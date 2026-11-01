@@ -1,0 +1,6 @@
+{
+  "name": "Anchor",
+  "description": "Rock-solid time for serious play. High-precision metronome with instant first-beat response, custom accents, and visual/haptic sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

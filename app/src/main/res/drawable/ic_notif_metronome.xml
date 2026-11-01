@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Metronome body outline -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2L5.5,21h13L12,2zM12,6.2L15.7,19H8.3L12,6.2z" />
+    <!-- Pendulum needle -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M11.2,18L16.5,7.4l1.6,0.8L12.8,18.8z" />
+</vector>

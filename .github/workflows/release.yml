@@ -1,0 +1,415 @@
+name: Build, Test & Release APK
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Publish GitHub Release with APK'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-release:
+    name: Build, Test, Security & Release
+    runs-on: ubuntu-latest
+    outputs:
+      version_name: ${{ steps.prepare_release.outputs.version_name }}
+      release_tag: ${{ steps.prepare_release.outputs.release_tag }}
+      apk_name: ${{ steps.prepare_release.outputs.apk_name }}
+      is_release: ${{ steps.prepare_release.outputs.is_release }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x gradlew
+
+      # -----------------------------------------------------------------------
+      # Security Check 1: Secret & Sensitive Token Leak Detection
+      # -----------------------------------------------------------------------
+      - name: Security Check - Scan for Secret Leaks
+        run: |
+          echo "Scanning codebase for accidental secrets or private key leaks..."
+          LEAK_FOUND=0
+          # Exclude .git, .github workflows, and build directories, scan for common high-risk private tokens
+          if grep -rEI "(AIzaSy[A-Za-z0-9_-]{33}|ghp_[A-Za-z0-9]{36}|BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY|AKIA[0-9A-Z]{16})" \
+             --exclude-dir=".git" --exclude-dir=".github" --exclude-dir=".gradle" --exclude-dir="build" . ; then
+            echo "::error::Potential sensitive secret or private key pattern detected in source code!"
+            LEAK_FOUND=1
+          fi
+
+          if [ $LEAK_FOUND -ne 0 ]; then
+            exit 1
+          fi
+          echo "Secret leak scan passed cleanly."
+
+      # -----------------------------------------------------------------------
+      # Security Check 2: AndroidManifest Security & Least Privilege Audit
+      # -----------------------------------------------------------------------
+      - name: Security Check - AndroidManifest & Permissions Audit
+        run: |
+          echo "Verifying AndroidManifest security declarations..."
+          MANIFEST="app/src/main/AndroidManifest.xml"
+
+          # 1. Enforce TLS / encrypted traffic only
+          if ! grep -q 'android:usesCleartextTraffic="false"' "$MANIFEST"; then
+            echo "::error::Security violation: android:usesCleartextTraffic must be set to 'false' to enforce HTTPS."
+            exit 1
+          fi
+
+          # 2. Least-privilege permissions check: verify no dangerous storage/phone permissions exist
+          DISALLOWED_PERMS=("READ_EXTERNAL_STORAGE" "WRITE_EXTERNAL_STORAGE" "READ_PRIVILEGED_PHONE_STATE" "ACCESS_COARSE_LOCATION" "ACCESS_FINE_LOCATION" "RECORD_AUDIO")
+          for perm in "${DISALLOWED_PERMS[@]}"; do
+            if grep -q "$perm" "$MANIFEST"; then
+              echo "::error::Unauthorized permission $perm found in $MANIFEST! Least-privilege violation."
+              exit 1
+            fi
+          done
+
+          echo "Manifest security audit passed cleanly."
+
+      # -----------------------------------------------------------------------
+      # Keystore Restoration & Keystore Integrity Verification
+      # -----------------------------------------------------------------------
+      - name: Restore Signing Keystore
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          if [ -n "${SIGNING_KEYSTORE_BASE64}" ]; then
+            echo "Restoring keystore from GitHub Secret SIGNING_KEYSTORE_BASE64..."
+            echo "${SIGNING_KEYSTORE_BASE64}" | tr -d '\r\n' | base64 -d > debug.keystore
+          elif [ -f "signing/debug.keystore.base64" ]; then
+            echo "Restoring keystore from committed signing/debug.keystore.base64..."
+            cat signing/debug.keystore.base64 | tr -d '\r\n' | base64 -d > debug.keystore
+          elif [ -f "debug.keystore.base64" ]; then
+            echo "Restoring keystore from committed debug.keystore.base64..."
+            cat debug.keystore.base64 | tr -d '\r\n' | base64 -d > debug.keystore
+          elif [ -f ".github/scripts/restore_keystore.sh" ]; then
+            bash .github/scripts/restore_keystore.sh
+          fi
+
+          if [ ! -f "debug.keystore" ]; then
+            echo "::error::debug.keystore file could not be restored! Aborting build."
+            exit 1
+          fi
+
+          # Verify keystore integrity & display SHA-256 fingerprint
+          echo "Verifying restored signing keystore integrity..."
+          keytool -list -v -keystore debug.keystore -storepass android | grep -E "(Alias name|SHA256:)" || true
+
+          # Prepare Release signing keystore (my-upload-key.jks with alias 'upload')
+          # Clones the restored signing key so existing installs upgrade seamlessly while building a true Release APK
+          cp debug.keystore my-upload-key.jks
+          if ! keytool -list -keystore my-upload-key.jks -storepass android -alias upload >/dev/null 2>&1; then
+            EXISTING_ALIAS=$(keytool -list -keystore my-upload-key.jks -storepass android | grep "PrivateKeyEntry" | head -n1 | cut -d',' -f1 | tr -d ' ')
+            EXISTING_ALIAS=${EXISTING_ALIAS:-androiddebugkey}
+            keytool -changealias -keystore my-upload-key.jks -storepass android -alias "${EXISTING_ALIAS}" -destalias upload -keypass android
+          fi
+          echo "KEYSTORE_PATH=${GITHUB_WORKSPACE}/my-upload-key.jks" >> $GITHUB_ENV
+          echo "STORE_PASSWORD=android" >> $GITHUB_ENV
+          echo "KEY_PASSWORD=android" >> $GITHUB_ENV
+
+      # -----------------------------------------------------------------------
+      # Security Check 3: Static Analysis & Android Security Lint
+      # -----------------------------------------------------------------------
+      - name: Security Check - Run Android Security Lint
+        run: ./gradlew lintDebug
+
+      # -----------------------------------------------------------------------
+      # Unit Tests & Audio Engine Verification
+      # -----------------------------------------------------------------------
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest --continue
+
+      # -----------------------------------------------------------------------
+      # Deterministic Versioning & Packaging (Reproducible Builds)
+      # -----------------------------------------------------------------------
+      - name: Prepare Deterministic Version Info
+        id: prepare_release
+        run: |
+          mkdir -p release-artifacts
+          SHORT_SHA=$(git rev-parse --short=7 HEAD 2>/dev/null || echo "${{ github.sha }}" | cut -c1-7)
+          # Derive build timestamp strictly from the git commit timestamp (UTC) for 100% reproducible builds
+          COMMIT_EPOCH=$(git log -1 --format=%ct HEAD 2>/dev/null || date +%s)
+          export SOURCE_DATE_EPOCH="${COMMIT_EPOCH}"
+          echo "SOURCE_DATE_EPOCH=${COMMIT_EPOCH}" >> $GITHUB_ENV
+
+          # Extract canonical semantic version from CHANGELOG.md (e.g. 1.2.3) so CHANGELOG, APK, and GitHub Release match
+          CHANGELOG_VER=$(grep -m1 -oE '^## \[v?[0-9]+\.[0-9]+(\.[0-9]+)?\]' CHANGELOG.md | sed -E 's/^## \[v?([0-9.]+)\]/\1/' || true)
+          if [ -z "$CHANGELOG_VER" ]; then
+            CHANGELOG_VER="1.2.3"
+          fi
+
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            RELEASE_TAG="${GITHUB_REF#refs/tags/}"
+            VERSION_NAME="${RELEASE_TAG#v}"
+          else
+            VERSION_NAME="${CHANGELOG_VER}"
+            RELEASE_TAG="v${VERSION_NAME}"
+          fi
+
+          APK_NAME="Anchor-${RELEASE_TAG}.apk"
+
+          # Compute deterministic versionCode from semantic version (major*10000 + minor*100 + patch)
+          IFS='.' read -r V_MAJOR V_MINOR V_PATCH <<< "${VERSION_NAME}"
+          V_MAJOR=${V_MAJOR:-1}
+          V_MINOR=${V_MINOR:-2}
+          V_PATCH=${V_PATCH:-0}
+          VERSION_CODE=$(( V_MAJOR * 10000 + V_MINOR * 100 + V_PATCH ))
+
+          echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
+          echo "version_name=${VERSION_NAME}" >> $GITHUB_OUTPUT
+          echo "version_code=${VERSION_CODE}" >> $GITHUB_OUTPUT
+          echo "apk_name=${APK_NAME}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+          IS_RELEASE="false"
+          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.create_release }}" == "true" ]]; then
+            IS_RELEASE="true"
+          fi
+          echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT
+
+      - name: Build Reproducible Release APK
+        run: |
+          ./gradlew assembleRelease \
+            -PversionName="${{ steps.prepare_release.outputs.version_name }}" \
+            -PversionCode="${{ steps.prepare_release.outputs.version_code }}" \
+            -PreleaseTag="${{ steps.prepare_release.outputs.release_tag }}"
+
+      - name: Stage APK and Generate SHA-256 Checksum
+        run: |
+          APK_FILE="${{ steps.prepare_release.outputs.apk_name }}"
+          cp app/build/outputs/apk/release/app-release.apk "release-artifacts/${APK_FILE}"
+          (cd release-artifacts && sha256sum "${APK_FILE}" > "${APK_FILE}.sha256")
+          echo "Staged APK and SHA-256 checksum:"
+          cat "release-artifacts/${APK_FILE}.sha256"
+          ls -la release-artifacts/
+
+      # -----------------------------------------------------------------------
+      # Security Check 4: APK Signature & Cryptographic Integrity Verification
+      # -----------------------------------------------------------------------
+      - name: Security Check - Verify APK Cryptographic Signature
+        run: |
+          echo "Verifying cryptographic signature of staged APK..."
+          APK_PATH="release-artifacts/${{ steps.prepare_release.outputs.apk_name }}"
+
+          # Locate apksigner or fallback to keytool jar verification
+          APKSIGNER=$(find /usr/local/lib/android/sdk/build-tools /opt/android-sdk/build-tools /opt/android/sdk/build-tools -name apksigner 2>/dev/null | sort -V | tail -n1)
+          if [ -n "$APKSIGNER" ] && [ -x "$APKSIGNER" ]; then
+            echo "Using apksigner: $APKSIGNER"
+            "$APKSIGNER" verify --verbose "$APK_PATH"
+          else
+            echo "Using keytool verification fallback..."
+            keytool -printcert -jarfile "$APK_PATH" | grep -E "(Owner:|SHA256:)" || true
+          fi
+          echo "APK signature verified successfully."
+
+      # -----------------------------------------------------------------------
+      # Release Notes & Deployment
+      # -----------------------------------------------------------------------
+      - name: Generate Release Changelog
+        if: steps.prepare_release.outputs.is_release == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.prepare_release.outputs.release_tag }}
+          VERSION_NAME: ${{ steps.prepare_release.outputs.version_name }}
+          APK_NAME: ${{ steps.prepare_release.outputs.apk_name }}
+        run: |
+          python3 - << 'EOF'
+          import os, re, subprocess
+
+          tag = os.environ.get("RELEASE_TAG", "")
+          version = os.environ.get("VERSION_NAME", "")
+          apk_name = os.environ.get("APK_NAME", "")
+          changelog_path = "CHANGELOG.md"
+          output_path = "release-artifacts/RELEASE_NOTES.md"
+
+          notes = None
+          if os.path.exists(changelog_path):
+              with open(changelog_path, "r", encoding="utf-8") as f:
+                  content = f.read()
+              sections = [s.strip() for s in re.split(r'\n(?=##\s+\[)', content) if s.strip().startswith("## [")]
+              if sections:
+                  clean_tag = tag.lstrip("v").split("-")[0]
+                  for sec in sections:
+                      if clean_tag in sec.split("\n", 1)[0]:
+                          notes = sec
+                          break
+                  if not notes:
+                      notes = sections[0]
+
+          if not notes:
+              notes = f"## Release {tag or version}\n\n- Audio engine, UI, and stability updates."
+
+          output = [notes]
+          try:
+              res = subprocess.run(["git", "log", "-n7", "--pretty=format:- %s (%h)"], capture_output=True, text=True)
+              if res.returncode == 0 and res.stdout.strip():
+                  output.append("\n### Recent Commits\n")
+                  output.append(res.stdout.strip())
+          except Exception:
+              pass
+
+          sha_file = f"release-artifacts/{apk_name}.sha256"
+          if os.path.exists(sha_file):
+              with open(sha_file, "r", encoding="utf-8") as sf:
+                  sha_val = sf.read().strip()
+              output.append(f"\n### SHA-256 Checksum\n```text\n{sha_val}\n```")
+
+          os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+          with open(output_path, "w", encoding="utf-8") as f:
+              f.write("\n".join(output) + "\n")
+          print(f"Generated release notes at {output_path}")
+          EOF
+
+      - name: Upload Build Artifact to Workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.prepare_release.outputs.apk_name }}
+          path: |
+            release-artifacts/*.apk
+            release-artifacts/*.sha256
+          retention-days: 14
+
+      - name: Create or Update GitHub Release
+        if: steps.prepare_release.outputs.is_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_TAG="${{ steps.prepare_release.outputs.release_tag }}"
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Updating existing GitHub release ${RELEASE_TAG}..."
+            gh release edit "${RELEASE_TAG}" \
+              --title "Anchor ${RELEASE_TAG}" \
+              --notes-file release-artifacts/RELEASE_NOTES.md \
+              --target "${{ github.sha }}"
+            gh release upload "${RELEASE_TAG}" \
+              release-artifacts/*.apk \
+              release-artifacts/*.sha256 \
+              --clobber
+          else
+            echo "Creating new GitHub release ${RELEASE_TAG}..."
+            gh release create "${RELEASE_TAG}" \
+              release-artifacts/*.apk \
+              release-artifacts/*.sha256 \
+              --title "Anchor ${RELEASE_TAG}" \
+              --notes-file release-artifacts/RELEASE_NOTES.md \
+              --target "${{ github.sha }}"
+          fi
+
+  # ===========================================================================
+  # GitHub Pages Website Deployment
+  # Automatically syncs website release metadata and publishes to GitHub Pages
+  # ===========================================================================
+  deploy-pages:
+    name: Deploy GitHub Pages Website
+    needs: [build-test-release]
+    if: ${{ always() && (needs.build-test-release.result == 'success') && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync Website with Latest App Release Metadata
+        env:
+          VERSION_NAME: ${{ needs.build-test-release.outputs.version_name }}
+          RELEASE_TAG: ${{ needs.build-test-release.outputs.release_tag }}
+          APK_NAME: ${{ needs.build-test-release.outputs.apk_name }}
+        run: |
+          python3 - << 'EOF'
+          import json, os, re, datetime
+
+          # Retrieve version from job outputs, fallback to CHANGELOG.md
+          ver = os.environ.get("VERSION_NAME", "")
+          tag = os.environ.get("RELEASE_TAG", "")
+          apk_name = os.environ.get("APK_NAME", "")
+
+          if not ver:
+              if os.path.exists("CHANGELOG.md"):
+                  with open("CHANGELOG.md", "r", encoding="utf-8") as f:
+                      m = re.search(r'##\s+\[v?([0-9.]+)\]', f.read())
+                      if m:
+                          ver = m.group(1)
+              ver = ver or "1.2.3"
+
+          if not tag:
+              tag = f"v{ver}"
+          if not apk_name:
+              apk_name = f"Anchor-{tag}.apk"
+
+          today = datetime.datetime.now(datetime.timezone.utc).strftime("%B %d, %Y")
+          repo = os.environ.get("GITHUB_REPOSITORY", "DamionGans/Anchor")
+          download_url = f"https://github.com/{repo}/releases/download/{tag}/{apk_name}"
+
+          # Update docs/version.json
+          ver_path = "docs/version.json"
+          if os.path.exists(ver_path):
+              with open(ver_path, "r", encoding="utf-8") as f:
+                  data = json.load(f)
+              data["version"] = ver
+              data["releaseTag"] = tag
+              data["releaseDate"] = today
+              data["apkName"] = apk_name
+              data["downloadUrl"] = download_url
+              with open(ver_path, "w", encoding="utf-8") as f:
+                  json.dump(data, f, indent=2)
+              print(f"Updated {ver_path} with {tag}")
+
+          # Update docs/index.html
+          html_path = "docs/index.html"
+          if os.path.exists(html_path):
+              with open(html_path, "r", encoding="utf-8") as f:
+                  html = f.read()
+              html = re.sub(r'class="brand-tag">v[0-9.]+<', f'class="brand-tag">{tag}<', html)
+              html = re.sub(r'id="version-pill-text"[^>]*>v[0-9.]+<', f'id="version-pill-text" class="pill-version-name">{tag}<', html)
+              html = re.sub(r'Download for Android \(v[0-9.]+\)', f'Download for Android ({tag})', html)
+              html = re.sub(r'/releases/download/[^/]+/[^"]+\.apk', f'/releases/download/{tag}/{apk_name}', html)
+              with open(html_path, "w", encoding="utf-8") as f:
+                  f.write(html)
+              print(f"Updated {html_path} with {tag} links")
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

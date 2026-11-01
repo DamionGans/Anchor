@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Metronome Outer Housing Shadow/Backing -->
+    <path
+        android:fillColor="#182232"
+        android:pathData="M 43,23 L 65,23 L 78,79 L 30,79 Z" />
+
+    <!-- Metronome Body Cutout -->
+    <path
+        android:fillColor="#101722"
+        android:strokeColor="#243248"
+        android:strokeWidth="1.5"
+        android:pathData="M 45,26 L 63,26 L 75,76 L 33,76 Z" />
+
+    <!-- Scale ticks inside metronome face -->
+    <path
+        android:strokeColor="#334155"
+        android:strokeWidth="1"
+        android:pathData="M 48,38 L 60,38 M 46,48 L 62,48 M 44,58 L 64,58 M 42,68 L 66,68" />
+
+    <!-- Center Line Guide -->
+    <path
+        android:strokeColor="#243248"
+        android:strokeWidth="1"
+        android:pathData="M 54,28 L 54,72" />
+
+    <!-- Base Pedestal -->
+    <path
+        android:fillColor="#182232"
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="1.5"
+        android:pathData="M 28,78 L 80,78 L 83,84 L 25,84 Z" />
+
+    <!-- Pendulum Arm (Cyan accent) -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M 54,74 L 68,32" />
+
+    <!-- Pendulum Weight (Amber Gold accent) -->
+    <path
+        android:fillColor="#FFB300"
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="0.8"
+        android:pathData="M 60,40 L 73,44 L 70,51 L 57,47 Z" />
+
+    <!-- Pivot Point Pin -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M 54,74 m -3.5,0 a 3.5,3.5 0 1,0 7,0 a 3.5,3.5 0 1,0 -7,0" />
+
+    <!-- Dynamic Pulse Waves (Cyan arcs indicating sound) -->
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.75"
+        android:pathData="M 74,27 C 79,32 82,39 82,47" />
+    <path
+        android:strokeColor="#00E5FF"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.45"
+        android:pathData="M 80,22 C 87,29 90,38 90,47" />
+</vector>
