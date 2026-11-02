@@ -49,14 +49,14 @@ import com.damiongans.anchor.ui.dialogs.TimeSignatureDialog
 import com.damiongans.anchor.ui.dialogs.UpdateAvailableDialog
 import com.damiongans.anchor.ui.icons.AnchorIcons
 import com.damiongans.anchor.ui.theme.AccentDownbeat
-import com.damiongans.anchor.viewmodel.MetronomeViewModel
+import com.damiongans.anchor.viewmodel.MetronomeController
 
 @Composable
 fun MetronomeScreen(
-    viewModel: MetronomeViewModel,
+    controller: MetronomeController,
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by controller.uiState.collectAsState()
 
     var showTimeSignatureDialog by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
@@ -100,7 +100,7 @@ fun MetronomeScreen(
                 // Top App Bar
                 TopBar(
                     audioInfo = state.audioInfo,
-                    onSelectAudioOutput = { deviceId -> viewModel.selectAudioOutputDevice(deviceId) },
+                    onSelectAudioOutput = { deviceId -> controller.selectAudioOutputDevice(deviceId) },
                     onSettingsClick = { showSettingsSheet = true }
                 )
 
@@ -121,7 +121,7 @@ fun MetronomeScreen(
                     subdivision = state.currentSubdivision,
                     accents = state.accents,
                     isPlaying = state.isPlaying,
-                    onBeatClick = { beatIdx -> viewModel.cycleBeatAccent(beatIdx) },
+                    onBeatClick = { beatIdx -> controller.cycleBeatAccent(beatIdx) },
                     modifier = Modifier.padding(vertical = 2.dp)
                 )
 
@@ -129,9 +129,9 @@ fun MetronomeScreen(
                 TempoControls(
                     bpm = state.bpm,
                     tempoMarking = state.tempoMarking,
-                    onBpmChange = { newBpm -> viewModel.setBpm(newBpm) },
-                    onAdjustBpm = { delta -> viewModel.adjustBpm(delta) },
-                    onMultiplyBpm = { factor -> viewModel.multiplyBpm(factor) },
+                    onBpmChange = { newBpm -> controller.setBpm(newBpm) },
+                    onAdjustBpm = { delta -> controller.adjustBpm(delta) },
+                    onMultiplyBpm = { factor -> controller.multiplyBpm(factor) },
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
 
@@ -143,9 +143,9 @@ fun MetronomeScreen(
                     tapStatus = state.tapStatus,
                     buttonTriggerMode = state.buttonTriggerMode,
                     onTimeSignatureClick = { showTimeSignatureDialog = true },
-                    onSubdivisionSelect = { sub -> viewModel.setSubdivision(sub) },
-                    onTapTempo = { viewModel.tapTempo() },
-                    onPlayPauseToggle = { viewModel.togglePlayPause() },
+                    onSubdivisionSelect = { sub -> controller.setSubdivision(sub) },
+                    onTapTempo = { controller.tapTempo() },
+                    onPlayPauseToggle = { controller.togglePlayPause() },
                     modifier = Modifier.padding(vertical = 2.dp)
                 )
             }
@@ -157,8 +157,8 @@ fun MetronomeScreen(
         TimeSignatureDialog(
             currentBeats = state.totalBeats,
             currentSubdivision = state.currentSubdivision,
-            onSelectPreset = { preset -> viewModel.selectTimeSignature(preset) },
-            onCustomSelect = { beats, sub -> viewModel.setTimeSignature(beats, sub) },
+            onSelectPreset = { preset -> controller.selectTimeSignature(preset) },
+            onCustomSelect = { beats, sub -> controller.setTimeSignature(beats, sub) },
             onDismiss = { showTimeSignatureDialog = false }
         )
     }
@@ -167,9 +167,9 @@ fun MetronomeScreen(
     if (state.showUpdateDialog && updateInfo != null && updateInfo.isNewerVersion) {
         UpdateAvailableDialog(
             releaseInfo = updateInfo,
-            onYes = { viewModel.onAcceptUpdate() },
-            onAskLater = { viewModel.onAskLater() },
-            onNo = { viewModel.onDeclineUpdate() }
+            onYes = { controller.onAcceptUpdate() },
+            onAskLater = { controller.onAskLater() },
+            onNo = { controller.onDeclineUpdate() }
         )
     }
 
@@ -192,20 +192,20 @@ fun MetronomeScreen(
             updateCheckMessage = state.updateCheckMessage,
             canCheckForUpdates = state.canCheckForUpdates,
             updateStoreName = state.updateStoreName,
-            onSoundSetSelect = { soundSet -> viewModel.setSoundSet(soundSet) },
-            onPitchChange = { pitch -> viewModel.setPitchMultiplier(pitch) },
-            onSelectAudioOutput = { deviceId -> viewModel.selectAudioOutputDevice(deviceId) },
-            onButtonTriggerModeSelect = { mode -> viewModel.setButtonTriggerMode(mode) },
-            onToggleVibration = { viewModel.toggleVibration() },
-            onToggleFlash = { viewModel.toggleFlash() },
-            onFlashDelayChange = { delayMs -> viewModel.setFlashDelay(delayMs) },
-            onVibrationDelayChange = { delayMs -> viewModel.setVibrationDelay(delayMs) },
-            onThemeModeSelect = { mode -> viewModel.setThemeMode(mode) },
-            onAccentColorSelect = { accent -> viewModel.setAccentColor(accent) },
-            onBluetoothCompensationChange = { offset -> viewModel.setBluetoothCompensation(offset) },
-            onResetTimingOffsets = { viewModel.resetTimingOffsets() },
-            onCheckForUpdates = { viewModel.checkForUpdates(manual = true) },
-            onUpdateNow = { viewModel.onAcceptUpdate() },
+            onSoundSetSelect = { soundSet -> controller.setSoundSet(soundSet) },
+            onPitchChange = { pitch -> controller.setPitchMultiplier(pitch) },
+            onSelectAudioOutput = { deviceId -> controller.selectAudioOutputDevice(deviceId) },
+            onButtonTriggerModeSelect = { mode -> controller.setButtonTriggerMode(mode) },
+            onToggleVibration = { controller.toggleVibration() },
+            onToggleFlash = { controller.toggleFlash() },
+            onFlashDelayChange = { delayMs -> controller.setFlashDelay(delayMs) },
+            onVibrationDelayChange = { delayMs -> controller.setVibrationDelay(delayMs) },
+            onThemeModeSelect = { mode -> controller.setThemeMode(mode) },
+            onAccentColorSelect = { accent -> controller.setAccentColor(accent) },
+            onBluetoothCompensationChange = { offset -> controller.setBluetoothCompensation(offset) },
+            onResetTimingOffsets = { controller.resetTimingOffsets() },
+            onCheckForUpdates = { controller.checkForUpdates(manual = true) },
+            onUpdateNow = { controller.onAcceptUpdate() },
             onDismiss = { showSettingsSheet = false }
         )
     }

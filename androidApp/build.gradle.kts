@@ -118,6 +118,7 @@ secrets {
 // Shared KMP logic module + pure AndroidX & Kotlin Coroutines dependencies (zero Google Play Services dependencies for full AOSP compatibility)
 dependencies {
   implementation(project(":shared"))
+  implementation(project(":sharedUi"))
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.compose.material3)

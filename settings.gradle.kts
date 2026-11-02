@@ -26,3 +26,5 @@ rootProject.name = "Anchor"
 
 include(":androidApp")
 include(":shared")
+include(":sharedUi")
+include(":desktopApp")

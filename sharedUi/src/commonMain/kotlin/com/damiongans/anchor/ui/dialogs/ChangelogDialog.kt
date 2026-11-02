@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.damiongans.anchor.BuildConfig
+import com.damiongans.anchor.ui.platform.LocalAppVersionName
 import com.damiongans.anchor.ui.icons.AnchorIcons
 
 private data class ChangelogEntry(val title: String, val description: String)
@@ -70,7 +70,7 @@ fun ChangelogDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Release Notes (v${BuildConfig.VERSION_NAME})",
+                            text = "Release Notes (v${LocalAppVersionName.current})",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )

@@ -25,7 +25,14 @@ class DesktopAudioEngine(
     initialSampleRate: Int = DEFAULT_SAMPLE_RATE
 ) : BaseMetronomeAudioEngine(initialSampleRate) {
 
-    @Volatile private var running = false
+    /** True while a line + output thread exist (playing or in standby). */
+    @Volatile private var outputActive = false
+    /** Metronome playback requested (start() .. stop()). Read by the output thread. */
+    @Volatile private var playRequested = false
+    /** Keep the line open between plays (app window open) for an instant first beat. */
+    @Volatile private var standbyRequested = false
+    /** Incremented by every start(), so a fast stop()+start() still restarts at Beat 1. */
+    @Volatile private var playGeneration = 0
     @Volatile private var line: SourceDataLine? = null
     @Volatile private var preferredMixerIndex: Int? = null
     private var audioThread: Thread? = null
@@ -79,12 +86,14 @@ class DesktopAudioEngine(
         publishAudioRoute(active, sorted, bufferFrames, isProAudioSupported = false)
     }
 
+    @Synchronized
     override fun selectAudioOutputDevice(deviceId: Int?) {
         preferredMixerIndex = deviceId?.takeIf { it >= 0 }
-        val wasRunning = running
-        if (wasRunning) stop()
+        val wasOpen = outputActive
+        if (wasOpen) closeOutput()
         detectCurrentAudioDevice()
-        if (wasRunning) start()
+        // Reopen on the new mixer; a requested playback restarts there at Beat 1.
+        if (wasOpen) openOutputIfNeeded()
     }
 
     private fun classifyMixer(name: String): AudioDeviceType {
@@ -98,14 +107,51 @@ class DesktopAudioEngine(
         }
     }
 
+    /**
+     * Output standby: while enabled (app window open) the line stays open and keeps playing
+     * inaudible dither, so [start] places Beat 1 in the next chunk instead of opening the line and
+     * running the cold-start warmup. Disabling it closes the line unless the metronome is playing.
+     */
+    @Synchronized
+    override fun setOutputStandby(enabled: Boolean) {
+        standbyRequested = enabled
+        if (enabled) {
+            openOutputIfNeeded()
+        } else if (!playRequested) {
+            closeOutput()
+        }
+    }
+
     @Synchronized
     override fun start() {
-        if (running) return
+        if (playRequested) return
+        playGeneration++
+        playRequested = true
+        openOutputIfNeeded()
+        if (!outputActive) playRequested = false // no usable output device
+    }
+
+    @Synchronized
+    override fun stop() {
+        if (!playRequested) return
+        playRequested = false
+        if (!standbyRequested) closeOutput()
+    }
+
+    @Synchronized
+    override fun release() {
+        standbyRequested = false
+        playRequested = false
+        closeOutput()
+    }
+
+    private fun openOutputIfNeeded() {
+        if (outputActive) return
         val dataLine = openLine() ?: return
         line = dataLine
-        running = true
+        outputActive = true
         detectCurrentAudioDevice()
-        audioThread = Thread({ runAudioLoop(dataLine) }, "AnchorDesktopAudio").apply {
+        audioThread = Thread({ runOutputLoop(dataLine) }, "AnchorDesktopAudio").apply {
             priority = Thread.MAX_PRIORITY
             isDaemon = true
             start()
@@ -126,10 +172,9 @@ class DesktopAudioEngine(
         null // no usable output device
     }
 
-    @Synchronized
-    override fun stop() {
-        if (!running) return
-        running = false
+    private fun closeOutput() {
+        if (!outputActive) return
+        outputActive = false
         val dataLine = line
         line = null
         try {
@@ -142,58 +187,89 @@ class DesktopAudioEngine(
         audioThread = null
     }
 
-    override fun release() {
-        stop()
-    }
-
     /**
-     * Desktop I/O loop: blocking writes of the shared sequencer's warmup dither and click chunks
-     * to the line, with the hardware playhead fed back for playhead-anchored dispatch.
+     * Desktop I/O loop for the lifetime of one line: inaudible dither while idle (standby), the
+     * shared sequencer's clicks while playing, with the hardware playhead fed back for
+     * playhead-anchored dispatch. [outputFrames] counts every frame written to the line, the
+     * same timeline as `longFramePosition`; playback aligns the sequencer to it.
      */
-    private fun runAudioLoop(dataLine: SourceDataLine) {
+    private fun runOutputLoop(dataLine: SourceDataLine) {
         try {
             val chunk = ShortArray(CHUNK_FRAMES)
             val bytes = ByteArray(CHUNK_FRAMES * BYTES_PER_FRAME)
-            val warmupChunks = MetronomeSequencer.warmupChunkCount(sampleRate, CHUNK_FRAMES, minimumChunks = 2)
-
-            syncCompensatorSettings()
-            sequencer.prepare(sampleRate, warmupChunks.toLong() * CHUNK_FRAMES)
+            val ditherBytes = ByteArray(CHUNK_FRAMES * BYTES_PER_FRAME)
+            ShortArray(CHUNK_FRAMES).also {
+                MetronomeSequencer.fillWarmupDither(it, CHUNK_FRAMES)
+                toLittleEndian(it, ditherBytes)
+            }
+            // Cold-start warmup target: >= 55 ms of dither before Beat 1 (only the part the line
+            // has not already played is added on a start).
+            val warmupTargetFrames =
+                MetronomeSequencer.warmupChunkCount(sampleRate, CHUNK_FRAMES, minimumChunks = 2).toLong() * CHUNK_FRAMES
             val playhead = PlayheadEstimator(sampleRate, maxInterpolationFrames = CHUNK_FRAMES * 2L)
+            var outputFrames = 0L
+            var playing = false
+            var playingGeneration = -1
+
+            fun write(data: ByteArray): Boolean {
+                if (!outputActive) return false
+                val written = dataLine.write(data, 0, data.size)
+                if (written > 0) outputFrames += written / BYTES_PER_FRAME
+                return written > 0 && outputActive
+            }
 
             fun playheadFrame(): Long = playhead.estimate(
                 hardwareFrames = dataLine.longFramePosition,
                 nowNanos = System.nanoTime(),
-                totalWritten = sequencer.totalFramesWritten
+                totalWritten = outputFrames
             )
 
-            // 1. Hardware warmup: >= 55 ms of +/-1 LSB dither before Beat 1 (first chunk primes the
-            //    line buffer before start()).
-            MetronomeSequencer.fillWarmupDither(chunk, CHUNK_FRAMES)
-            toLittleEndian(chunk, bytes)
-            for (i in 0 until warmupChunks) {
-                if (!running) return
-                dataLine.write(bytes, 0, bytes.size)
-                sequencer.advanceWarmup(CHUNK_FRAMES)
-                if (i == 0) {
-                    dataLine.start()
-                    playhead.reset(System.nanoTime())
+            // Prime the line buffer, then start the hardware clock.
+            if (!write(ditherBytes)) return
+            dataLine.start()
+            playhead.reset(System.nanoTime())
+
+            while (outputActive) {
+                val generation = playGeneration
+                if (playRequested && (!playing || generation != playingGeneration)) {
+                    val extraChunks = ((warmupTargetFrames - outputFrames).coerceAtLeast(0L) + CHUNK_FRAMES - 1) / CHUNK_FRAMES
+                    syncCompensatorSettings()
+                    sequencer.prepare(sampleRate, outputFrames + extraChunks * CHUNK_FRAMES)
+                    sequencer.alignToOutputFrame(outputFrames)
+                    var warmupOk = true
+                    for (i in 0 until extraChunks) {
+                        if (!write(ditherBytes)) return
+                        if (!playRequested) {
+                            warmupOk = false
+                            break
+                        }
+                        sequencer.advanceWarmup(CHUNK_FRAMES)
+                        sequencer.processPlayhead(playheadFrame(), emitPhase = false)
+                    }
+                    if (!warmupOk) {
+                        playing = false
+                        continue
+                    }
+                    // Anchor Beat 1 at the exact next frame
+                    sequencer.startFirstBeat()
+                    playing = true
+                    playingGeneration = generation
+                } else if (!playRequested && playing) {
+                    playing = false
+                }
+
+                if (playing) {
+                    sequencer.renderChunk(chunk, CHUNK_FRAMES)
+                    toLittleEndian(chunk, bytes)
+                    if (!write(bytes)) break
+                    sequencer.processPlayhead(playheadFrame())
                 } else {
-                    sequencer.processPlayhead(playheadFrame(), emitPhase = false)
+                    // Standby: keep the output path awake with inaudible dither
+                    if (!write(ditherBytes)) break
                 }
             }
-
-            // 2. Anchor Beat 1 at the exact post-warmup frame
-            sequencer.startFirstBeat()
-
-            // 3. Continuous synthesis & playhead-synchronized dispatch
-            while (running) {
-                sequencer.renderChunk(chunk, CHUNK_FRAMES)
-                toLittleEndian(chunk, bytes)
-                if (dataLine.write(bytes, 0, bytes.size) <= 0 && !running) break
-                sequencer.processPlayhead(playheadFrame())
-            }
         } catch (_: Throwable) {
-            // Line closed or device removed while playing; stop() / route detection handle state.
+            // Line closed or device removed; closeOutput() / route detection own the state.
         }
     }
 

@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,10 +24,7 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
 import com.damiongans.anchor.ui.theme.NeonCyan
 import com.damiongans.anchor.ui.theme.primaryColor
 import androidx.compose.material3.MaterialTheme
@@ -60,7 +56,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.damiongans.anchor.BuildConfig
+import com.damiongans.anchor.ui.platform.LocalAppVersionName
+import com.damiongans.anchor.ui.platform.PlatformUi
+import com.damiongans.anchor.ui.platform.platformDynamicColorScheme
 import com.damiongans.anchor.model.AccentColorOption
 import com.damiongans.anchor.model.AudioDeviceType
 import com.damiongans.anchor.model.AudioOutputDevice
@@ -410,7 +408,7 @@ private fun AudioSettingsTab(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "${String.format("%.2f", pitchMultiplier)}x",
+                text = "${formatTwoDecimals(pitchMultiplier)}x",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary
             )
@@ -524,8 +522,8 @@ private fun TimingSettingsTab(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Independent Vibration / Haptic Offset Control (-200ms to +300ms)
-        OffsetCalibrationControl(
+        // Independent Vibration / Haptic Offset Control (-200ms to +300ms); hidden without a motor
+        if (PlatformUi.supportsVibration) OffsetCalibrationControl(
             title = "Vibration / Haptic Offset",
             subtitle = offsetDirectionLabel(vibrationDelayMs),
             valueMs = vibrationDelayMs,
@@ -556,8 +554,8 @@ private fun TimingSettingsTab(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Vibration Switch
-            Row(
+            // Vibration Switch (only on devices with a vibration motor)
+            if (PlatformUi.supportsVibration) Row(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
@@ -789,8 +787,8 @@ private fun ThemeSettingsTab(
     onThemeModeSelect: (ThemeMode) -> Unit,
     onAccentColorSelect: (AccentColorOption) -> Unit
 ) {
-    val context = LocalContext.current
     val systemInDark = isSystemInDarkTheme()
+    val systemThemePrimary = platformDynamicColorScheme(systemInDark)?.primary ?: NeonCyan
 
     Column {
         Text(
@@ -871,7 +869,7 @@ private fun ThemeSettingsTab(
             )
             if (accentColor.isDynamic) {
                 Text(
-                    text = "Android Phone Theme",
+                    text = PlatformUi.systemThemeLabel,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -889,12 +887,7 @@ private fun ThemeSettingsTab(
             AccentColorOption.values().forEach { option ->
                 val isSelected = option == accentColor
                 val previewColor = if (option.isDynamic) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        if (systemInDark) dynamicDarkColorScheme(context).primary
-                        else dynamicLightColorScheme(context).primary
-                    } else {
-                        NeonCyan
-                    }
+                    systemThemePrimary
                 } else {
                     option.primaryColor
                 }
@@ -920,7 +913,7 @@ private fun ThemeSettingsTab(
                         if (option.isDynamic) {
                             Icon(
                                 imageVector = AnchorIcons.Palette,
-                                contentDescription = "Phone Theme",
+                                contentDescription = PlatformUi.systemThemeLabel,
                                 tint = if (previewColor.luminance() > 0.5f) Color.Black else Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -928,7 +921,7 @@ private fun ThemeSettingsTab(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = if (option.isDynamic) "Phone" else option.displayName.split(" ").last(),
+                        text = if (option.isDynamic) PlatformUi.systemThemeShortLabel else option.displayName.split(" ").last(),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -970,7 +963,7 @@ private fun AboutSettingsTab(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Version ${BuildConfig.VERSION_NAME}",
+                    text = "Version ${LocalAppVersionName.current}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1091,4 +1084,10 @@ private fun UpdateCheckSection(
             }
         }
     }
+}
+
+/** Formats a non-negative value with exactly two decimals (multiplatform `"%.2f"`). */
+internal fun formatTwoDecimals(value: Float): String {
+    val hundredths = kotlin.math.round(value * 100f).toInt()
+    return "${hundredths / 100}.${(hundredths % 100).toString().padStart(2, '0')}"
 }
