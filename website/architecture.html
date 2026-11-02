@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Technical Architecture — Anchor Metronome</title>
-  <meta name="description" content="Under the hood of Anchor Metronome: 44.1 kHz real-time PCM synthesis, 55ms sub-LSB hardware warmup, playhead-anchored visual/haptic delay compensation, and a platform-agnostic Kotlin core.">
+  <meta name="description" content="Under the hood of Anchor Metronome: real-time PCM synthesis, 55ms sub-LSB hardware warmup, playhead-anchored visual/haptic delay compensation, and a platform-agnostic Kotlin core for Android, iPhone, and Windows.">
   <meta name="theme-color" content="#080C14">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="style.css">
@@ -38,8 +38,8 @@
           </svg>
           <span>docs/architecture.md</span>
         </a>
-        <a href="index.html" class="btn-nav-download">
-          Back to App Page
+        <a href="index.html#platforms" class="btn-nav-download">
+          Download Anchor
         </a>
       </div>
     </div>
@@ -52,34 +52,38 @@
     <section id="pcm-engine" class="section audio-deepdive" style="margin-top: 2rem;">
       <div class="section-header">
         <span class="section-tag">Engineering &amp; Audio DSP</span>
-        <h1 class="section-title">Under the Hood: Audio &amp; Sync Architecture</h1>
+        <h1 class="section-title">Under the Hood: Multiplatform Audio &amp; Sync Architecture</h1>
         <p class="section-subtitle">
-          How Anchor bypasses high-level Android media players to achieve sample-accurate timing, unclipped first beats, and hardware playhead synchronization.
+          How Anchor achieves sample-accurate timing, unclipped first beats, and hardware playhead synchronization across Android, iPhone, and Windows.
         </p>
       </div>
 
       <div class="deepdive-grid">
         <div class="deepdive-text">
-          <h3 style="font-size: 1.4rem; color: #FFF; margin-bottom: 0.75rem;">55ms Sub-LSB Hardware Warmup</h3>
+          <h3 style="font-size: 1.4rem; color: #FFF; margin-bottom: 0.75rem;">55ms Sub-LSB Hardware Warmup &amp; Output Standby</h3>
           <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
-            When an Android <code>AudioTrack</code> transitions from <code>STATE_INITIALIZED</code> to <code>PLAYSTATE_PLAYING</code>, the OS <code>AudioFlinger</code> mixer and the device's physical DAC/amplifier take <strong>25ms to 50ms</strong> to wake from power-saving standby. If Beat 1's transient is written at sample <code>0</code> immediately on start, the hardware wake-up clips or swallows the first click.
+            When OS audio sinks transition from idle to active playback, system mixers and DAC/amplifier circuitry take <strong>25ms to 50ms</strong> to wake from low-power sleep states. If Beat 1's transient is written immediately without preparation, the hardware wake-up clips or completely swallows the first click.
           </p>
           <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
-            Before sample <code>0</code> of Beat 1, <code>MetronomeAudioEngine</code> writes <strong>55ms (2,425 frames at 44.1 kHz) of alternating <code>±1</code> PCM sub-LSB dither</strong> (<code>-90.3 dBFS</code>). This non-zero signal forces the OEM audio HAL and amplifier fully awake while remaining completely inaudible, so Beat 1 hits an active DAC with 100% transient clarity. While the app is on screen, Anchor keeps this dither running in <strong>output standby</strong>, so the hardware is already awake and Beat 1 starts within the next audio chunk; the full warmup only runs on a cold start (e.g. from the notification while the app is in the background).
+            Anchor solves this across all three platforms with a unified two-stage strategy:
           </p>
 
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem;">
-            <li style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-              <span>Dedicated <code>THREAD_PRIORITY_URGENT_AUDIO</code> synthesis loop at 44,100 Hz 16-bit PCM</span>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.85rem;">
+            <li style="display: flex; align-items: flex-start; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF" style="flex-shrink: 0; margin-top: 0.15rem;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span><strong>Android (<code>MetronomeAudioEngine</code>):</strong> <code>AudioTrack</code> with Fast Path streaming at the native rate on a <code>THREAD_PRIORITY_URGENT_AUDIO</code> thread. Standby writes inaudible <code>±1</code> LSB dither (<code>-90.3 dBFS</code>) while the app is active, so Play aligns Beat 1 in the next ~5ms chunk. Cold starts run a 55ms warmup.</span>
             </li>
-            <li style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-              <span>Zero heap allocations on the audio thread via pre-synthesized <code>ShortArray</code> waveforms</span>
+            <li style="display: flex; align-items: flex-start; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF" style="flex-shrink: 0; margin-top: 0.15rem;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span><strong>iOS (<code>IosAudioEngine</code>):</strong> <code>AVAudioEngine</code> + <code>AVAudioPlayerNode</code> with a dedicated high-priority thread keeping four 256-frame buffers queued ahead. Standby keeps the engine active with the player node stopped; Play queues Beat 1 and calls <code>play()</code> with zero start-up delay.</span>
             </li>
-            <li style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-              <span>Beat 1 Lookahead tracks playhead frames on <code>-WARMUP_FRAMES until 0</code> for negative offsets</span>
+            <li style="display: flex; align-items: flex-start; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF" style="flex-shrink: 0; margin-top: 0.15rem;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span><strong>Windows (<code>DesktopAudioEngine</code>):</strong> <code>javax.sound.sampled.SourceDataLine</code> on a maximum-priority thread with 64-bit <code>longFramePosition</code> playhead tracking. Standby writes dither while the app window is open so Beat 1 starts instantaneously.</span>
+            </li>
+            <li style="display: flex; align-items: flex-start; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF" style="flex-shrink: 0; margin-top: 0.15rem;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              <span><strong>Zero Audio-Thread Allocations:</strong> All click voices (Tick, Click, Woodblock, Cowbell, Beep, Hi-Hat) are pre-rendered into static <code>ShortArray</code> PCM buffers. The real-time loop performs zero garbage collection or object allocations.</span>
             </li>
           </ul>
         </div>
@@ -87,7 +91,7 @@
         <div class="waveform-diagram">
           <div class="diagram-row">
             <div class="diagram-label">
-              <span>Standard AudioTrack Start (Clipped Beat 1)</span>
+              <span>Standard Audio Playback (Clipped Beat 1)</span>
               <span style="color: var(--accent-rose);">First 40ms Swallowed</span>
             </div>
             <div class="diagram-bar-container">
@@ -98,11 +102,11 @@
 
           <div class="diagram-row">
             <div class="diagram-label">
-              <span>Anchor 55ms Sub-LSB Warmup</span>
+              <span>Anchor Output Standby &amp; Warmup</span>
               <span style="color: var(--primary-cyan);">100% Full First Beat</span>
             </div>
             <div class="diagram-bar-container">
-              <div class="diagram-bar-good-warmup">55ms ±1 LSB Warmup</div>
+              <div class="diagram-bar-good-warmup">Silent Standby / Warmup</div>
               <div class="diagram-bar-good-attack">Beat 1 Full Attack Rendered</div>
             </div>
           </div>
@@ -116,9 +120,9 @@
     <section id="sync-engine" class="section">
       <div class="section-header">
         <span class="section-tag">DelayCompensationEngine</span>
-        <h2 class="section-title">Playhead-Anchored Synchronization</h2>
+        <h2 class="section-title">Playhead-Anchored Synchronization Across Every Device</h2>
         <p class="section-subtitle">
-          Why Anchor anchors visual and haptic scheduling to <code>AudioTrack.getPlaybackHeadPosition()</code> instead of buffer writes or OS timers.
+          Why Anchor anchors visual and haptic scheduling directly to the hardware audio playhead on every platform instead of write buffers or OS sleep timers.
         </p>
       </div>
 
@@ -127,7 +131,7 @@
           <span class="feature-badge">Hardware Playhead</span>
           <h3 class="feature-title">Never Write-Head Anchored</h3>
           <p class="feature-desc">
-            <code>AudioTrack.write()</code> blocks based on the OEM hardware buffer size, causing write-triggered visuals to fire early and drift across devices. Anchor polls the monotonic 64-bit hardware playhead counter so <code>0 ms</code> offset matches the exact sample frame leaving the mixer.
+            Buffer write operations block based on hardware buffer size, causing write-triggered visuals to fire early and drift. Anchor polls the monotonic hardware playhead (<code>AudioTrack.getPlaybackHeadPosition()</code> on Android, <code>AVAudioPlayerNode</code> sample time on iOS, and <code>SourceDataLine.longFramePosition</code> on Windows) so 0ms offset matches the exact frame leaving the DAC.
           </p>
         </div>
 
@@ -135,7 +139,7 @@
           <span class="feature-badge">-200ms to +300ms</span>
           <h3 class="feature-title">Bidirectional Frame Offsets</h3>
           <p class="feature-desc">
-            Millisecond offsets for Visual/Screen Flash and Haptic Vibration convert directly into sample-frame deltas (<code>round((offsetMs / 1000.0) * 44100)</code>). Negative values fire early to compensate for display or motor lag; positive values delay cues for external speakers.
+            Millisecond offsets for Visual/Screen Flash, Vibration, and Bluetooth audio convert directly into sample-frame deltas. Negative values fire cues early to compensate for display or vibration motor latency; positive values delay visual cues for high-latency external speakers.
           </p>
         </div>
 
@@ -151,23 +155,23 @@
           <span class="feature-badge">Bluetooth Detection</span>
           <h3 class="feature-title">Automatic Route Shift</h3>
           <p class="feature-desc">
-            Queries <code>AudioManager</code> and <code>AudioTrack.getRoutedDevice()</code> for active Bluetooth A2DP, BLE, or SCO outputs, applying the Bluetooth compensation offset only when wireless audio is actively routed.
+            Automatically queries active audio output routing (Bluetooth A2DP, BLE, or SCO on Android and iOS; device name matching on Windows) and applies the Bluetooth compensation offset only when wireless audio is actively routed.
           </p>
         </div>
 
         <div class="feature-card">
-          <span class="feature-badge">Foreground Service</span>
-          <h3 class="feature-title">WakeLock &amp; MediaSession</h3>
+          <span class="feature-badge">Background Playback</span>
+          <h3 class="feature-title">System Media &amp; Remote Controls</h3>
           <p class="feature-desc">
-            <code>MetronomePlaybackService</code> runs with <code>foregroundServiceType="mediaPlayback"</code>, holds a partial CPU <code>WakeLock</code>, and exposes a <code>MediaSession</code> controller with Play/Pause and Tempo <code>-1</code> / <code>+1</code> actions.
+            Keeps ticking while practicing with sheet music: Android <code>mediaPlayback</code> foreground service with <code>MediaSession</code> notification controls, iOS Now Playing with remote commands on Lock Screen and Control Center, and window-wide keyboard shortcuts on Windows.
           </p>
         </div>
 
         <div class="feature-card">
-          <span class="feature-badge">AOSP &amp; Play Store Ready</span>
-          <h3 class="feature-title">Zero Google Play Services</h3>
+          <span class="feature-badge">Cross-Platform Core</span>
+          <h3 class="feature-title">100% Platform-Agnostic Logic</h3>
           <p class="feature-desc">
-            Uses pure Android platform APIs (<code>HttpURLConnection</code>, <code>org.json</code>, <code>SharedPreferences</code>) and custom Compose vector icons with zero Google Play Services dependencies for ~2 MB builds that run on any Android or plain AOSP device.
+            All state, domain models, synthesis, timing, slew-limited BPM adjustments, and accent memory reside in pure Kotlin Multiplatform (<code>shared/src/commonMain</code>). Each platform layer does only OS calls and UI hosting, guaranteeing identical musical behavior everywhere.
           </p>
         </div>
       </div>

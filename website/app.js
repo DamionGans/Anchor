@@ -3,6 +3,7 @@
  * Features:
  * - Dynamic GitHub API release synchronizer (live version, APK + Windows MSI links, size, date)
  *   with automatic fallback from DamionGans/Anchor to DamionGans/PulseMetronome
+ * - Client OS detection (Windows x64 / ARM64, Android, iOS) with smart download targeting
  * - Dynamic QR Code generator for direct phone downloads
  */
 
@@ -32,6 +33,27 @@
   const qrContainer = document.getElementById('qr-container');
   const winX64Link = document.getElementById('win-x64-download');
   const winArm64Link = document.getElementById('win-arm64-download');
+  const androidCardLink = document.getElementById('android-card-download');
+
+  const chipWindows = document.getElementById('chip-windows');
+  const chipAndroid = document.getElementById('chip-android');
+  const chipIos = document.getElementById('chip-ios');
+
+  function detectClientOS() {
+    const userAgent = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    if (/Win/i.test(platform) || /Windows/i.test(userAgent)) {
+      const isArm = /ARM/i.test(userAgent) || /ARM64/i.test(platform);
+      return isArm ? 'windows-arm64' : 'windows-x64';
+    }
+    if (/Android/i.test(userAgent)) return 'android';
+    if (/iPhone|iPad|iPod/i.test(userAgent) || (/Mac/i.test(platform) && navigator.maxTouchPoints > 1)) {
+      return 'ios';
+    }
+    if (/Mac/i.test(platform)) return 'macos';
+    if (/Linux/i.test(platform)) return 'linux';
+    return 'unknown';
+  }
 
   /* ==========================================================================
      1. GitHub Releases Live Synchronization
@@ -78,7 +100,8 @@
     if (releaseData && releaseData.tag_name) {
       const tag = releaseData.tag_name;
       const cleanVer = tag.replace(/^v/, '');
-      const apkAsset = (releaseData.assets || []).find(a => a.name.endsWith('.apk'));
+      const assets = releaseData.assets || [];
+      const apkAsset = assets.find(a => a.name.endsWith('.apk'));
       const downloadUrl = apkAsset ? apkAsset.browser_download_url : `https://github.com/${activeRepo}/releases/download/${tag}/Anchor-${tag}.apk`;
       const sizeMb = apkAsset ? (apkAsset.size / (1024 * 1024)).toFixed(1) + ' MB' : DEFAULT_METADATA.fileSizeApprox;
 
@@ -88,55 +111,34 @@
         day: 'numeric'
       }) : DEFAULT_METADATA.releaseDate;
 
-      updateDownloadLinks(cleanVer, tag, downloadUrl, sizeMb, pubDate);
-      updateWindowsLinks(releaseData.assets || []);
+      updateAllPlatformLinks(cleanVer, tag, downloadUrl, sizeMb, pubDate, assets);
     } else {
+      let ver = DEFAULT_METADATA.version;
+      let tag = DEFAULT_METADATA.releaseTag;
+      let url = DEFAULT_METADATA.downloadUrl;
+      let size = DEFAULT_METADATA.fileSizeApprox;
+      let date = DEFAULT_METADATA.releaseDate;
+
       try {
         const localRes = await fetch('version.json');
         if (localRes.ok) {
           const localVer = await localRes.json();
-          updateDownloadLinks(
-            localVer.version,
-            localVer.releaseTag || ('v' + localVer.version),
-            localVer.downloadUrl,
-            localVer.fileSizeApprox || DEFAULT_METADATA.fileSizeApprox,
-            localVer.releaseDate || DEFAULT_METADATA.releaseDate
-          );
-          return;
+          ver = localVer.version || ver;
+          tag = localVer.releaseTag || ('v' + ver);
+          url = localVer.downloadUrl || url;
+          size = localVer.fileSizeApprox || size;
+          date = localVer.releaseDate || date;
         }
       } catch (e) {
         // Fallback to DEFAULT_METADATA
       }
-      updateDownloadLinks(
-        DEFAULT_METADATA.version,
-        DEFAULT_METADATA.releaseTag,
-        DEFAULT_METADATA.downloadUrl,
-        DEFAULT_METADATA.fileSizeApprox,
-        DEFAULT_METADATA.releaseDate
-      );
+      updateAllPlatformLinks(ver, tag, url, size, date, []);
     }
   }
 
-  // Windows installers (one MSI per architecture); the links default to the releases page.
-  function updateWindowsLinks(assets) {
-    const x64 = assets.find(a => a.name.endsWith('windows-x64.msi'));
-    const arm64 = assets.find(a => a.name.endsWith('windows-arm64.msi'));
-    if (winX64Link && x64) winX64Link.href = x64.browser_download_url;
-    if (winArm64Link && arm64) winArm64Link.href = arm64.browser_download_url;
-  }
-
-  function updateDownloadLinks(versionName, releaseTag, url, size, date) {
+  function updateAllPlatformLinks(versionName, releaseTag, apkUrl, size, date, assets) {
     if (versionPill) {
       versionPill.textContent = releaseTag;
-    }
-    if (btnHeroDownload) {
-      btnHeroDownload.href = url;
-      const btnText = btnHeroDownload.querySelector('.btn-download-title');
-      if (btnText) btnText.textContent = `Download for Android (${releaseTag})`;
-    }
-    if (btnNavDownload) {
-      btnNavDownload.href = url;
-      btnNavDownload.textContent = `Download (${releaseTag})`;
     }
     if (releaseDateSpan) {
       releaseDateSpan.textContent = date;
@@ -145,7 +147,62 @@
       releaseSizeSpan.textContent = size;
     }
 
-    renderQrCode(url);
+    // Windows MSI links
+    const x64Asset = assets.find(a => a.name.endsWith('windows-x64.msi'));
+    const arm64Asset = assets.find(a => a.name.endsWith('windows-arm64.msi'));
+    const defaultReleaseUrl = `https://github.com/DamionGans/Anchor/releases/tag/${releaseTag}`;
+
+    const x64Url = x64Asset ? x64Asset.browser_download_url : (winX64Link ? winX64Link.href : defaultReleaseUrl);
+    const arm64Url = arm64Asset ? arm64Asset.browser_download_url : (winArm64Link ? winArm64Link.href : defaultReleaseUrl);
+
+    if (winX64Link) winX64Link.href = x64Url;
+    if (winArm64Link) winArm64Link.href = arm64Url;
+    if (androidCardLink) androidCardLink.href = apkUrl;
+
+    const os = detectClientOS();
+
+    // Highlight the relevant platform chip
+    if (chipWindows) chipWindows.classList.remove('active');
+    if (chipAndroid) chipAndroid.classList.remove('active');
+    if (chipIos) chipIos.classList.remove('active');
+
+    if (btnHeroDownload) {
+      const btnTitle = btnHeroDownload.querySelector('.btn-download-title');
+      if (os === 'windows-x64' || os === 'windows-arm64') {
+        if (chipWindows) chipWindows.classList.add('active');
+        btnHeroDownload.href = os === 'windows-arm64' ? arm64Url : x64Url;
+        if (btnTitle) {
+          btnTitle.textContent = `Download for Windows (${releaseTag})`;
+        }
+        if (btnNavDownload) {
+          btnNavDownload.href = btnHeroDownload.href;
+          btnNavDownload.textContent = `Download for Windows (${releaseTag})`;
+        }
+      } else if (os === 'ios') {
+        if (chipIos) chipIos.classList.add('active');
+        btnHeroDownload.href = '#platforms-ios';
+        if (btnTitle) {
+          btnTitle.textContent = `Anchor for iPhone (iOS 16+)`;
+        }
+        if (btnNavDownload) {
+          btnNavDownload.href = '#platforms-ios';
+          btnNavDownload.textContent = `Get for iPhone`;
+        }
+      } else {
+        // Android or other
+        if (chipAndroid) chipAndroid.classList.add('active');
+        btnHeroDownload.href = apkUrl;
+        if (btnTitle) {
+          btnTitle.textContent = `Download for Android (${releaseTag})`;
+        }
+        if (btnNavDownload) {
+          btnNavDownload.href = apkUrl;
+          btnNavDownload.textContent = `Download (${releaseTag})`;
+        }
+      }
+    }
+
+    renderQrCode(apkUrl);
   }
 
   /* ==========================================================================
@@ -167,22 +224,34 @@
   }
 
   /* ==========================================================================
-     3. QR Modal Event Listeners
+     3. Modal & Button Event Listeners
      ========================================================================== */
   function initEvents() {
-    if (btnShowQr && qrModal && btnCloseQr) {
-      btnShowQr.addEventListener('click', (e) => {
-        e.preventDefault();
-        qrModal.classList.add('active');
-      });
+    function openQrModal(e) {
+      if (e) e.preventDefault();
+      if (qrModal) qrModal.classList.add('active');
+    }
 
-      btnCloseQr.addEventListener('click', () => {
-        qrModal.classList.remove('active');
-      });
+    function closeQrModal() {
+      if (qrModal) qrModal.classList.remove('active');
+    }
 
+    if (btnShowQr) {
+      btnShowQr.addEventListener('click', openQrModal);
+    }
+
+    document.querySelectorAll('.btn-card-qr').forEach(btn => {
+      btn.addEventListener('click', openQrModal);
+    });
+
+    if (btnCloseQr) {
+      btnCloseQr.addEventListener('click', closeQrModal);
+    }
+
+    if (qrModal) {
       qrModal.addEventListener('click', (e) => {
         if (e.target === qrModal) {
-          qrModal.classList.remove('active');
+          closeQrModal();
         }
       });
     }

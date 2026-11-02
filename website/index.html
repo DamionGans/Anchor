@@ -12,7 +12,7 @@
   <!-- Open Graph / Social Sharing -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Anchor Metronome — Rock-solid time for serious play">
-  <meta property="og:description" content="Rock-solid time for serious play. No ads, no clutter, no missed first beats.">
+  <meta property="og:description" content="Rock-solid time for serious play across Android, iPhone, and Windows. No ads, no clutter, no missed first beats.">
   <meta property="og:image" content="assets/anchor-logo.svg">
   
   <!-- Favicon -->
@@ -50,7 +50,7 @@
           </svg>
           <span>GitHub</span>
         </a>
-        <a id="nav-download-btn" href="https://github.com/DamionGans/Anchor/releases/download/v1.6.1/Anchor-v1.6.1.apk" class="btn-nav-download">
+        <a id="nav-download-btn" href="#platforms" class="btn-nav-download">
           Download App
         </a>
       </div>
@@ -65,9 +65,9 @@
       <div class="hero-content">
         <div class="version-pill">
           <span class="status-dot"></span>
-          <span>Free &amp; Ad-Free for Android, iPhone &amp; Windows</span>
+          <span>Free &amp; Open Source for Android, iPhone &amp; Windows</span>
           <span id="version-pill-text" class="pill-version-name">v1.6.1</span>
-          <span>• Works Offline &amp; on AOSP</span>
+          <span>• Works 100% Offline • No Ads or Bloat</span>
         </div>
 
         <h1 class="hero-title">
@@ -76,7 +76,7 @@
         </h1>
 
         <p class="hero-description">
-          Rock-solid time for serious play. Every control lives on a single clean screen—delivering unwavering rhythm, an instant first beat that never clips, and effortless visual and vibration cues without ads or bloat.
+          Rock-solid time for serious play across phone, tablet, and desktop. A single clean screen gives you unwavering rhythm, an instant first beat that never clips, and seamless visual and haptic cues on Android, iPhone, and Windows.
         </p>
 
         <div class="hero-cta-group">
@@ -87,18 +87,41 @@
             <span class="btn-download-title">Download for Android (v1.6.1)</span>
           </a>
 
+          <a href="#platforms" class="btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 6h16v10H4V6zm18-2H2v14h20V4zm-7 16H9v2h6v-2z"/>
+            </svg>
+            <span>All Platforms</span>
+          </a>
+
           <button id="btn-show-qr" class="btn-secondary" title="Display QR code to scan from phone">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm13-2h3v2h-3zm-5 0h3v3h-3zm2 3h3v2h-3zm3 3h3v3h-3zm-3 0h3v3h-3zm-2-2h2v2h-2z"/>
             </svg>
-            <span>Scan QR on Phone</span>
+            <span>Scan QR</span>
           </button>
+        </div>
+
+        <div class="hero-platform-pills">
+          <span class="hero-platform-label">Get Anchor for:</span>
+          <a href="#platforms-windows" class="platform-chip" id="chip-windows">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5l7.5-1v7H3v-6zm0 13l7.5 1v-7H3v6zm8.5 1.15L21 21v-8.5h-9.5v7.15zm0-15.3V11.5H21V3l-9.5 1.35z"/></svg>
+            <span>Windows (x64 / arm64)</span>
+          </a>
+          <a href="#platforms-android" class="platform-chip" id="chip-android">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+            <span>Android (APK)</span>
+          </a>
+          <a href="#platforms-ios" class="platform-chip" id="chip-ios">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-4 21c-.83 0-1.5-.67-1.5-1.5S11.17 19 12 19s1.5.67 1.5 1.5S12.83 22 12 22zm5-4H7V4h10v14z"/></svg>
+            <span>iPhone (iOS 16+)</span>
+          </a>
         </div>
 
         <div class="download-meta">
           <span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            Lightweight: <strong id="release-size-text" class="num">~2.1 MB</strong>
+            Android APK: <strong id="release-size-text" class="num">~2.1 MB</strong>
           </span>
           <span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"/></svg>
@@ -115,138 +138,132 @@
            Animated App Screenshot (Constructed from UI Elements)
            ==================================================================== -->
       <div class="app-preview-wrapper" aria-label="Animated preview of the Anchor app interface" role="img">
-        <div class="phone-frame">
-          <!-- Android Status Bar -->
-          <div class="mock-status-bar">
-            <span class="num">9:41</span>
-            <div class="mock-status-icons">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.95 3 3.15 4.85 0 7.23L12 22 24 7.25C20.85 4.87 17.05 3 12 3z"/></svg>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
-            </div>
-          </div>
-
-          <!-- App Top Bar -->
-          <div class="mock-topbar">
-            <div class="mock-brand-col">
-              <div class="mock-brand-row">
-                <span class="mock-brand-dot"></span>
-                <span class="mock-brand-title">ANCHOR</span>
+        <div>
+          <div class="phone-frame">
+            <!-- App Top Bar -->
+            <div class="mock-topbar">
+              <div class="mock-brand-col">
+                <div class="mock-brand-row">
+                  <span class="mock-brand-dot"></span>
+                  <span class="mock-brand-title">ANCHOR</span>
+                </div>
+                <span class="mock-brand-sub">ROCK-SOLID TIME FOR SERIOUS PLAY</span>
               </div>
-              <span class="mock-brand-sub">ROCK-SOLID TIME FOR SERIOUS PLAY</span>
-            </div>
 
-            <div class="mock-topbar-right">
-              <div class="mock-output-pill">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-                <span>Speaker</span>
-              </div>
-              <div class="mock-settings-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Animated Pendulum Visualizer -->
-          <div class="mock-pendulum-card">
-            <div class="mock-pendulum-arc"></div>
-            <div class="mock-pendulum-center-line"></div>
-            <div class="mock-pendulum-arm">
-              <div class="mock-pendulum-bob"></div>
-            </div>
-            <div class="mock-pendulum-pivot"></div>
-          </div>
-
-          <!-- Animated 4-Beat Bar -->
-          <div class="mock-beat-bar">
-            <div class="mock-beat-item beat-1">
-              <span class="mock-beat-bars">
-                <i class="bar-tall"></i><i class="bar-tall"></i><i class="bar-tall"></i>
-              </span>
-              <span class="mock-beat-num num">1</span>
-              <span class="mock-beat-tag">ACCENT</span>
-            </div>
-            <div class="mock-beat-item beat-2">
-              <span class="mock-beat-bars">
-                <i class="bar-mid"></i><i class="bar-mid"></i>
-              </span>
-              <span class="mock-beat-num num">2</span>
-              <span class="mock-beat-tag">NORMAL</span>
-            </div>
-            <div class="mock-beat-item beat-3">
-              <span class="mock-beat-bars">
-                <i class="bar-mid"></i><i class="bar-mid"></i>
-              </span>
-              <span class="mock-beat-num num">3</span>
-              <span class="mock-beat-tag">NORMAL</span>
-            </div>
-            <div class="mock-beat-item beat-4">
-              <span class="mock-beat-bars">
-                <i class="bar-mid"></i><i class="bar-mid"></i>
-              </span>
-              <span class="mock-beat-num num">4</span>
-              <span class="mock-beat-tag">NORMAL</span>
-            </div>
-          </div>
-
-          <!-- Tempo Controls Surface -->
-          <div class="mock-tempo-card">
-            <div class="mock-tempo-header">
-              <span class="mock-tempo-marking">ALLEGRO</span>
-              <div class="mock-bpm-readout">
-                <span class="mock-bpm-digits num">120</span>
-                <span class="mock-bpm-unit">BPM</span>
+              <div class="mock-topbar-right">
+                <div class="mock-output-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                  <span>Speaker</span>
+                </div>
+                <div class="mock-settings-btn">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                </div>
               </div>
             </div>
 
-            <div class="mock-slider-track">
-              <div class="mock-slider-fill"></div>
-              <div class="mock-slider-thumb"></div>
+            <!-- Animated Pendulum Visualizer -->
+            <div class="mock-pendulum-card">
+              <div class="mock-pendulum-arc"></div>
+              <div class="mock-pendulum-center-line"></div>
+              <div class="mock-pendulum-arm">
+                <div class="mock-pendulum-bob"></div>
+              </div>
+              <div class="mock-pendulum-pivot"></div>
             </div>
 
-            <div class="mock-stepper-row">
-              <span class="mock-step-pill num">½</span>
-              <span class="mock-step-pill num">-5</span>
-              <span class="mock-step-circle">−</span>
-              <span class="mock-step-circle">+</span>
-              <span class="mock-step-pill num">+5</span>
-              <span class="mock-step-pill num">2×</span>
-            </div>
-          </div>
-
-          <!-- Time Signature & Subdivisions Row -->
-          <div class="mock-meter-row">
-            <div class="mock-timesig-pill">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="#00E5FF"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-              <span class="num">4/4</span>
-            </div>
-
-            <div class="mock-sub-group">
-              <span class="mock-sub-pill active">♩</span>
-              <span class="mock-sub-pill">♪</span>
-              <span class="mock-sub-pill">³♪</span>
-              <span class="mock-sub-pill">♬</span>
-            </div>
-          </div>
-
-          <!-- Bottom Deck: Tap Tempo & Play/Pause -->
-          <div class="mock-bottom-deck">
-            <div class="mock-tap-pad">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB300"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
-              <div class="mock-tap-text">
-                <strong>TAP TEMPO</strong>
-                <span>TAP REPEATEDLY</span>
+            <!-- Animated 4-Beat Bar -->
+            <div class="mock-beat-bar">
+              <div class="mock-beat-item beat-1">
+                <span class="mock-beat-bars">
+                  <i class="bar-tall"></i><i class="bar-tall"></i><i class="bar-tall"></i>
+                </span>
+                <span class="mock-beat-num num">1</span>
+                <span class="mock-beat-tag">ACCENT</span>
+              </div>
+              <div class="mock-beat-item beat-2">
+                <span class="mock-beat-bars">
+                  <i class="bar-mid"></i><i class="bar-mid"></i>
+                </span>
+                <span class="mock-beat-num num">2</span>
+                <span class="mock-beat-tag">NORMAL</span>
+              </div>
+              <div class="mock-beat-item beat-3">
+                <span class="mock-beat-bars">
+                  <i class="bar-mid"></i><i class="bar-mid"></i>
+                </span>
+                <span class="mock-beat-num num">3</span>
+                <span class="mock-beat-tag">NORMAL</span>
+              </div>
+              <div class="mock-beat-item beat-4">
+                <span class="mock-beat-bars">
+                  <i class="bar-mid"></i><i class="bar-mid"></i>
+                </span>
+                <span class="mock-beat-num num">4</span>
+                <span class="mock-beat-tag">NORMAL</span>
               </div>
             </div>
 
-            <div class="mock-play-fab">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-              </svg>
-            </div>
-          </div>
+            <!-- Tempo Controls Surface -->
+            <div class="mock-tempo-card">
+              <div class="mock-tempo-header">
+                <span class="mock-tempo-marking">ALLEGRO</span>
+                <div class="mock-bpm-readout">
+                  <span class="mock-bpm-digits num">120</span>
+                  <span class="mock-bpm-unit">BPM</span>
+                </div>
+              </div>
 
-          <!-- Gesture Pill -->
-          <div class="mock-home-indicator"></div>
+              <div class="mock-slider-track">
+                <div class="mock-slider-fill"></div>
+                <div class="mock-slider-thumb"></div>
+              </div>
+
+              <div class="mock-stepper-row">
+                <span class="mock-step-pill num">½</span>
+                <span class="mock-step-pill num">-5</span>
+                <span class="mock-step-circle">−</span>
+                <span class="mock-step-circle">+</span>
+                <span class="mock-step-pill num">+5</span>
+                <span class="mock-step-pill num">2×</span>
+              </div>
+            </div>
+
+            <!-- Time Signature & Subdivisions Row -->
+            <div class="mock-meter-row">
+              <div class="mock-timesig-pill">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="#00E5FF"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                <span class="num">4/4</span>
+              </div>
+
+              <div class="mock-sub-group">
+                <span class="mock-sub-pill active">♩</span>
+                <span class="mock-sub-pill">♪</span>
+                <span class="mock-sub-pill">³♪</span>
+                <span class="mock-sub-pill">♬</span>
+              </div>
+            </div>
+
+            <!-- Bottom Deck: Tap Tempo & Play/Pause -->
+            <div class="mock-bottom-deck">
+              <div class="mock-tap-pad">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#FFB300"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
+                <div class="mock-tap-text">
+                  <strong>TAP TEMPO</strong>
+                  <span>TAP REPEATEDLY</span>
+                </div>
+              </div>
+
+              <div class="mock-play-fab">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Gesture Pill -->
+            <div class="mock-home-indicator"></div>
+          </div>
+          <div class="preview-caption">Single-screen interface — identical on Android, Windows &amp; iPhone</div>
         </div>
       </div>
     </section>
@@ -259,7 +276,7 @@
         <span class="section-tag">Made for Musicians</span>
         <h2 class="section-title">Everything You Need to Lock In Your Groove</h2>
         <p class="section-subtitle">
-          Whether you are shedding rudiments, rehearsing with a band, or teaching a student, Anchor stays out of your way so you can focus on playing.
+          Whether you are shedding rudiments on your phone, practicing at the piano with a tablet, or teaching in a studio with a laptop, Anchor stays out of your way so you can focus on playing.
         </p>
       </div>
 
@@ -274,7 +291,7 @@
           <span class="feature-badge">6 Click Voices</span>
           <h3 class="feature-title">Crisp, Musical Sounds</h3>
           <p class="feature-desc">
-            Switch effortlessly between Tick, Click, Woodblock, Cowbell, Beep, and Hi-Hat. Every sound is voiced to cut cleanly through acoustic instruments or in-ear monitors without harshness.
+            Switch effortlessly between Tick, Click, Woodblock, Cowbell, Beep, and Hi-Hat. Every sound is pre-synthesized PCM voiced to cut cleanly through acoustic instruments or in-ear monitors without harshness.
           </p>
         </div>
 
@@ -288,7 +305,7 @@
           <span class="feature-badge">Meters &amp; Subdivisions</span>
           <h3 class="feature-title">Custom Accents &amp; Grooves</h3>
           <p class="feature-desc">
-            Tap any beat indicator to accent it, make it a standard beat, or mute it completely to test your internal clock. Practice with quarter notes, eighth notes, triplets, or 16th subdivisions.
+            Tap any beat indicator to accent it, make it a standard beat, or mute it completely. Anchor remembers your custom accent pattern for each meter count so switching time signatures never wipes your groove.
           </p>
         </div>
 
@@ -299,10 +316,10 @@
               <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
             </svg>
           </div>
-          <span class="feature-badge">See &amp; Feel the Beat</span>
+          <span class="feature-badge">Visual &amp; Haptic Pulse</span>
           <h3 class="feature-title">Screen Flash, Pendulum &amp; Haptics</h3>
           <p class="feature-desc">
-            Playing loud drums or on a noisy stage? Turn on the full-screen flash, smooth pendulum motion, or distinct tactile vibrations so you can see and feel every downbeat and subdivision.
+            Playing loud drums or on a noisy stage? Turn on the full-screen flash and smooth pendulum on any display, plus distinct tactile vibrations on phones so you can see and feel every downbeat and subdivision.
           </p>
         </div>
 
@@ -314,9 +331,9 @@
             </svg>
           </div>
           <span class="feature-badge">Sheet Music Friendly</span>
-          <h3 class="feature-title">Notification Media Controls</h3>
+          <h3 class="feature-title">Background &amp; Remote Controls</h3>
           <p class="feature-desc">
-            Open your PDF sheet music, chord charts, or lock your screen. Anchor keeps ticking in the background and puts a multimedia player in your notification drawer with current BPM, Play/Pause, and Tempo &minus;/+ buttons.
+            Open PDF sheet music, chord charts, or lock your screen. Anchor continues ticking in the background with notification media controls on Android, Lock Screen &amp; Control Center Now Playing on iPhone, and global keyboard shortcuts on Windows.
           </p>
         </div>
 
@@ -328,9 +345,9 @@
             </svg>
           </div>
           <span class="feature-badge">Headphone Sync</span>
-          <h3 class="feature-title">Perfect Sync on Any Device</h3>
+          <h3 class="feature-title">Hardware &amp; Wireless Audio Sync</h3>
           <p class="feature-desc">
-            Practicing with wireless Bluetooth earbuds or external speakers? Easily nudge the visual flash, vibration, or Bluetooth timing in 1ms steps so what you see, feel, and hear always line up together.
+            Practicing with wireless Bluetooth earbuds or an external audio interface? Fine-tune visual flash, vibration, or Bluetooth timing in 1ms steps so what you see, feel, and hear always line up perfectly.
           </p>
         </div>
 
@@ -342,81 +359,158 @@
             </svg>
           </div>
           <span class="feature-badge">Always Ready</span>
-          <h3 class="feature-title">Remembers Your Setup</h3>
+          <h3 class="feature-title">Remembers Your Setup &amp; Theme</h3>
           <p class="feature-desc">
-            Anchor automatically saves your tempo, time signature, sound choice, accent pattern, and theme (including Material You colors on Android) so you can pick up right where you left off.
+            Anchor saves your tempo, meter, click sound, accents, and theme (Material You dynamic color on Android, custom accents on Windows and iPhone) so you can resume practicing immediately.
           </p>
         </div>
       </div>
     </section>
 
     <!-- ========================================================================
-         Platforms (Android, iPhone, Windows)
+         Platforms & Downloads (Windows, Android, iPhone)
          ======================================================================== -->
     <section id="platforms" class="section">
       <div class="section-header">
-        <span class="section-tag">One Core, Every Device</span>
-        <h2 class="section-title">Android, iPhone &amp; Windows</h2>
+        <span class="section-tag">Cross-Platform Precision</span>
+        <h2 class="section-title">Available for Android, Windows &amp; iPhone</h2>
         <p class="section-subtitle">
-          Every version of Anchor runs the same shared timing engine, click sounds, and settings logic, so the beat feels identical wherever you practice.
+          Every edition of Anchor is powered by the same shared Kotlin Multiplatform audio and sequencing engine. The exact same steady pulse, crystal-clear click sounds, and zero-latency first beat wherever you practice.
         </p>
       </div>
 
       <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
-            </svg>
+        <!-- Platform: Windows -->
+        <div id="platforms-windows" class="feature-card platform-card-anchor">
+          <div class="platform-card-header">
+            <div class="feature-icon-box">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 5.5l7.5-1v7H3v-6zm0 13l7.5 1v-7H3v6zm8.5 1.15L21 21v-8.5h-9.5v7.15zm0-15.3V11.5H21V3l-9.5 1.35z"/>
+              </svg>
+            </div>
+            <span class="feature-badge">Available (v1.6.1)</span>
           </div>
-          <span class="feature-badge">Available</span>
-          <h3 class="feature-title">Android 7.0+</h3>
+
+          <div>
+            <h3 class="feature-title">Windows 10 &amp; 11</h3>
+            <div class="platform-card-subtitle">PC &amp; Tablet (Intel/AMD x64 + ARM64)</div>
+          </div>
+
           <p class="feature-desc">
-            Download the free APK above or from <a href="https://github.com/DamionGans/Anchor/releases/latest" style="color: var(--primary-cyan);">GitHub Releases</a> and update right inside the app. Works on Google Play devices and plain AOSP phones. F-Droid and Google Play listings are coming soon.
+            The full Anchor experience on your PC or tablet. Includes touchscreen swipe-to-scroll, multi-output audio device selector, and handy keyboard shortcuts:
           </p>
+
+          <div class="kbd-shortcuts-list">
+            <div class="kbd-row">
+              <span class="kbd-key">Space</span>
+              <span>Play / Pause</span>
+            </div>
+            <div class="kbd-row">
+              <span class="kbd-key">↑</span> <span class="kbd-key">↓</span>
+              <span>Tempo ±1 BPM (<span class="kbd-key">Shift</span> for ±5 BPM)</span>
+            </div>
+            <div class="kbd-row">
+              <span class="kbd-key">T</span>
+              <span>Tap tempo</span>
+            </div>
+          </div>
+
+          <div class="platform-action-group">
+            <a id="win-x64-download" href="https://github.com/DamionGans/Anchor/releases/download/v1.6.1/Anchor-v1.6.1-windows-x64.msi" class="btn-platform-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <span>Download for Intel/AMD (x64 MSI)</span>
+            </a>
+            <a id="win-arm64-download" href="https://github.com/DamionGans/Anchor/releases/download/v1.6.1/Anchor-v1.6.1-windows-arm64.msi" class="btn-platform-action btn-outline">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <span>Download for ARM PCs (arm64 MSI)</span>
+            </a>
+            <div class="platform-store-note">
+              Per-user MSI installer (no admin rights needed). See the <a href="https://github.com/DamionGans/Anchor/blob/main/docs/windows.md" style="color: var(--primary-cyan);">Windows Guide</a>.
+            </div>
+          </div>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-4 21c-.83 0-1.5-.67-1.5-1.5S11.17 19 12 19s1.5.67 1.5 1.5S12.83 22 12 22zm5-4H7V4h10v14z"/>
-            </svg>
+        <!-- Platform: Android -->
+        <div id="platforms-android" class="feature-card platform-card-anchor">
+          <div class="platform-card-header">
+            <div class="feature-icon-box">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+              </svg>
+            </div>
+            <span class="feature-badge">Available (v1.6.1)</span>
           </div>
-          <span class="feature-badge">Available to Sideload</span>
-          <h3 class="feature-title">iPhone (iOS 16+)</h3>
+
+          <div>
+            <h3 class="feature-title">Android 7.0+</h3>
+            <div class="platform-card-subtitle">Phone &amp; Tablet (AOSP &amp; Google Play)</div>
+          </div>
+
           <p class="feature-desc">
-            The native iPhone app with Lock Screen and Control Center controls is built automatically. Install the unsigned IPA from the <a href="https://github.com/DamionGans/Anchor/actions/workflows/ios.yml" style="color: var(--primary-cyan);">iOS build</a> with your own signing, or build it in Xcode. The App Store version is coming soon.
+            Ultra-lightweight (~2.1 MB) APK with low-latency AudioTrack Fast Path audio, notification drawer media controls, Material You dynamic colors, and in-app updates.
           </p>
+
+          <div class="platform-action-group">
+            <a id="android-card-download" href="https://github.com/DamionGans/Anchor/releases/download/v1.6.1/Anchor-v1.6.1.apk" class="btn-platform-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <span>Download Android APK (v1.6.1)</span>
+            </a>
+            <button class="btn-platform-action btn-outline btn-card-qr">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm13-2h3v2h-3zm-5 0h3v3h-3zm2 3h3v2h-3zm3 3h3v3h-3zm-3 0h3v3h-3zm-2-2h2v2h-2z"/></svg>
+              <span>Scan QR on Mobile</span>
+            </button>
+            <div class="platform-store-note">
+              Free &amp; open source on GitHub and F-Droid. Google Play Store listing coming soon.
+            </div>
+          </div>
         </div>
 
-        <div class="feature-card">
-          <div class="feature-icon-box">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 5.5l7.5-1v7H3v-6zm0 13l7.5 1v-7H3v6zm8.5 1.15L21 21v-8.5h-9.5v7.15zm0-15.3V11.5H21V3l-9.5 1.35z"/>
-            </svg>
+        <!-- Platform: iPhone -->
+        <div id="platforms-ios" class="feature-card platform-card-anchor">
+          <div class="platform-card-header">
+            <div class="feature-icon-box">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-4 21c-.83 0-1.5-.67-1.5-1.5S11.17 19 12 19s1.5.67 1.5 1.5S12.83 22 12 22zm5-4H7V4h10v14z"/>
+              </svg>
+            </div>
+            <span class="feature-badge">Available to Sideload</span>
           </div>
-          <span class="feature-badge">Available</span>
-          <h3 class="feature-title">Windows 10 &amp; 11 (x64 &amp; ARM)</h3>
+
+          <div>
+            <h3 class="feature-title">iPhone (iOS 16+)</h3>
+            <div class="platform-card-subtitle">Native SwiftUI App</div>
+          </div>
+
           <p class="feature-desc">
-            The same metronome and interface as on Android, with keyboard shortcuts (Space to play, arrow keys for tempo). Installs per user, no admin rights needed. See the <a href="https://github.com/DamionGans/Anchor/blob/main/docs/windows.md" style="color: var(--primary-cyan);">Windows guide</a>.
+            Built natively with SwiftUI and AVAudioEngine. Runs seamlessly in the background with Lock Screen and Control Center Now Playing controls, plus high-precision tactile haptics.
           </p>
-          <p class="feature-desc" style="margin-top: 0.75rem;">
-            <a id="win-x64-download" href="https://github.com/DamionGans/Anchor/releases/latest" style="color: var(--primary-cyan); font-weight: 600;">Download for Intel/AMD PCs (x64)</a><br>
-            <a id="win-arm64-download" href="https://github.com/DamionGans/Anchor/releases/latest" style="color: var(--primary-cyan); font-weight: 600;">Download for ARM PCs (arm64)</a>
-          </p>
+
+          <div class="platform-action-group">
+            <a href="https://github.com/DamionGans/Anchor/actions/workflows/ios.yml" target="_blank" rel="noopener noreferrer" class="btn-platform-action">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <span>Download Unsigned IPA (CI)</span>
+            </a>
+            <a href="https://github.com/DamionGans/Anchor/blob/main/docs/distribution.md" target="_blank" rel="noopener noreferrer" class="btn-platform-action btn-outline">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+              <span>Build in Xcode from Source</span>
+            </a>
+            <div class="platform-store-note">
+              Sign with your own certificate or build via Xcode. App Store release coming soon.
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ========================================================================
-         Why Musicians Choose Anchor (with subtle link to Technical Docs)
+         Why Musicians Choose Anchor
          ======================================================================== -->
     <section id="why-anchor" class="section audio-deepdive">
       <div class="section-header">
         <span class="section-tag">No Compromises</span>
         <h2 class="section-title">Why Musicians Switch to Anchor</h2>
         <p class="section-subtitle">
-          Many mobile metronomes swallow the very first click, drift out of time, or bury basic controls behind pop-up ads and subscription paywalls. Anchor was built to fix that.
+          Many metronomes swallow the very first click, drift out of time, or bury essential controls behind pop-up ads and subscriptions. Anchor was built from scratch to fix that on every device.
         </p>
       </div>
 
@@ -424,30 +518,30 @@
         <div class="deepdive-text">
           <h3 style="font-size: 1.4rem; color: #FFF; margin-bottom: 0.75rem;">Every Beat Counts—Including Beat One</h3>
           <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
-            Have you ever pressed Play on a phone metronome only to hear silence on the first downbeat while your phone's speaker wakes up? Anchor silently prepares your phone's audio hardware the instant you tap Start, so <strong>Beat 1 always rings out loud, crisp, and right on time</strong>.
+            Have you ever pressed Play on a metronome app only to hear silence on the first downbeat while your phone or PC speaker wakes up? Anchor keeps the audio hardware primed so <strong>Beat 1 always rings out loud, crisp, and right on time</strong> across Android, iPhone, and Windows.
           </p>
           <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
-            Everything is designed for one-handed use on a music stand: quick BPM steppers, multi-tap tempo, clear visual beat indicators, and zero scrolling.
+            Every platform runs the same single-screen, non-scrolling interface with quick BPM steppers, multi-tap tempo, clear visual beat indicators, and zero bloat.
           </p>
 
           <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.75rem;">
             <li style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-              <span><strong>Zero Ads or Paywalls:</strong> Never interrupted mid-practice by a video ad</span>
+              <span><strong>Zero Ads or Paywalls:</strong> Never interrupted mid-practice by a video or subscription prompt</span>
             </li>
             <li style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-              <span><strong>One-Tap In-App Updates:</strong> Stay up to date directly from Settings</span>
+              <span><strong>Dedicated Audio Engines:</strong> Low-latency native audio on Android (AudioTrack), iOS (AVAudioEngine), and Windows (SourceDataLine)</span>
             </li>
             <li style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-main); font-size: 0.95rem;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="#00E5FF"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-              <span><strong>Tiny &amp; Battery Friendly:</strong> Installs in seconds and sips battery during long rehearsals</span>
+              <span><strong>100% Offline &amp; Privacy-First:</strong> Zero analytics, no account requirements, and works completely offline</span>
             </li>
           </ul>
 
           <div style="padding-top: 0.5rem;">
             <a href="architecture.html" class="btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none; font-size: 0.9rem;">
-              <span>Curious how the audio engine works under the hood? Read the Technical Docs →</span>
+              <span>Curious how the multiplatform audio engine works? Read the Technical Docs →</span>
             </a>
           </div>
         </div>
@@ -455,7 +549,7 @@
         <div class="waveform-diagram">
           <div class="diagram-row">
             <div class="diagram-label">
-              <span>Typical Phone Metronomes</span>
+              <span>Typical Metronome Start</span>
               <span style="color: var(--accent-rose);">Missed First Downbeat</span>
             </div>
             <div class="diagram-bar-container">
@@ -466,11 +560,11 @@
 
           <div class="diagram-row">
             <div class="diagram-label">
-              <span>Anchor</span>
+              <span>Anchor (All Platforms)</span>
               <span style="color: var(--primary-cyan);">Crisp Beat 1 Every Time</span>
             </div>
             <div class="diagram-bar-container">
-              <div class="diagram-bar-good-warmup">Silent Wake-Up</div>
+              <div class="diagram-bar-good-warmup">Hardware Standby / Warmup</div>
               <div class="diagram-bar-good-attack">Full, Clear First Beat</div>
             </div>
           </div>
@@ -486,7 +580,7 @@
         <span class="section-tag">Release History</span>
         <h2 class="section-title">What's New in Anchor</h2>
         <p class="section-subtitle">
-          Recent improvements and refinements.
+          Recent improvements and refinements across all platforms.
         </p>
       </div>
 
@@ -740,13 +834,59 @@
       <div class="faq-grid">
         <details class="faq-item">
           <summary class="faq-summary">
-            <span>How do I install Anchor on my Android phone?</span>
+            <span>How do I install Anchor on Windows?</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+          </summary>
+          <div class="faq-answer">
+            1. Under <a href="#platforms-windows">Platforms</a> above, download the MSI installer for your PC architecture: <strong>x64</strong> for standard Intel/AMD PCs, or <strong>arm64</strong> for Snapdragon/ARM PCs.<br>
+            2. Run the downloaded <code>.msi</code> installer. It installs per-user into your user profile and needs no administrator rights.<br>
+            3. Since the MSI is currently unsigned, Windows SmartScreen may show <em>"Windows protected your PC"</em>: click <strong>More info</strong> and then <strong>Run anyway</strong>. Future updates will upgrade your installation in place.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span>How do I install Anchor on Android?</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
           </summary>
           <div class="faq-answer">
             1. Tap <strong>Download for Android</strong> above (or scan the QR code with your phone's camera).<br>
-            2. Open the downloaded <code>.apk</code> file. If prompted, allow your browser to install apps.<br>
-            3. Once installed, you can check for and install future updates right inside the app's Settings menu with a single tap.
+            2. Open the downloaded <code>.apk</code> file. If prompted, allow your browser to install unknown apps.<br>
+            3. Once installed, future updates can be checked and downloaded right inside the app's Settings menu with a single tap. Google Play and F-Droid listings are coming soon.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span>How do I install Anchor on iPhone?</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+          </summary>
+          <div class="faq-answer">
+            The native iPhone app requires iOS 16+. Currently you can download the unsigned <code>.ipa</code> from the <a href="https://github.com/DamionGans/Anchor/actions/workflows/ios.yml">iOS GitHub Action build</a> and sign it with your own developer account / sideloading tool (such as AltStore or Sideloadly), or open <code>iosApp/</code> in Xcode to build it from source. A standard App Store release is currently in preparation.
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span>What keyboard shortcuts are available on Windows?</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+          </summary>
+          <div class="faq-answer">
+            When the Anchor window is focused on Windows, you can control the metronome without touching the mouse:<br>
+            • <kbd class="kbd-key">Space</kbd>: Start or stop playback (Play / Pause)<br>
+            • <kbd class="kbd-key">↑</kbd> or <kbd class="kbd-key">+</kbd>: Increase tempo by 1 BPM (hold <kbd class="kbd-key">Shift</kbd> for 5 BPM)<br>
+            • <kbd class="kbd-key">↓</kbd> or <kbd class="kbd-key">-</kbd>: Decrease tempo by 1 BPM (hold <kbd class="kbd-key">Shift</kbd> for 5 BPM)<br>
+            • <kbd class="kbd-key">T</kbd>: Tap tempo repeatedly to match a rhythm
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-summary">
+            <span>Do Android, iPhone, and Windows share the same rhythm and sound?</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+          </summary>
+          <div class="faq-answer">
+            Yes, 100%. All three platforms run the exact same shared Kotlin Multiplatform core: <code>ClickSynthesizer</code> for identical PCM click sounds, <code>DelayCompensationEngine</code> for millisecond-exact synchronization, and <code>MetronomeSequencer</code> for slew-limited BPM adjustments and phase calculations. The beat will never drift, and your saved settings are identical.
           </div>
         </details>
 
@@ -762,22 +902,11 @@
 
         <details class="faq-item">
           <summary class="faq-summary">
-            <span>Is Anchor available for iPhone and Windows?</span>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-          </summary>
-          <div class="faq-answer">
-            <strong>iPhone:</strong> yes. The native iPhone app (iOS 16+) can be installed from the unsigned IPA built by the <a href="https://github.com/DamionGans/Anchor/actions/workflows/ios.yml">iOS workflow</a> using your own signing, or built from source in Xcode; an App Store version is coming soon.<br>
-            <strong>Windows:</strong> yes. Download the MSI installer for your PC (x64 for Intel/AMD, arm64 for ARM PCs) from the Platforms section above or the <a href="https://github.com/DamionGans/Anchor/releases/latest">latest release</a>. The installer is not code-signed yet, so Windows may show "Windows protected your PC": choose <strong>More info → Run anyway</strong>.
-          </div>
-        </details>
-
-        <details class="faq-item">
-          <summary class="faq-summary">
             <span>Can I keep the metronome running while looking at sheet music?</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
           </summary>
           <div class="faq-answer">
-            Absolutely. When Anchor is running, you can switch to your sheet music app, chord chart, or lock your screen and the beat will continue uninterrupted. You can Play/Pause and nudge the tempo up or down directly from the multimedia player in your notification drawer or lock screen.
+            Absolutely. When Anchor is running, you can switch to your sheet music app, chord chart, or lock your screen and the beat will continue uninterrupted. You can Play/Pause and nudge the tempo up or down directly from the multimedia player in your notification drawer (Android) or Lock Screen / Control Center (iOS).
           </div>
         </details>
 
@@ -787,7 +916,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
           </summary>
           <div class="faq-answer">
-            Wireless Bluetooth headphones naturally take a split second to receive audio from your phone. Open <strong>Settings → Synchronization &amp; Latency</strong> in Anchor and adjust the <strong>Bluetooth Audio Offset</strong> slider until the visual beat and flash match what you hear in your headphones.
+            Wireless Bluetooth headphones naturally take a split second to buffer audio from your device. Open <strong>Settings → Synchronization &amp; Latency</strong> in Anchor and adjust the <strong>Bluetooth Audio Offset</strong> slider until the visual beat and flash match what you hear in your headphones.
           </div>
         </details>
       </div>
@@ -802,7 +931,7 @@
       <button id="btn-close-qr" class="modal-close-btn" aria-label="Close dialog">&times;</button>
       <h3 id="qr-modal-title" style="color: #FFF; font-size: 1.25rem; margin-bottom: 0.5rem;">Scan to Download App</h3>
       <p style="color: var(--text-muted); font-size: 0.9rem;">
-        Point your Android phone's camera at this QR code to download the latest APK directly:
+        Point your phone's camera at this QR code to download the latest Anchor Android APK directly to your device:
       </p>
 
       <div id="qr-container" class="qr-container">
