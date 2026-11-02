@@ -102,6 +102,12 @@ android {
   }
 }
 
+androidComponents {
+  beforeVariants { variantBuilder ->
+    (variantBuilder as? com.android.build.api.variant.HasUnitTestBuilder)?.enableUnitTest = true
+  }
+}
+
 // Reproducible builds: strip environment-specific timestamps and enforce deterministic file ordering in archives
 tasks.withType<AbstractArchiveTask>().configureEach {
   isPreserveFileTimestamps = false

@@ -47,7 +47,7 @@ kotlin {
       implementation(libs.kotlinx.coroutines.test)
     }
     // Desktop only (GitHub release JSON parsing); never part of commonMain or the Android APK.
-    val desktopMain by getting {
+    getByName("desktopMain") {
       dependencies {
         implementation(libs.kotlinx.serialization.json)
       }

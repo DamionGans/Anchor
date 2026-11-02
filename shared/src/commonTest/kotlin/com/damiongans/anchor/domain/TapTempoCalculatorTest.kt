@@ -20,8 +20,8 @@ class TapTempoCalculatorTest {
     fun singleTap_doesNotCalculateBpmYet() {
         val result = calculator.registerTap(1000L)
         assertNotNull(result)
-        assertEquals(1, result?.status?.tapCount)
-        assertNull(result?.bpmToApply)
+        assertEquals(1, result.status.tapCount)
+        assertNull(result.bpmToApply)
     }
 
     @Test
@@ -32,11 +32,11 @@ class TapTempoCalculatorTest {
         val r4 = calculator.registerTap(2500L)
 
         assertNotNull(r4)
-        assertEquals(4, r4?.status?.tapCount)
-        assertEquals(120, r4?.status?.estimatedBpm)
-        assertEquals(120, r4?.bpmToApply)
-        assertTrue(r4?.status?.confidencePercent ?: 0 >= 90)
-        assertTrue(r4?.status?.isHighCertainty == true)
+        assertEquals(4, r4.status.tapCount)
+        assertEquals(120, r4.status.estimatedBpm)
+        assertEquals(120, r4.bpmToApply)
+        assertTrue(r4.status.confidencePercent >= 90)
+        assertTrue(r4.status.isHighCertainty)
     }
 
     @Test
@@ -49,7 +49,7 @@ class TapTempoCalculatorTest {
         // Valid tap 500ms later
         val valid = calculator.registerTap(1500L)
         assertNotNull(valid)
-        assertEquals(2, valid?.status?.tapCount)
+        assertEquals(2, valid.status.tapCount)
     }
 
     @Test
@@ -60,8 +60,8 @@ class TapTempoCalculatorTest {
         // 3000ms later (> maxTapIntervalMs 2300ms)
         val afterTimeout = calculator.registerTap(4500L)
         assertNotNull(afterTimeout)
-        assertEquals(1, afterTimeout?.status?.tapCount)
-        assertNull(afterTimeout?.bpmToApply)
+        assertEquals(1, afterTimeout.status.tapCount)
+        assertNull(afterTimeout.bpmToApply)
     }
 
     @Test
@@ -74,7 +74,7 @@ class TapTempoCalculatorTest {
 
         assertNotNull(res)
         // 300 / 2 = 150 BPM
-        assertEquals(150, res?.status?.estimatedBpm)
-        assertEquals("Eighth notes detected", res?.status?.pulseDescription)
+        assertEquals(150, res.status.estimatedBpm)
+        assertEquals("Eighth notes detected", res.status.pulseDescription)
     }
 }
