@@ -77,6 +77,36 @@ class MetronomeSequencerTest {
     }
 
     @Test
+    fun warmStart_onRunningOutput_placesBeat1AtTheNextFrameOfTheOutputTimeline() {
+        val sequencer = MetronomeSequencer()
+        sequencer.bpm = 120.0
+        sequencer.totalBeats = 4
+        sequencer.subdivision = Subdivision.QUARTER
+        sequencer.waveforms = ClickSynthesizer.synthesize(SoundSet.DIGITAL, 1.0f, sampleRate)
+        val visual = mutableListOf<Int>()
+        sequencer.onVisualTick = { beat, _, _ -> visual.add(beat) }
+
+        // The output has been running in standby for ~3 hours (beyond any Int-sized warmup count).
+        val outputFrame = sampleRate.toLong() * 60 * 60 * 3 + 123
+        repeat(2) { // a second run on the same output restarts cleanly at Beat 1
+            visual.clear()
+            sequencer.prepare(sampleRate, outputFrame)
+            sequencer.alignToOutputFrame(outputFrame)
+            assertEquals(outputFrame, sequencer.totalFramesWritten)
+            sequencer.startFirstBeat()
+
+            val chunk = ShortArray(256)
+            sequencer.renderChunk(chunk, chunk.size)
+            assertTrue(chunk.any { it.toInt() != 0 }, "Beat 1 must sound in the first chunk")
+
+            sequencer.processPlayhead(outputFrame - 1)
+            assertTrue(visual.isEmpty())
+            sequencer.processPlayhead(outputFrame)
+            assertEquals(listOf(0), visual)
+        }
+    }
+
+    @Test
     fun playheadEstimator_interpolatesMonotonicallyAndCapsAtWritten() {
         val estimator = PlayheadEstimator(sampleRate = 48000, maxInterpolationFrames = 512)
         estimator.reset(nowNanos = 0L)

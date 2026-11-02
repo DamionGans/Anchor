@@ -318,8 +318,17 @@ class MetronomeController(
                 flashPulse = false
             )
         }
-        syncPlaybackSession()
+        // Audio first: the media session / foreground service sync must not delay Beat 1.
         audioEngine.start()
+        syncPlaybackSession()
+    }
+
+    /**
+     * Keeps the audio output warm while the app is on screen so the first beat sounds without a
+     * start-up delay (see [com.damiongans.anchor.audio.IAudioEngine.setOutputStandby]).
+     */
+    fun setOutputStandby(enabled: Boolean) {
+        audioEngine.setOutputStandby(enabled)
     }
 
     fun pause() {

@@ -35,4 +35,10 @@ interface IAudioEngine {
     fun release()
     fun detectCurrentAudioDevice()
     fun selectAudioOutputDevice(deviceId: Int?)
+
+    /**
+     * Keeps the audio output open (writing inaudible dither) while the app is in the foreground,
+     * so [start] can place Beat 1 almost immediately. Platforms without a warm-output path ignore it.
+     */
+    fun setOutputStandby(enabled: Boolean) {}
 }

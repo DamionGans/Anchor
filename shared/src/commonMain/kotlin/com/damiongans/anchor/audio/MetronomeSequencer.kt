@@ -134,6 +134,15 @@ class MetronomeSequencer(
     }
 
     /**
+     * Warm start: aligns the sequencer's write position with an output that is already running
+     * (e.g. in standby), where [outputFrame] frames were written before this playback run. Call it
+     * right after [prepare], whose `warmupFrames` must then be the absolute frame of Beat 1.
+     */
+    fun alignToOutputFrame(outputFrame: Long) {
+        if (outputFrame > 0) totalFramesWritten = outputFrame
+    }
+
+    /**
      * Anchors Beat 1 (seqId 0) at the current write position, right after the warmup.
      */
     fun startFirstBeat() {

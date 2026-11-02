@@ -91,6 +91,8 @@ class AnchorIosApp {
 
     // ---- Actions -------------------------------------------------------------------------------
     fun togglePlayPause() = controller.togglePlayPause()
+    /** Keep the audio output warm while the app is in the foreground (instant first beat). */
+    fun setOutputStandby(enabled: Boolean) = controller.setOutputStandby(enabled)
     fun play() = controller.play()
     fun pause() = controller.pause()
     fun changeBpm(bpm: Int) = controller.setBpm(bpm)
@@ -132,7 +134,7 @@ class AnchorIosApp {
             // (GITHUB for the unsigned CI build, APP_STORE for App Store archives).
             val channel = bundle.objectForInfoDictionaryKey("AnchorDistribution") as? String
             return AppVersionInfo(
-                versionName = version?.takeIf { it.isNotBlank() } ?: "1.5.4",
+                versionName = version?.takeIf { it.isNotBlank() } ?: "1.5.5",
                 channel = DistributionChannel.fromName(channel)
             )
         }

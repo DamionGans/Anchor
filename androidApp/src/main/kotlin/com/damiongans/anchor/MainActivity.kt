@@ -65,7 +65,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
+        // Keep the audio output warm while visible so Play sounds Beat 1 without a start-up delay.
+        viewModel.setOutputStandby(true)
         viewModel.syncPlaybackService()
+    }
+
+    override fun onStop() {
+        // Close the idle output in the background (playback, if running, continues).
+        viewModel.setOutputStandby(false)
+        super.onStop()
     }
 
     private fun requestNotificationPermissionIfNeeded() {
