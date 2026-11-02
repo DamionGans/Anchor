@@ -1,22 +1,15 @@
 package com.damiongans.anchor.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 import com.damiongans.anchor.model.AccentColorOption
 import com.damiongans.anchor.model.ThemeMode
+import com.damiongans.anchor.ui.platform.PlatformSystemBarsEffect
+import com.damiongans.anchor.ui.platform.platformDynamicColorScheme
 
 @Composable
 fun MyApplicationTheme(
@@ -24,7 +17,6 @@ fun MyApplicationTheme(
     accentColor: AccentColorOption = AccentColorOption.SYSTEM,
     content: @Composable () -> Unit
 ) {
-    val context = LocalContext.current
     val systemInDark = isSystemInDarkTheme()
     val isDark = when (themeMode) {
         ThemeMode.SYSTEM -> systemInDark
@@ -32,18 +24,13 @@ fun MyApplicationTheme(
         ThemeMode.LIGHT -> false
     }
 
-    // Resolve system dynamic accent color from Android phone theme on Android 12+ (API 31+)
-    val systemPhonePrimary = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (isDark) dynamicDarkColorScheme(context).primary else dynamicLightColorScheme(context).primary
-    } else {
-        NeonCyan
-    }
+    // OS dynamic accent color (Material You on Android 12+); Anchor cyan elsewhere.
+    val platformScheme = platformDynamicColorScheme(isDark)
+    val systemPhonePrimary = platformScheme?.primary ?: NeonCyan
 
     val primaryAccent = if (accentColor.isDynamic) systemPhonePrimary else accentColor.primaryColor
 
-    val dynamicScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && accentColor.isDynamic) {
-        if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else null
+    val dynamicScheme = if (accentColor.isDynamic) platformScheme else null
 
     val colorScheme = if (isDark) {
         darkColorScheme(
@@ -87,18 +74,7 @@ fun MyApplicationTheme(
         )
     }
 
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as? Activity)?.window ?: return@SideEffect
-            val bgColor = if (isDark) BackgroundDark else BackgroundLight
-            window.statusBarColor = bgColor.toArgb()
-            window.navigationBarColor = bgColor.toArgb()
-            val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = !isDark
-            insetsController.isAppearanceLightNavigationBars = !isDark
-        }
-    }
+    PlatformSystemBarsEffect(isDark)
 
     MaterialTheme(
         colorScheme = colorScheme,

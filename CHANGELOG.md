@@ -1,5 +1,21 @@
 # Changelog
 
+## [v1.6.0] — Anchor for Windows (x64 & arm64)
+
+### Windows
+- New Windows app for Intel/AMD (x64) and ARM (arm64) PCs, built with Compose Multiplatform Desktop on the shared core: same timing engine, sounds, settings, and interface as on Android.
+- Per-architecture MSI installers (`Anchor-vX.Y.Z-windows-x64.msi`, `Anchor-vX.Y.Z-windows-arm64.msi`) with a bundled Java runtime; per-user installation without administrator rights. Installers are not code-signed yet.
+- Keyboard shortcuts: Space (play/pause), Up/Down or +/- (tempo ±1 BPM, with Shift ±5), T (tap tempo).
+- In-app update checks offer the installer matching the PC's architecture.
+- The audio output stays open while the app runs, so the first beat starts immediately (same approach as Android).
+
+### Shared UI
+- The Compose interface moved from the Android app into a new shared Compose Multiplatform module (`sharedUi`) used by Android and Windows. Android behavior and appearance are unchanged; Material You colors and vibration settings remain Android-only.
+
+### CI & Documentation
+- `desktop.yml` now builds and tests the Windows app on x64 and arm64 runners and attaches both MSIs to the GitHub Release.
+- README, website (Windows downloads, platforms, FAQ), and developer documentation updated for the Windows app.
+
 ## [v1.5.5] — Instant First Beat on Android & iPhone, Multi-Platform Documentation
 
 ### Android

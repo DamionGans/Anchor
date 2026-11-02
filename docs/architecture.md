@@ -70,7 +70,11 @@ When a musician switches to a PDF sheet music reader or locks their phone screen
 **Android (`AndroidPlaybackSession` → `MetronomePlaybackService`)**
 - Runs as an explicit `foregroundServiceType="mediaPlayback"` service.
 - Acquires a partial `PowerManager.WakeLock` while playing (released when paused) so the CPU keeps servicing the high-priority PCM loop with the screen off.
-- An active `MediaSession` and `Notification.MediaStyle` controller provides `-1 BPM`, `Play/Pause`, and `+1 BPM` controls.
+- An active `MediaSession` and `Notification.MediaStyle` controller provides `-1 BPM`, `Play/Pause`, and `+1 BPM` controls, both as compact `Notification.Action`s and in the Android 13+ media carousel (`PlaybackState.CustomAction`).
+- Title `"120 BPM • Allegro"`, subtitle `"Playing • 4/4 Time"` / `"Paused • 4/4 Time"`. Pausing keeps the notification (with a Play button) instead of dismissing it.
+- Updates (GitHub flavor): `AppUpdateManager` checks `DamionGans/Anchor` (fallback `DamionGans/PulseMetronome`) over `HttpURLConnection` and opens the APK with a zero-permission `Intent.ACTION_VIEW`, so the app never needs `REQUEST_INSTALL_PACKAGES`.
+
+**Windows**: no system media controls yet (`NoOpPlaybackSession`; SMTC planned, see `windows.md`).
 
 **iOS (`IosPlaybackSession`)**
 - `AVAudioSession` playback category with the `audio` background mode keeps the engine running when the app is in the background or the screen is locked.
@@ -78,9 +82,9 @@ When a musician switches to a PDF sheet music reader or locks their phone screen
 
 ---
 
-## 4. Kotlin Multiplatform Architecture (Android + iPhone, Windows-ready)
+## 4. Kotlin Multiplatform Architecture (Android + iPhone + Windows)
 
-All application logic lives once in the `shared` Kotlin Multiplatform module. Platform code is limited to I/O and UI: the Android app (`androidApp/`, Jetpack Compose) and the iPhone app (`iosApp/`, SwiftUI) plus the iOS implementations in `shared/src/iosMain`.
+All application logic lives once in the `shared` Kotlin Multiplatform module. Platform code is limited to I/O and UI: the Android app (`androidApp/`), the Windows app (`desktopApp/` + `shared/src/desktopMain`), and the iPhone app (`iosApp/`, SwiftUI, + `shared/src/iosMain`). Android and Windows render the same Compose Multiplatform UI from `sharedUi/`.
 
 ```text
 shared/src/commonMain/kotlin/com/damiongans/anchor/     # Shared logic (no platform imports)
@@ -113,12 +117,20 @@ shared/src/iosMain/kotlin/com/damiongans/anchor/        # iOS platform implement
 ├── playback/IosPlaybackSession.kt      # Now Playing + remote commands
 └── ios/AnchorIosApp.kt                 # Swift entry point (wires iOS implementations)
 
-shared/src/desktopMain/kotlin/com/damiongans/anchor/    # Desktop JVM (future Windows x64 + arm64 app)
-├── audio/DesktopAudioEngine.kt         # javax.sound SourceDataLine I/O loop on the shared sequencer
+shared/src/desktopMain/kotlin/com/damiongans/anchor/    # Desktop JVM (Windows x64 + arm64 app)
+├── audio/DesktopAudioEngine.kt         # javax.sound SourceDataLine I/O loop (+ output standby) on the shared sequencer
 ├── repository/PreferencesKeyValueStore.kt  # java.util.prefs (Windows registry)
 ├── update/DesktopUpdateRepository.kt   # java.net.http, per-architecture .msi selection
 ├── platform/WindowsArch.kt             # X64 / ARM64 detection
-└── desktop/AnchorDesktop.kt            # Composition root for the future desktop app (see windows.md)
+└── desktop/AnchorDesktop.kt            # Composition root used by desktopApp (see windows.md)
+
+sharedUi/src/                            # Compose Multiplatform UI (android + jvm "desktop")
+├── commonMain/.../ui/                  # MetronomeScreen(controller), components/, dialogs/, icons/, theme/
+│   └── platform/PlatformUi.kt          # expect hooks: dynamic color, system bars, labels, vibration, version
+├── androidMain/.../ui/platform/        # Material You dynamic color, status/navigation bars
+└── desktopMain/.../ui/platform/        # Windows defaults
+
+desktopApp/                              # Windows host: Main.kt (window, icon), KeyboardShortcuts.kt, MSI packaging
 
 androidApp/src/main/kotlin/com/damiongans/anchor/       # Android platform layer
 ├── audio/MetronomeAudioEngine.kt       # AudioTrack Fast Path I/O loop & device routing
@@ -126,8 +138,7 @@ androidApp/src/main/kotlin/com/damiongans/anchor/       # Android platform layer
 ├── repository/SharedPreferencesSettingsRepository.kt  # SharedPreferences store + legacy migration
 ├── service/                            # MetronomePlaybackService + AndroidPlaybackSession
 ├── update/AppUpdateManager.kt          # HttpURLConnection + org.json transport, ACTION_VIEW
-├── viewmodel/MetronomeViewModel.kt     # AndroidViewModel hosting MetronomeController
-└── ui/                                 # Jetpack Compose UI
+└── viewmodel/MetronomeViewModel.kt     # AndroidViewModel hosting MetronomeController (UI comes from sharedUi)
 
 iosApp/                                  # SwiftUI app (XcodeGen project.yml)
 ├── Anchor/App/                         # AnchorApp.swift, MetronomeStore.swift (display-link
@@ -165,7 +176,7 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 - **Distribution channels**: shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`). Only GitHub builds run the GitHub Releases update checker; Android `fdroid` and `play` flavors also drop the `INTERNET` permission. iOS selects the channel with the `ANCHOR_DISTRIBUTION` build setting.
 
 - **Android** (`.github/workflows/android.yml`, every branch push and PRs; publishing only from `main` / `v*` tags): lint, `testGithubDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, `bundlePlayRelease` (Play AAB, optional tag upload to the internal track), and the GitHub Release.
-- **Desktop** (`.github/workflows/desktop.yml`): runs `:shared:desktopTest` (shared logic + desktop platform code) on Windows x64 (`windows-latest`) and Windows arm64 (`windows-11-arm`). No desktop app is built yet; see [`windows.md`](./windows.md).
+- **Windows** (`.github/workflows/desktop.yml`): on Windows x64 (`windows-latest`) and Windows arm64 (`windows-11-arm`): `:shared:desktopTest`, then `:desktopApp:packageMsi` staged as `Anchor-vX.Y.Z-windows-{x64,arm64}.msi` (+ SHA-256); on `main` / `v*`, both MSIs are attached to the GitHub Release. See [`windows.md`](./windows.md).
 - **Website** (`.github/workflows/pages.yml`): deploys `website/` to GitHub Pages on `main` / `v*` pushes that touch `website/**` or `CHANGELOG.md`, independent of the app builds.
 - **iPhone** (`.github/workflows/ios.yml`, macOS runner): `:shared:iosSimulatorArm64Test`, `xcodegen generate`, simulator build, and an unsigned device build packaged as `Anchor-vX.Y.Z-unsigned.ipa` (+ SHA-256) uploaded as a workflow artifact; on tags, an optional App Store Connect upload (`ANCHOR_DISTRIBUTION=APP_STORE`).
 - **Local iOS build**: `brew install xcodegen`, `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`. The "Build Kotlin shared framework" phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
@@ -175,3 +186,16 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 ## 7. Contributing & AI Agent Guidelines
 
 For developer workflow rules, testing requirements, and release checklists, see [**`AGENTS.md`**](../AGENTS.md).
+
+---
+
+## 8. Test Inventory
+
+- **Shared** (`shared/src/commonTest`, `kotlin.test`; runs on the Android host, desktop JVM, and iOS simulator):
+  - `TapTempoCalculatorTest`
+  - `DelayCompensationEngineTest`: 0 ms exact frame match, negative/positive offsets, Bluetooth shift, subdivisions
+  - `MetronomeControllerTest`: state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update, output standby passthrough
+  - `MetronomeSequencerTest`: synthesis, warmup, exact beat frames, warm start on a running output, steady pulse under subdivision/meter changes, pendulum continuity, playhead estimator, route selection
+  - `KeyValueSettingsRepositoryTest`, `ReleaseVersioningTest`
+- **Desktop** (`shared/src/desktopTest`, run on Windows x64 + arm64): `DesktopAudioEngineTest` (lifecycle and standby without an audio device), `PreferencesKeyValueStoreTest`, `WindowsArchTest`, `DesktopUpdateRepositoryTest`.
+- **Android** (`androidApp/src/test`, Robolectric): `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`.

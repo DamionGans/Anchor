@@ -1,0 +1,1 @@
+- The interface is now shared with the new Windows app; the Android app looks and works the same.

@@ -23,4 +23,19 @@ class DesktopAudioEngineTest {
         engine.stop()       // idempotent
         engine.release()
     }
+
+    @Test
+    fun outputStandbyLifecycleNeverThrows_evenWithoutAnAudioDevice() {
+        val engine = DesktopAudioEngine()
+        engine.setOutputStandby(true)   // opens the line in standby if a device exists
+        Thread.sleep(80)
+        engine.start()                  // warm start
+        Thread.sleep(120)
+        engine.stop()                   // back to standby
+        engine.start()                  // fast restart at Beat 1
+        engine.stop()
+        engine.setOutputStandby(false)  // closes the idle line
+        engine.setOutputStandby(false)  // idempotent
+        engine.release()
+    }
 }

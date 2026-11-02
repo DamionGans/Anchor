@@ -25,14 +25,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.damiongans.anchor.BuildConfig
+import com.damiongans.anchor.ui.platform.LocalAppVersionName
 import com.damiongans.anchor.ui.icons.AnchorIcons
 
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Instant First Beat", "Pressing Play now starts the first beat right away. While Anchor is open, the audio output stays ready in the background so there is no start-up delay."),
-    ChangelogEntry("Android, iPhone & Windows", "The website and documentation now cover every platform: Android, iPhone, and the upcoming Windows app for x64 and ARM PCs.")
+    ChangelogEntry("Anchor for Windows", "Anchor now runs on Windows PCs with Intel/AMD or ARM processors, with the same metronome and interface as on Android plus keyboard shortcuts (Space to play, arrow keys for tempo)."),
+    ChangelogEntry("One Shared Interface", "Android and Windows now share one interface, so both always look and work the same.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +70,7 @@ fun ChangelogDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Release Notes (v${BuildConfig.VERSION_NAME})",
+                            text = "Release Notes (v${LocalAppVersionName.current})",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )

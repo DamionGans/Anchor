@@ -1,277 +1,89 @@
-# Anchor Metronome — AI Agent & Developer Guidelines (`AGENTS.md`)
+# AGENTS.md — Anchor Metronome rules
 
-This document is the authoritative source of truth for all AI coding agents (AI Studio, Gemini, Claude Code, GitHub Copilot, Cursor, Windsurf, Codex) and human contributors working on **Anchor Metronome** (short name **Anchor**, formerly Pulse Metronome) for Android and iPhone, with a Windows (x64 + arm64) app in preparation.
+Canonical rules for all AI agents and contributors. **Anchor Metronome** (short: **Anchor**, formerly Pulse Metronome) for Android, iPhone, and Windows (x64 + arm64). Background and reference: `docs/architecture.md`, `docs/distribution.md`, `docs/windows.md`.
 
----
+## 1. Always
+- Read this file before changing anything. Update it in the same commit when you change architecture, timing/audio behavior, UI rules, persisted settings, build/release setup, or standing user instructions. Keep rules here only (`CLAUDE.md`, `.github/copilot-instructions.md` just point here).
+- Neutral, factual tone in commits, changelogs, release notes, docs; no emojis in changelogs.
+- Never upload to Google Play, the App Store, F-Droid, or the Microsoft Store unless the user asks.
 
-## 1. Self-Updating Living Document Mandate (READ FIRST)
+## 2. Product
+- Name: full **Anchor Metronome** (titles, `app_full_name`, `metadata.json`, About sheet, media album, website `<title>`/OG, release titles); short **Anchor** (launcher `app_name`, iOS `CFBundleDisplayName`, "ANCHOR" top bar, `com.damiongans.anchor`, `Anchor-vX.Y.Z.apk`). Titles ≤ 30 chars, no emojis/buzzwords.
+- Tagline everywhere: **"Rock-solid time for serious play"**. It is a musical metronome, never a "timekeeping" app.
+- Repo `DamionGans/Anchor` (Pages `damiongans.github.io/Anchor`); update checks and `website/app.js` fall back to `DamionGans/PulseMetronome`.
+- Channels (standing decision): free and open source on GitHub + F-Droid; same app as a one-time paid purchase on Google Play + App Store. Never add ads, subscriptions, IAP/billing SDKs, analytics, accounts, or channel feature gating. Copy must not call store versions free ("paid store versions support development"). Keep `website/privacy.html` accurate and linked.
+- `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`) via `AppVersionInfo.channel`; only `GITHUB` self-updates (`canCheckForUpdates`/`updateStoreName` hide the update UI). Store builds never download or link APK/IPA updates. Android flavors `github`/`fdroid`/`play`; `fdroid` and `play` drop `INTERNET`. iOS: `ANCHOR_DISTRIBUTION` → `AnchorDistribution` Info.plist key.
+- No feature bloat: no Practice Timer / Speed Trainer, multi-screen navigation, accounts, or analytics unless asked. The main screen (`MetronomeScreen.kt`, `ContentView.swift`) stays single-screen and non-scrolling with every core control visible.
+- Public copy (`README.md` with the logo on top, `website/index.html`) is musician-focused; technical depth lives in `docs/architecture.md` and `website/architecture.html`, linked from both.
+- Website hero = non-interactive HTML/CSS app preview with a steady background (no web audio, no flash overlay, no raster screenshot). Pendulum and beat bar both derive from `--mock-beat` in `website/style.css` (0.5 s = 120 BPM; bar cycle `calc(var(--mock-beat) * 4)`); change timing only there.
+- All platforms documented with current status in `README.md`, `website/index.html` (`#platforms`, hero pill, meta, FAQ), `website/architecture.html`, `docs/`: Android (available), iPhone (unsigned IPA / Xcode; App Store coming), Windows x64 + arm64 (unsigned MSIs on GitHub Releases; no Microsoft Store yet).
 
-1. **Always Read Before Acting**: Every AI agent working on this repository must read `AGENTS.md` before modifying code, build scripts, or documentation.
-2. **Automatic Synchronization**: Whenever a change is made to the project—whether explicitly instructed by the user or decided by the agent to solve a problem—you **must update `AGENTS.md` in the same turn/commit** if the change alters:
-   - Architectural patterns, modules, or file structure
-   - Audio synthesis, timing, or delay compensation behavior
-   - UI/UX constraints, features, or persisted settings
-   - Build configuration, dependencies, or release workflows
-   - Standing user preferences or workflows
-3. **Keep Pointers Intact**: `CLAUDE.md`, `.github/copilot-instructions.md`, and `README.md` point to `AGENTS.md`. Do not duplicate diverging rules across files; keep all canonical guidelines in `AGENTS.md`.
-
----
-
-## 2. Core Product Philosophy & Scope
-
-- **Focused, High-Precision Instrument**: **Anchor Metronome** (**Anchor**) is a clean, distraction-free, sample-accurate metronome.
-- **Brand Name (Full vs. Short) & Canonical Tagline**:
-  - **Full App Name**: **Anchor Metronome** (used to prevent trademark infringement in `metadata.json`, `<application android:label="@string/app_full_name">`, the in-app About sheet in `SettingsBottomSheet.kt`, `MediaMetadata.METADATA_KEY_ALBUM`, `README.md` / `docs/architecture.md` headings, website `<title>` / Open Graph tags, and GitHub Release titles).
-  - **Short Name / References**: **Anchor** (kept for the home screen launcher icon label `<activity android:label="@string/app_name">`, the iOS home screen name `CFBundleDisplayName` in `iosApp/project.yml`, the top-bar header `"ANCHOR"` in `MetronomeScreen.kt`, package namespace and applicationId `com.damiongans.anchor`, APK filename `Anchor-vX.Y.Z.apk`, and concise body copy).
-  - **Canonical Tagline**: **"Rock-solid time for serious play"** across `README.md`, `website/index.html`, `metadata.json`, `MetronomeScreen.kt`, and the in-app About sheet (`SettingsBottomSheet.kt`). Never describe Anchor as a general "timekeeping" app—it is a musical metronome.
-  - **Repository URL**: **`DamionGans/Anchor`** (`https://github.com/DamionGans/Anchor`, Pages `https://damiongans.github.io/Anchor/`). Both `AppUpdateManager.kt` and `website/app.js` check `DamionGans/Anchor` first and automatically fall back to `DamionGans/PulseMetronome` so releases resolve seamlessly before and after renaming the GitHub repository.
-- **Distribution Channels & Monetization (standing decision)**: Anchor is **free and open source on GitHub and F-Droid** and sold as an **upfront paid app (one-time price, identical features) on Google Play and the Apple App Store** for side income. Rules:
-  - **Never** add ads, subscriptions, in-app purchases/billing SDKs (Play Billing, StoreKit), analytics, accounts, or feature gating between channels. All channels ship the same features.
-  - The channel is a shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`) in `update/ReleaseVersioning.kt`, passed via `AppVersionInfo.channel`. Only `GITHUB` builds self-update (`selfUpdates`); `MetronomeController` skips update checks otherwise and exposes `canCheckForUpdates` / `updateStoreName` so both UIs hide the update section. Store builds must **never** download or link to APK/IPA updates (Play Device & Network Abuse policy, App Store guideline 2.5.2).
-  - Android flavors (`androidApp/build.gradle.kts`, dimension `distribution`): `github` (GitHub Release APK), `fdroid`, `play` (AAB). `fdroid` and `play` remove `INTERNET` via `src/<flavor>/AndroidManifest.xml`, so those builds make no network requests. iOS: `ANCHOR_DISTRIBUTION` build setting → `AnchorDistribution` Info.plist key (`GITHUB` for the unsigned CI IPA, `APP_STORE` for App Store archives).
-  - Public copy must not claim the store versions are free. Use: "free and open source on GitHub and F-Droid; paid store versions support development". Keep `website/privacy.html` accurate (no data collected) and linked from the website footer.
-- **No Feature Bloat**: Do **not** re-introduce the removed *Practice Timer* or *Speed Trainer* features, and do not add multi-screen navigation, accounts, analytics, or bloatware unless explicitly requested.
-- **Single-Screen Ergonomics**: The main metronome view (`MetronomeScreen.kt` on Android, `ContentView.swift` on iOS) must remain a non-scrolling, single-screen layout where BPM, beat indicators, pendulum, time signature, subdivisions, sound profile, and transport controls are immediately accessible.
-- **Musician-First Public Copy vs. Dedicated Technical Docs**:
-  - The main `README.md` (featuring the `website/assets/anchor-logo.svg` app logo at the top) and landing page (`website/index.html`) must remain **musician-focused and benefit-driven** (written for players who want a reliable, high-precision metronome without low-level audio DSP jargon front-and-center).
-  - The website hero (`website/index.html`) displays a **non-interactive animated app preview** constructed from HTML/CSS UI elements (swinging pendulum, pulsing 4-beat bar, and tempo/transport cards mirroring `MetronomeScreen.kt`) with a **steady background color** (as if the Screen Flash background setting is disabled)—do not re-introduce an interactive web audio simulator, a flashing background overlay on the website preview, or a static raster image screenshot.
-  - **Preview sync**: the preview's pendulum and beat bar run on one clock: `--mock-beat` (0.5 s = the displayed 120 BPM) on `.phone-frame` in `website/style.css`. The pendulum swings once per beat (`var(--mock-beat)`, `alternate`) and the beat-bar cycle is `calc(var(--mock-beat) * 4)`, so every swing reaches its extreme exactly when the next beat lights up. Change both only through `--mock-beat` (and the displayed BPM).
-  - Deep technical implementation details (44.1 kHz PCM synthesis, 55ms sub-LSB warmup, `AudioTrack` / `AVAudioPlayerNode` playhead math, the shared Kotlin Multiplatform architecture) must be maintained in dedicated technical documentation (`docs/architecture.md` and `website/architecture.html` on the website) and linked cleanly from `README.md` and `website/index.html`.
-  - **All platforms are documented**: `README.md` (platform table + per-platform install sections), `website/index.html` (`#platforms` section, hero pill, meta description, FAQ), `website/architecture.html`, and `docs/` must describe every platform with its current status: Android (available), iPhone (available via unsigned IPA / Xcode; App Store coming), Windows x64 + arm64 (in preparation). Update all of them when a platform's status changes.
-- **Neutral, Factual Communication**: All changelogs, release notes, commit messages, and technical documentation must use a neutral, concise, factual engineering tone. Avoid emojis in changelogs or overly enthusiastic AI phrasing.
-
----
-
-## 3. Architecture: Kotlin Multiplatform Core (Android + iPhone, Windows-ready) & Clean SDLC
-
-### Repository Layout (keep this structure)
-
+## 3. Layout
 ```text
-Anchor/
-├── androidApp/            # Android app module (Jetpack Compose UI + Android platform code)
-│   └── src/{main,test,androidTest}/kotlin/   + flavor overlays src/fdroid, src/play
-├── iosApp/                # iPhone app (SwiftUI) + XcodeGen project.yml
-├── shared/                # Kotlin Multiplatform module: ALL shared app logic (commonMain) + iosMain + desktopMain
-├── docs/                  # Developer documentation (Markdown): architecture.md, distribution.md, windows.md
-├── website/               # GitHub Pages site (index, architecture, privacy, version.json, assets)
-├── fastlane/metadata/     # F-Droid / store listing metadata
-├── signing/               # Debug/CI keystore (base64) — never a production upload key
-├── gradle/                # Gradle wrapper + libs.versions.toml (version catalog)
-├── .github/               # workflows (android.yml, ios.yml, pages.yml, desktop.yml), scripts, issue/PR templates, dependabot
-├── AGENTS.md · CLAUDE.md  # Contributor & AI agent rules (this file is canonical)
-├── README.md · CHANGELOG.md · CONTRIBUTING.md · SECURITY.md · LICENSE
-└── build.gradle.kts · settings.gradle.kts · gradle.properties · .editorconfig
+androidApp/  Android platform code (flavors src/fdroid, src/play); hosts sharedUi
+desktopApp/  Windows host (Compose Desktop window, shortcuts, MSI packaging, icons/)
+iosApp/      SwiftUI iPhone app (XcodeGen project.yml; .xcodeproj git-ignored)
+shared/      KMP: ALL app logic (commonMain) + iosMain + desktopMain (jvm "desktop")
+sharedUi/    Compose Multiplatform UI for Android + Windows
+scripts/     set-version.sh
+docs/ website/ fastlane/ signing/(debug keystore only) gradle/ .github/
 ```
-- `desktopApp/` is reserved for the future Windows (Compose Multiplatform Desktop) app; do not create it until requested (see `docs/windows.md`).
-- Kotlin sources always live in `src/<sourceSet>/kotlin/` (never `java/`). New top-level folders require updating this layout, `README.md`, and `CONTRIBUTING.md`.
-- `website/` is published by its own workflow, `.github/workflows/pages.yml` (GitHub Pages source = GitHub Actions), independent of the Android and iOS builds. Markdown documentation belongs in `docs/`, never in `website/`.
-- `metadata.json` and `.env.example` (Secrets Gradle Plugin defaults) stay at the root for Google AI Studio compatibility.
+- Kotlin sources in `src/<sourceSet>/kotlin/`; packages under `com.damiongans.anchor`. New top-level folders: update this map, `README.md`, `CONTRIBUTING.md`. Markdown docs go in `docs/`, never `website/`. `metadata.json` and `.env.example` stay at the root (AI Studio).
+- Module trees: `docs/architecture.md` §4.
 
-Anchor ships an **Android app** (`androidApp/`, Jetpack Compose) and an **iPhone app** (`iosApp/`, SwiftUI) on top of one **shared Kotlin Multiplatform module** (`shared/`). Packages stay under `com.damiongans.anchor`.
+## 4. Boundaries
+- **All app logic in `shared/src/commonMain`** (state, actions, persistence keys/defaults/clamping/accent memory, timing, synthesis, sequencing, route rules, version comparison/asset selection). Platform code (`androidApp/`, `iosMain` + `iosApp/`, `desktopMain` + `desktopApp/`) does only OS calls and UI hosting.
+- `commonMain`: no `android.*`, `androidx.*`, `java.*`, `platform.*`, `@Synchronized`; use `kotlin.concurrent.Volatile`. `DelayCompensationEngine` timeline methods are audio-thread only.
+- **sharedUi** (Compose Multiplatform 1.12.x, material3 via `org.jetbrains.compose.material3`): `MetronomeScreen(controller: MetronomeController)`. `commonMain` UI has no `android.*`, `BuildConfig`, `Context`, `String.format`, `Math.*`; platform differences go in `ui/platform/PlatformUi` (`expect`/`actual`: dynamic color, system bars, labels, `supportsVibration`); hosts provide `LocalAppVersionName`.
+- **UI parity**: features go into both `sharedUi` (Android + Windows) and SwiftUI, unless platform-specific.
+- **Swift** talks only to `AnchorIosApp` (no default args, `change*` names, catalog lists, `observe(onChange:)` on main). Kotlin `description` is exposed via helpers (`soundSetSummary`, `buttonTriggerModeSummary`); Swift compares enums by `name`.
+- **Windows** is the JVM target (`jvm("desktop")`, JVM 17) in `shared`/`sharedUi`; never add `mingwX64` (no Windows ARM64 in Kotlin/Native). `desktopApp` only hosts. `kotlinx-serialization-json` is desktopMain-only (never `commonMain`/APK).
+- **DI**: `MetronomeController` gets every platform implementation, `AppVersionInfo`, and a `CoroutineScope` via its constructor (tests use `commonTest/.../fakes/TestFakes.kt` + `TestScope`). `MetronomeViewModel` delegates to `controller` and **must keep `@JvmOverloads constructor`** (AndroidViewModelFactory reflection; removing it crashes on launch).
 
-```text
-shared/                                   # Kotlin Multiplatform (androidLibrary + iosX64/iosArm64/iosSimulatorArm64)
-├── build.gradle.kts                      # com.android.kotlin.multiplatform.library + static XCFramework "AnchorShared"
-└── src/
-    ├── commonMain/kotlin/com/damiongans/anchor/   # ALL shared app logic (no platform imports)
-    │   ├── model/MetronomeModels.kt               # Immutable domain models
-    │   ├── domain/DelayCompensationEngine.kt      # Frame-accurate visual/haptic/BT scheduler
-    │   ├── domain/TapTempoCalculator.kt           # Tap tempo math
-    │   ├── audio/IAudioEngine.kt                  # Audio engine contract
-    │   ├── audio/BaseMetronomeAudioEngine.kt      # Shared engine state, clamping, synthesis, route publishing
-    │   ├── audio/ClickSynthesizer.kt              # Click waveform synthesis for every SoundSet
-    │   ├── audio/MetronomeSequencer.kt            # Warmup dither, sequencing, playhead dispatch, PlayheadEstimator, WrappingFrameCounter
-    │   ├── audio/AudioRouteSelector.kt            # Output list normalization (speaker always listed) & default route priority
-    │   ├── haptics/IHapticsManager.kt             # Haptics contract
-    │   ├── playback/IPlaybackSession.kt           # System media controls contract (+ NoOpPlaybackSession)
-    │   ├── repository/ISettingsRepository.kt      # Settings contract & default accent rules
-    │   ├── repository/KeyValueSettingsRepository.kt # Shared keys/defaults/clamping over IKeyValueStore (+ InMemoryKeyValueStore)
-    │   ├── update/IUpdateRepository.kt            # Update contract & AppReleaseInfo
-    │   ├── update/ReleaseVersioning.kt            # GitHubReleaseConfig, ReleaseAsset, SemVer comparison, AppVersionInfo
-    │   └── viewmodel/MetronomeController.kt       # MetronomeUiState + every user action (shared state holder)
-    ├── commonTest/                                # Shared tests (kotlin.test), run on Android host, iOS simulator, and desktop JVM
-    ├── desktopMain/kotlin/com/damiongans/anchor/   # Desktop JVM (future Windows x64 + arm64 app) platform code
-    │   ├── audio/DesktopAudioEngine.kt            # javax.sound SourceDataLine I/O loop on the shared sequencer
-    │   ├── repository/PreferencesKeyValueStore.kt # java.util.prefs (Windows registry)
-    │   ├── update/DesktopUpdateRepository.kt      # java.net.http + kotlinx-serialization-json, per-arch .msi selection
-    │   ├── platform/WindowsArch.kt                # os.arch -> X64 / ARM64, asset markers
-    │   └── desktop/AnchorDesktop.kt               # Composition root for the future desktop app
-    ├── desktopTest/                               # Desktop-only tests (run on Windows x64 + arm64 in CI)
-    └── iosMain/kotlin/com/damiongans/anchor/      # iOS platform implementations
-        ├── audio/IosAudioEngine.kt                # AVAudioEngine + AVAudioPlayerNode I/O loop
-        ├── haptics/IosHapticsManager.kt           # UIImpactFeedbackGenerator
-        ├── repository/NSUserDefaultsKeyValueStore.kt
-        ├── update/IosUpdateRepository.kt          # NSURLSession + NSJSONSerialization, .ipa asset preference
-        ├── playback/IosPlaybackSession.kt         # MPNowPlayingInfoCenter + MPRemoteCommandCenter
-        └── ios/AnchorIosApp.kt                    # Swift entry point wiring iOS implementations into MetronomeController
+## 5. Audio & timing invariants
+- Synthesis (`ClickSynthesizer`, pre-rendered `ShortArray`s, zero audio-thread allocations), warmup, sequencing, slew-limited BPM, and playhead dispatch are shared (`MetronomeSequencer`). Engines (`MetronomeAudioEngine`, `IosAudioEngine`, `DesktopAudioEngine`) extend `BaseMetronomeAudioEngine` and only push chunks + report the hardware playhead.
+- Android: `THREAD_PRIORITY_URGENT_AUDIO` thread, 16-bit mono at the native rate, streaming `AudioTrack` with `PERFORMANCE_MODE_LOW_LATENCY`. iOS: `.playback` session (background audio), `AVAudioEngine` + `AVAudioPlayerNode`, high-priority `NSThread` keeping 4×256 frames scheduled, restart on `AVAudioEngineConfigurationChangeNotification`; route chosen by the OS. Desktop: `SourceDataLine`, `longFramePosition`.
+- **Warmup (do not remove)**: ≥ 55 ms of ±1 LSB dither before Beat 1 (`fillWarmupDither`/`warmupChunkCount`) on cold starts.
+- **Output standby (instant first beat)**, via `IAudioEngine.setOutputStandby`:
+  - Android: on while `MainActivity` is started (`onStart`/`onStop`); one `AudioTrack` writes dither; Play aligns with `prepare(firstBeatFrame)` + `alignToOutputFrame(Long)`, Beat 1 in the next chunk; warmup only covers frames not yet written; play-generation counter restarts fast stop→start at Beat 1; head counter sampled every standby chunk (32-bit wrap).
+  - iOS: on unless `scenePhase == .background` (+ `onAppear`); engine runs with the player node stopped; each run restarts the node (sample time 0 = sequencer frame 0), Beat 1 queued before `node.play()`; warmup only if the engine started < warmup duration ago; idle `.playback` + `.mixWithOthers`, `start()` switches to non-mixing; pause = `node.stop()`.
+  - Desktop: same loop as Android (line open with dither while the app runs; `Main.kt` enables it).
+  - `MetronomeController.play()` calls `audioEngine.start()` **before** `syncPlaybackSession()`.
+- Output list: `AudioRouteSelector.normalize` always includes Built-in Speaker; the top-bar selector and Settings audio tab always show all outputs (even one).
+- **Playhead-anchored, never write-head**: visuals, flash, pendulum, vibration fire from the hardware playhead (`getPlaybackHeadPosition()`, player-node sample time, `longFramePosition`) smoothed by `PlayheadEstimator`. At 0 ms offset events fire at `playheadFrame >= beatAudioFrame`; no hidden latency constants.
+- Offsets −200…+300 ms (negative = earlier). Bluetooth offset applies only while a Bluetooth output is routed and shifts visual + vibration together. Negative offsets may fire Beat 1 during the warmup (lookahead).
+- **Steady pulse**: one beat-phase accumulator (`beatPhase += bpm / (60 * sampleRate)`); never a per-subdivision counter. BPM changes are slew-limited (`MAX_BPM_STEP_PER_CHUNK`); subdivision changes apply at the next subdivision boundary (no late ticks); time-signature changes at the next beat (shorter bar → new bar). Covered by `MetronomeSequencerTest`.
+- Pendulum interpolates per-chunk phase checkpoints (`recordPhaseCheckpoint`, allocation-free ring buffer); tick interpolation only as fallback.
+- `setTimeSignature`/`setSubdivision` never reset `currentBeat`/`currentSubdivisionIndex` while playing. Media-session updates from BPM/meter changes are debounced (`SESSION_SYNC_DEBOUNCE_MS` = 150); play/pause update immediately.
+- `BeatBar`, pendulum, and flash share `flashDelayMs` and switch on with `snap()`.
 
-androidApp/src/main/kotlin/com/damiongans/anchor/  # Android platform layer only
-├── MainActivity.kt                       # Edge-to-edge host, lifecycle & update prompt trigger
-├── audio/MetronomeAudioEngine.kt         # AudioTrack Fast Path I/O, device discovery/routing, wake lock
-├── haptics/AndroidHapticsManager.kt      # VibrationEffect haptics
-├── repository/SharedPreferencesSettingsRepository.kt # SharedPreferencesKeyValueStore + legacy pulse_metronome_prefs migration
-├── service/MetronomePlaybackService.kt   # Foreground mediaPlayback service, MediaSession & WakeLock
-├── service/AndroidPlaybackSession.kt     # IPlaybackSession bridge to MetronomePlaybackService
-├── update/AppUpdateManager.kt            # HttpURLConnection + org.json transport, ACTION_VIEW (GitHubUpdateRepository)
-├── viewmodel/MetronomeViewModel.kt       # AndroidViewModel hosting MetronomeController (viewModelScope)
-└── ui/                                   # Compose UI: MetronomeScreen, components/, dialogs/, icons/, theme/
+## 6. Playback session & updates
+- `MetronomeController` publishes `PlaybackSessionState` (title `"<BPM> BPM • <Marking>"`, subtitle `"Playing • 4/4 Time"`) to `IPlaybackSession`; commands come back via `PlaybackCommandListener`. Android: foreground `mediaPlayback` service with MediaSession, −1 BPM / Play-Pause / +1 BPM, stays while paused. iOS: Now Playing + remote commands (next/previous = ±1 BPM). Windows: `NoOpPlaybackSession`. Details: `docs/architecture.md` §5.
+- Update checks: shared `ReleaseVersioning` (repo fallback, `.apk`/`.ipa`/per-arch `.msi` selection, SemVer); platforms only do HTTP/JSON and open the URL. Android opens updates with `ACTION_VIEW` (never `REQUEST_INSTALL_PACKAGES`).
 
-iosApp/                                   # SwiftUI iPhone app (iOS 16+)
-├── project.yml                           # XcodeGen spec (generate with `xcodegen generate`; .xcodeproj is git-ignored)
-└── Anchor/
-    ├── App/                              # AnchorApp.swift (entry), MetronomeStore.swift (Kotlin bridge), Theme.swift
-    ├── Views/                            # ContentView, SettingsView, TimeSignatureView
-    └── Resources/Assets.xcassets         # App icon & accent color
-```
+## 7. UI & persistence
+- No in-app volume slider (system media volume; `STREAM_MUSIC`, unity gain).
+- Accents never reset on time-signature change: 16-entry `rememberedAccents` per count; switching restores `rememberedAccents.take(beats)`.
+- `ButtonTriggerMode` (`ON_PRESS`/`ON_RELEASE`) for Play and Tap Tempo.
+- Persist via `ISettingsRepository` (shared keys): bpm, timeSignature, subdivision, soundSet, pitchMultiplier, accents, rememberedAccents, buttonTriggerMode, flash/vibration enabled, flash/vibration/bluetooth delays, themeMode, accentColor.
+- Each offset in Settings has a slider (−200…+300 ms) plus −10/−1/0/+1/+10 ms buttons.
+- Tabular numbers (`"tnum"`) on BPM, counters, ms labels; ≥ 48 dp touch targets; Material You ("Android Phone Theme") + custom accents + System/Light/Dark.
 
-### Shared-Logic Boundary (CRITICAL)
-- **All app logic lives in `shared/src/commonMain`**: state, user actions, persistence rules (keys, defaults, clamping, accent memory), timing/delay compensation, click synthesis, sequencing/warmup/dispatch, route list rules, update version comparison and asset selection. Never duplicate this logic in `androidApp/`, `iosMain`, or Swift.
-- **Platform code only does platform work**: Android (`androidApp/`) and iOS (`shared/src/iosMain` + `iosApp/`) contain only OS API calls (audio I/O & playhead, device routing, haptics, key-value storage, HTTP/JSON transport, system media controls, URL opening) and UI. If new behavior is not inherently platform-specific, add it to `commonMain` and call it from both platforms.
-- **Zero platform imports in `commonMain`**: no `android.*`, `androidx.*`, `java.*`, `platform.*`, or JVM-only annotations (`@Synchronized`). Use `kotlin.concurrent.Volatile`. `DelayCompensationEngine` timeline methods are single-threaded (called only from the platform audio loop).
-- **Swift interop**: Swift talks only to `AnchorIosApp` (methods without default arguments, `change*` naming, catalog lists, `observe(onChange:)` delivering on the main thread). Kotlin `description` properties are exposed through helpers (`soundSetSummary`, `buttonTriggerModeSummary`) because `description` collides with `NSObject`. Swift compares Kotlin enums by `name`.
-- **UI parity**: Feature changes must be applied to both the Compose UI and the SwiftUI UI unless explicitly platform-specific.
+## 8. Android constraints
+- Never Google Play Services, Firebase, or the google-services plugin; must work on plain AOSP/LineageOS/GrapheneOS.
+- Manifest least-privilege: `INTERNET` (github flavor only), `VIBRATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`; `usesCleartextTraffic="false"`; never `REQUEST_INSTALL_PACKAGES`/storage permissions.
+- APK ~2 MB: no `material-icons-extended` (use `AnchorIcons.kt`), no Retrofit/OkHttp/Moshi/Room/Firebase (use `HttpURLConnection`, `org.json`, `SharedPreferences`).
+- Release builds: `isMinifyEnabled`/`isShrinkResources` true; reproducible archives (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`); release artifacts only from `assemble<Flavor>Release`/`bundlePlayRelease`; never sign Play builds with the debug keystore.
 
-### Windows / Desktop Preparation (no desktop app yet)
-- Windows support (x64 **and** arm64) is a **JVM** target: `jvm("desktop")` in `shared/` (JVM 17 bytecode). Kotlin/Native has no Windows-on-ARM64 target, so never add `mingwX64` for Windows.
-- The planned UI is **Compose Multiplatform Desktop** in a future `desktopApp/` module; do not create it, packaging, or release jobs until the user asks. Roadmap: `docs/windows.md`.
-- The shared-logic boundary applies: desktop code in `desktopMain` contains only JVM/OS integration (audio I/O, preferences, HTTP/JSON, architecture detection). `kotlinx-serialization-json` is a **desktopMain-only** dependency and must never enter `commonMain` or the Android APK.
-- Release assets for Windows are named `Anchor-vX.Y.Z-windows-x64.msi` / `Anchor-vX.Y.Z-windows-arm64.msi`; `DesktopUpdateRepository` selects by `WindowsArch.assetMarker` via `ReleaseVersioning.buildReleaseInfo(preferredAssetMarker = ...)`.
-- `desktop.yml` must stay green on **both** `windows-latest` (x64) and `windows-11-arm` (arm64).
+## 9. CI & releases
+- Workflows: `android.yml` (every branch; GitHub Release only from `main`, `v*`, or manual), `ios.yml` (unsigned IPA artifact), `desktop.yml` (tests + MSI on `windows-latest` x64 and `windows-11-arm` arm64, must stay green on both; attaches MSIs to the release on `main`/`v*`), `pages.yml` (website). Store jobs skip until secrets exist (`docs/distribution.md`). No third-party Swift packages.
+- Windows packaging: per-user MSI, jlink JRE, built per architecture on a matching runner; never change `upgradeUuid`; assets `Anchor-vX.Y.Z-windows-{x64,arm64}.msi` (+ `.sha256`), selected by `WindowsArch.assetMarker`. Unsigned until a certificate exists.
+- **Versioning**: SemVer, `versionCode = MAJOR*10000 + MINOR*100 + PATCH`; PATCH = fixes/docs, MINOR = features, MAJOR = rare. Check `api.github.com/repos/DamionGans/Anchor/releases` first: if the repo version is **unreleased**, rewrite that single top entry (raise its level if needed); if **released**, bump.
+- **Bump**: run `scripts/set-version.sh X.Y.Z` (updates every mechanical location: Gradle defaults, iOS `project.yml`, desktop defaults, code/CI fallbacks, `AppUpdateManagerTest`, `website/version.json`/`app.js`/`index.html` links, README APK name, fastlane file). Then write the text: `CHANGELOG.md` top `## [vX.Y.Z]` (feeds release notes), `CURRENT_RELEASE_CHANGELOG` in `sharedUi/.../dialogs/ChangelogDialog.kt`, `website/index.html` changelog entry (Latest/Previous/Earlier labels), `website/version.json` highlights, `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`.
 
-### Critical DI & ViewModel Rule
-- `MetronomeController` takes all platform implementations (`IAudioEngine`, `IHapticsManager`, `ISettingsRepository`, `IUpdateRepository`, `IPlaybackSession`), `AppVersionInfo`, and a `CoroutineScope` via its constructor so shared tests inject fakes (`shared/src/commonTest/.../fakes/TestFakes.kt`) and a `TestScope`.
-- `MetronomeViewModel` keeps constructor injection with default parameters for production Android implementations and delegates every action to `controller`.
-- **CRITICAL**: Always keep `@JvmOverloads constructor(...)` on `MetronomeViewModel`. `ViewModelProvider.AndroidViewModelFactory` instantiates `AndroidViewModel` subclasses via reflection using the single-argument `(Application)` constructor. Removing `@JvmOverloads` causes an immediate crash on app launch (`RuntimeException: Cannot create an instance of class MetronomeViewModel`).
-
----
-
-## 4. Audio Engine & Delay Compensation Invariants
-
-### 4.1 Real-Time PCM Audio (shared `MetronomeSequencer` + platform engines)
-- Click synthesis (`ClickSynthesizer`), the warmup dither, sample-accurate sequencing, slew-limited BPM changes, and playhead-anchored dispatch are shared. Platform engines (`MetronomeAudioEngine` on Android, `IosAudioEngine` on iOS) extend `BaseMetronomeAudioEngine` and only push rendered chunks to the OS and report the hardware playhead.
-- **iOS**: `AVAudioSession` playback category (background `audio` mode), `AVAudioEngine` + `AVAudioPlayerNode`, a high-priority `NSThread` loop that keeps `LOOKAHEAD_CHUNKS` (4 × 256 frames) scheduled ahead of the player-node sample time, and `AVAudioEngineConfigurationChangeNotification` restarts. iOS chooses outputs via Control Center / AirPlay, so `selectAudioOutputDevice` only refreshes the reported route.
-- **Android**: uses a dedicated high-priority thread (`Process.THREAD_PRIORITY_URGENT_AUDIO`) writing 16-bit mono PCM at native low-latency sample rate to a streaming `AudioTrack` configured with `AudioTrack.PERFORMANCE_MODE_LOW_LATENCY`.
-- All click waveforms (`SoundSet`: Woodblock, Mechanical, Digital Beep, Rimshot, 808 Percussion) are pre-synthesized by `ClickSynthesizer` into `ShortArray` buffers to guarantee zero allocations on the audio thread.
-- **First-Beat Hardware Warmup (Do Not Remove)**: Before sample `0` of Beat 1 is written, both platforms write **at least 55ms of sub-LSB dither (`±1` PCM amplitude)** (`MetronomeSequencer.fillWarmupDither` / `warmupChunkCount`). This forces Android's AudioFlinger mixer and the device DAC out of idle standby so the first beat is never clipped or swallowed, without introducing audible noise.
-- **Android Output Standby (Instant First Beat)**: While `MainActivity` is started, `MetronomeAudioEngine` keeps one `AudioTrack` + output thread open writing the same `±1` dither (`IAudioEngine.setOutputStandby(true)`, called from `onStart`; `false` from `onStop`). Play then aligns the sequencer to the running output (`prepare(firstBeatFrame)` + `MetronomeSequencer.alignToOutputFrame(Long)`) and anchors Beat 1 at the next chunk; the warmup only runs for frames the output has not yet covered (full warmup on a cold start). Stop returns to standby, or closes the track when standby is off. A play-generation counter makes a fast stop→start restart at Beat 1. The head counter is sampled every standby chunk so 32-bit wraps stay tracked. `MetronomeController.play()` must call `audioEngine.start()` **before** `syncPlaybackSession()`.
-- **iOS Output Standby**: `IosAudioEngine` implements the same contract. While the scene is not in the background (`AnchorApp` `scenePhase` != `.background`, plus `onAppear`), the `AVAudioEngine` keeps running with the player node stopped. Every playback run stops/restarts the player node so its sample time starts at 0 with the sequencer timeline; Beat 1 is queued before `node.play()`. The cold-start warmup only runs when the engine has been running for less than the warmup duration. Standby uses the `.playback` category with `.mixWithOthers` (opening Anchor never interrupts other apps' audio); `start()` switches to the non-mixing category (Now Playing owner). Pause in standby calls `node.stop()` to drop queued clicks immediately. Desktop keeps the default no-op `setOutputStandby`.
-- **Always-Visible Audio Output Selection**: Platform engines enumerate media outputs and `AudioRouteSelector.normalize` guarantees `Built-in Speaker` is always included even when it is the only output. Both the top bar output selector and `SettingsBottomSheet` (`AudioSettingsTab`) must always display all available outputs (even when only 1 output exists) and allow routing via `AudioTrack.setPreferredDevice`.
-
-### 4.2 Vendor-Agnostic Delay Compensation (`DelayCompensationEngine`)
-- **Playhead-Anchored (Never Write-Head-Anchored)**: Visual beats, screen flashes, pendulum motion, and vibrations must **always** be scheduled and triggered against the hardware playhead (Android `AudioTrack.getPlaybackHeadPosition()`, iOS `AVAudioPlayerNode` player sample time, both smoothed by `PlayheadEstimator`) (monotonic 64-bit `playheadFrame`, offset by `WARMUP_FRAMES`), never `writeFrame`. Because `AudioTrack.write()` blocks based on OEM buffer size, anchoring to `writeFrame` causes severe timing drift across devices.
-- **Zero Hidden Magic Constants**: At `0 ms` offset, events fire at the exact frame `playheadFrame >= beatAudioFrame`. Do not add hidden latency guesses or arbitrary frame offsets.
-- **Bidirectional Offsets (`-200 ms` to `+300 ms`)**:
-  - **Negative offset (`< 0 ms`)**: Fires *earlier* than the audio frame to compensate for display rendering pipeline latency or slower haptic motor spin-up.
-  - **Positive offset (`> 0 ms`)**: Fires *later* than the audio frame to delay visuals or haptics (e.g., when using external/Bluetooth speakers).
-  - **Bluetooth Audio Offset (`-200 ms` to `+300 ms`)**: Only applied when a Bluetooth A2DP/LE/SCO output device is actively routed (`isBluetoothOutputConnected`), shifting both visual and vibration schedules together relative to the delayed Bluetooth audio stream.
-- **Beat 1 Lookahead**: When a user configures a negative (early) offset, Beat 1's target frame can occur during the 55ms hardware warmup window (`targetFrame < 0`). `MetronomeAudioEngine` tracks warmup playhead frames on `-WARMUP_FRAMES until 0` so Beat 1 still plays its full audio buffer while early visual/haptic triggers fire on schedule.
-- **Steady Pulse Under Live Changes (CRITICAL)**: `MetronomeSequencer` drives timing with a single **beat-phase accumulator** (`beatPhase += bpm / (60 * sampleRate)` per frame). Main beats fire when it wraps past 1.0; subdivision ticks fire when it crosses `k / subdivisionCount`. Never go back to a per-subdivision phase counter: with it, a subdivision change (including time-signature presets such as 6/8) moved the downbeat.
-  - BPM changes are slew-limited (`MAX_BPM_STEP_PER_CHUNK`) and only change the accumulator speed.
-  - Subdivision changes take effect at the next subdivision boundary of the current beat (the sub counter is resynchronized; passed boundaries are never fired late).
-  - Time-signature changes take effect at the next beat; if the bar became shorter than the current beat index, the next beat starts a new bar.
-  - Covered by `MetronomeSequencerTest` (frame-exact beat grid after subdivision/meter changes, pendulum continuity under rapid tempo, subdivision, and meter changes).
-- **Continuous Pendulum**: the sequencer records a beat-phase checkpoint per rendered chunk (`DelayCompensationEngine.recordPhaseCheckpoint`, allocation-free ring buffer). The pendulum phase/angle is interpolated from these at the visual cursor, so it follows tempo and subdivision changes exactly like the audio and never snaps. Tick-based interpolation is only the fallback when no checkpoints exist.
-- **No Visual Resets on Live Changes**: `MetronomeController.setTimeSignature` / `setSubdivision` must not reset `currentBeat` / `currentSubdivisionIndex` while playing; the next beat tick updates the visuals. Media-session updates from BPM / meter changes are debounced (`SESSION_SYNC_DEBOUNCE_MS` = 150 ms) so slider drags do not rebuild the Android notification or iOS Now Playing info on every step; play/pause update immediately.
-- **Unified Visual Timing**: The main beat indicator (`BeatBar`), pendulum phase, and full-screen flash overlay share the exact same `flashDelayMs` schedule and trigger simultaneously via `snap()` on beat onset (zero fade-in lag).
-
----
-
-## 5. Background Playback, Multimedia Notification & Update Checker
-
-- **Shared contract**: `MetronomeController` publishes `PlaybackSessionState` (`title` = `"<BPM> BPM • <TempoMarking>"`, `subtitle` = `"Playing • 4/4 Time"`) to `IPlaybackSession` and receives commands through `PlaybackCommandListener`. Android: `AndroidPlaybackSession` → `MetronomePlaybackService`. iOS: `IosPlaybackSession` (Now Playing info; play/pause/toggle/stop; next/previous track = `+1`/`-1 BPM`).
-- **Update checks**: `ReleaseVersioning` / `GitHubReleaseConfig` (shared) handle repo fallback, asset selection (`.apk` on Android, `.ipa` on iOS, else the release page), and SemVer comparison; platforms only perform HTTP + JSON parsing and open the URL.
-
-- **Foreground Service & Multimedia Notification (`MetronomePlaybackService`)**: `MetronomePlaybackService` runs with `foregroundServiceType="mediaPlayback"`, holds a partial `WakeLock` while playing (releasing it when paused), and maintains an active `MediaSession` + `Notification.MediaStyle` controller in the notification drawer and lock screen.
-  - **Displayed Info**: Shows the current tempo and marking (`"<BPM> BPM • <TempoMarking>"`, e.g., `"120 BPM • Allegro"`) as the notification/media title and playback status + time signature (`"Playing • 4/4 Time"` or `"Paused • 4/4 Time"`) as the subtitle.
-  - **Transport Controls**: Provides three actions in both compact notification view (`Notification.Action`) and Android 13+ System UI Media Carousel (`PlaybackState.CustomAction` + `Play/Pause`): **Decrease Tempo (`-1 BPM`)**, **Play / Pause**, and **Increase Tempo (`+1 BPM`)**.
-  - **Persistent While Paused**: Pausing playback updates the notification to the Paused state (with a `Play` button) rather than dismissing it, allowing users to start/pause playback and adjust BPM directly from the notification drawer at any time.
-- **GitHub Releases Update Checker (`AppUpdateManager`)**: Checks `DamionGans/Anchor` (with automatic fallback to `DamionGans/PulseMetronome`) via `HttpURLConnection` and launches updates via a standard zero-permission `Intent.ACTION_VIEW` intent so the app requires no restricted `REQUEST_INSTALL_PACKAGES` permission and remains 100% compliant with Google Play Store policies while preserving full update functionality.
-
----
-
-## 6. UI, Visual Design & Persistence Rules
-
-- **System Media Volume Only (No In-App Volume Slider)**: Do **not** add an in-app volume slider or software volume multiplier on either platform (iOS uses the hardware volume buttons as well). `MainActivity` sets `volumeControlStream = AudioManager.STREAM_MUSIC` and `MetronomeAudioEngine` outputs waveforms at unity gain so loudness is controlled exclusively via the Android device's physical volume buttons and system media stream.
-- **Per-Count Accent Memory Across Time Signatures**: Beat accents must **never** reset when changing time signatures. `MetronomeViewModel` and `ISettingsRepository` maintain a 16-beat `rememberedAccents` list indexed by beat count (`0..15`). Modifying a beat's accent updates that count in `rememberedAccents`, and switching time signatures restores `rememberedAccents.take(beats)` so every count keeps its remembered accent unless altered in the meantime.
-- **Play & Tap Tempo Button Trigger Mode (`ButtonTriggerMode`)**: Users can configure whether the Play/Pause and Tap Tempo buttons in `QuickControlsBar` register immediately on finger touch-down (`ON_PRESS` / button tap) or on finger lift (`ON_RELEASE` / button release).
-- **Settings Persistence**: Every user-configurable setting (`bpm`, `timeSignature`, `subdivision`, `soundSet`, `pitchMultiplier`, `accents`, `rememberedAccents`, `buttonTriggerMode`, `isFlashEnabled`, `isVibrationEnabled`, `flashDelayMs`, `vibrationDelayMs`, `bluetoothCompensationMs`, `themeMode`, `accentColor`) must be saved and restored via `ISettingsRepository` (shared `KeyValueSettingsRepository` over `SharedPreferences` on Android and `NSUserDefaults` on iOS; storage keys are shared).
-- **Fine-Grained Calibration Controls**: In `SettingsBottomSheet`, each latency offset (Visual & Screen Flash, Vibration, Bluetooth Audio) must provide both a slider (`-200 ms` to `+300 ms`) and quick fine-tuning step buttons (`-10ms`, `-1ms`, `0ms`, `+1ms`, `+10ms`).
-- **Typography & Accessibility**:
-  - Use tabular numbers (`fontFeatureSettings = "tnum"`) on BPM readouts, beat counters, and ms offset labels to prevent layout jitter.
-  - Maintain a minimum `48.dp` touch target on all interactive buttons and steppers.
-  - Support Material 3 Dynamic Color ("Android Phone Theme" on Android 12+) alongside curated custom accent palettes and System/Light/Dark modes.
-
----
-
-## 7. APK Size, Plain AOSP Independence, Google Play Store Compliance & Reproducible Builds
-
-- **Workflows**: `.github/workflows/android.yml` (Android build/test/release), `.github/workflows/ios.yml` (iOS), and `.github/workflows/pages.yml` (website deploy of `website/` on `main`/`v*` pushes that touch `website/**` or `CHANGELOG.md`, or manually; version metadata comes from the tag or the top `CHANGELOG.md` entry). Dependabot (`.github/dependabot.yml`) opens weekly update PRs for Gradle and GitHub Actions.
-- **Android CI** (`.github/workflows/android.yml`): builds, lints (`lintGithubDebug`), and tests (`testGithubDebugUnitTest`, `:shared:testAndroidHostTest`) on pushes to **every branch** and on pull requests; builds `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, and `assemblePlayRelease` + `bundlePlayRelease` (Play AAB workflow artifact) and fails if the play APK requests `INTERNET`. On `v*` tags, `publish-play` uploads the AAB to the Play internal track (draft) once `PLAY_SERVICE_ACCOUNT_JSON` and a real `SIGNING_KEYSTORE_BASE64` upload key exist (the first Play release must be uploaded manually). For Play, never sign with the committed debug keystore; GitHub Releases are published only for pushes to `main`, `v*` tags, or a manual `workflow_dispatch` with `create_release`.
-- **iOS builds**: `.github/workflows/ios.yml` (macOS runner, Xcode 16.4) runs `:shared:iosSimulatorArm64Test`, generates the project with XcodeGen, builds for the simulator, and uploads an unsigned `Anchor-vX.Y.Z-unsigned.ipa` (+ `.sha256`) as a workflow artifact. The shared framework is built by the Xcode pre-build phase `./gradlew :shared:embedAndSignAppleFrameworkForXcode`. The iOS app must not add third-party Swift packages, analytics, or tracking. On `v*` tags the `appstore` job archives with `ANCHOR_DISTRIBUTION=APP_STORE` and uploads to App Store Connect / TestFlight once `APPLE_TEAM_ID`, `APPLE_DIST_CERT_P12_BASE64`, `APPLE_DIST_CERT_PASSWORD`, `APPLE_PROVISIONING_PROFILE_BASE64`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_P8` secrets exist; otherwise it skips.
-- **F-Droid**: metadata lives in `fastlane/metadata/android/en-US/` (title, descriptions, `changelogs/<versionCode>.txt`, icon); add a `changelogs/<versionCode>.txt` for every release. F-Droid builds the `fdroid` flavor from source; the repository is licensed Apache 2.0 (`LICENSE`).
-
-- **Zero Google Play Services / 100% Plain AOSP Compatibility (CRITICAL)**:
-  - The app must **never** depend on Google Play Services (`com.google.android.gms.*`), Firebase (`com.google.firebase.*`), or the `com.google.gms.google-services` Gradle plugin.
-  - It must always build and run with full functionality on plain AOSP, LineageOS, GrapheneOS, and de-Googled Android phones as well as standard Google Play devices.
-- **Google Play Store Compliance**:
-  - Keep `AndroidManifest.xml` strictly least-privilege (`INTERNET` — github flavor only, removed for `fdroid`/`play` — `VIBRATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`) with `android:usesCleartextTraffic="false"` and no prohibited permissions (`REQUEST_INSTALL_PACKAGES`, `READ_EXTERNAL_STORAGE`, etc.).
-  - Keep app titles (`app_name` = `"Anchor"` for launcher icon, `app_full_name` and `metadata.json` = `"Anchor Metronome"` for full app name) concise (`<= 30` chars) without emojis or promotional buzzwords.
-- **Minimal Footprint**: Keep the release APK lightweight (~2 MB):
-  - Do **not** add `androidx.compose.material:material-icons-extended` (adds several MBs); add custom vector icons in `AnchorIcons.kt`.
-  - Do **not** add heavy networking/serialization/database libraries (Retrofit, OkHttp, Moshi, Room, Firebase) when Android platform APIs (`HttpURLConnection`, `org.json`, `SharedPreferences`) suffice.
-- **Release Optimization (`androidApp/build.gradle.kts`)**:
-  - Release builds must keep `isMinifyEnabled = true` and `isShrinkResources = true`.
-  - Release artifacts are built with `assemble<Flavor>Release` / `bundlePlayRelease` (never ship debug builds as releases).
-  - Reproducible build flags (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`) must remain enabled on `AbstractArchiveTask`.
-
----
-
-## 8. Mandatory Release, Semantic Versioning & Website Sync Checklist
-
-### Semantic Versioning Policy (`MAJOR.MINOR.PATCH`)
-Version numbers use standard Semantic Versioning (`MAJOR.MINOR.PATCH`, with `versionCode = MAJOR * 10000 + MINOR * 100 + PATCH`, e.g., `1.3.0` → `10300`)—**never** use date-based version strings. Use engineering judgment to determine the appropriate version level:
-- **PATCH / Hotfix (`MAJOR.MINOR.(PATCH+1)`)**: Bug fixes, hotfixes, copy/documentation updates, or small internal adjustments.
-- **MINOR (`MAJOR.(MINOR+1).0`)**: New user-facing features, controls, or capabilities (resets patch to `0`). It is fine for minor versions to advance quickly as features are introduced.
-- **MAJOR (`(MAJOR+1).0.0`)**: Be conservative with major bumps; reserve them for major new feature milestones, architectural overhauls, or after a substantial progression of minor updates.
-
-### GitHub Release Gate Rule (CRITICAL — Check Before Creating a New Version Section)
-1. **Check Published GitHub Releases First**: Before adding a new version section, check `https://api.github.com/repos/DamionGans/Anchor/releases` (and fallback `https://api.github.com/repos/DamionGans/PulseMetronome/releases`) to see what version was most recently published as an APK release on GitHub.
-2. **If the Current Version in the Repo Has NOT Been Released on GitHub Yet**:
-   - **Do NOT stack a second unreleased version entry.** Maintain a single unreleased version entry at the top of `CHANGELOG.md`.
-   - **Adjust the Unreleased SemVer Level If Needed & Combine the Changelog**: You may adjust the unreleased version's semantic level relative to the last published GitHub release (e.g., upgrading an unreleased patch bump to a minor bump `1.3.0` if new features were added since the last published release), and merge/rewrite all changes since the last GitHub release into that single unreleased version section across `CHANGELOG.md`, `ChangelogDialog.kt`, `website/version.json`, and `website/index.html`.
-3. **If the Current Version in the Repo HAS Already Been Released on GitHub**:
-   - Increment the semantic version (`PATCH`, `MINOR`, or `MAJOR` as appropriate) and prepend a new changelog entry.
-
-Whenever updating the version or rewriting the current unreleased version's changelog, you **must keep all 6 locations in lockstep**:
-
-1. **`androidApp/build.gradle.kts`**:
-   - Keep or update `val appVersionName = "X.Y.Z"` and `val appVersionCode = X * 10000 + Y * 100 + Z`.
-2. **`CHANGELOG.md`**:
-   - Prepend (if bumping after a published release) or rewrite (if unreleased on GitHub) the top `## [vX.Y.Z]` section in a neutral, concise, factual tone.
-   - Note: `.github/workflows/android.yml` automatically extracts the top section of `CHANGELOG.md` for GitHub Release notes.
-3. **`androidApp/src/main/kotlin/com/damiongans/anchor/ui/dialogs/ChangelogDialog.kt`**:
-   - Update `CURRENT_RELEASE_CHANGELOG` to match the combined changes in `CHANGELOG.md`.
-4. **`website/version.json`, `website/index.html` & `website/app.js` (GitHub Pages Website)**:
-   - Keep `version`, `versionCode`, `releaseDate`, `downloadUrl`, and `highlights` synchronized in `website/version.json`.
-   - Keep the fallback version badge, download link, and changelog list synchronized in `website/index.html` and `website/app.js`.
-5. **`androidApp/src/test/kotlin/com/damiongans/anchor/AppUpdateManagerTest.kt`** (plus `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` for F-Droid):
-   - Ensure the `BuildConfig.VERSION_NAME` assertion in `testVersionComparison()` matches the active `X.Y.Z` version.
-6. **iOS version (`iosApp/project.yml`)**:
-   - Keep `MARKETING_VERSION: "X.Y.Z"` and `CURRENT_PROJECT_VERSION: "<versionCode>"` in sync, plus the `"X.Y.Z"` fallbacks in `AnchorIosApp.currentAppVersion()` and `MetronomeViewModel` (`BuildConfig.VERSION_NAME.ifBlank { ... }`). CI overrides both from `CHANGELOG.md`.
-
----
-
-## 9. Verification & Testing Workflow
-
-Before completing any task that modifies code or configuration:
-
-1. **Compile Check**: Verify the project compiles cleanly (`gradle assembleGithubDebug`; store-channel changes also `assemblePlayRelease bundlePlayRelease assembleFdroidRelease`).
-2. **Shared tests** (`shared/src/commonTest`, `kotlin.test`): run `./gradlew :shared:testAndroidHostTest` (any OS), `./gradlew :shared:desktopTest` (any OS; also runs `desktopTest`), and `./gradlew :shared:iosSimulatorArm64Test` (macOS):
-   - `TapTempoCalculatorTest`, `DelayCompensationEngineTest` (0ms exact frame match, negative/positive offsets, Bluetooth shift, subdivisions)
-   - `MetronomeControllerTest` (state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update)
-   - `MetronomeSequencerTest` (synthesis, warmup, exact beat frames, playhead estimator, route selection)
-   - `KeyValueSettingsRepositoryTest`, `ReleaseVersioningTest`
-3. **Android Unit & Robolectric Tests**: run `./gradlew :androidApp:testGithubDebugUnitTest`:
-   - `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service integration), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`
-4. **iOS build**: on macOS, `cd iosApp && xcodegen generate && xcodebuild -scheme Anchor -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (or rely on the `Build iOS App` workflow).
-5. **Update `AGENTS.md`**: Confirm whether your changes introduced or modified any architectural rules or user requirements, and update this file if so.
+## 10. Verify
+- `./gradlew :androidApp:testGithubDebugUnitTest assembleGithubDebug` (store-channel changes: `assemblePlayRelease bundlePlayRelease assembleFdroidRelease`)
+- `./gradlew :shared:testAndroidHostTest :shared:desktopTest` (macOS: `:shared:iosSimulatorArm64Test`)
+- Windows: `./gradlew :desktopApp:run` / `:desktopApp:packageMsi` (or `desktop.yml`)
+- iOS: `cd iosApp && xcodegen generate && xcodebuild -scheme Anchor -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (or `ios.yml`)
+- Test inventory: `docs/architecture.md` §8.

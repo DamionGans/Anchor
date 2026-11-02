@@ -55,7 +55,7 @@ fun PendulumVisualizer(
             // Measurement tick marks
             for (step in -4..4) {
                 val tickAngle = step * 6.5
-                val rad = Math.toRadians(tickAngle - 90.0)
+                val rad = (tickAngle - 90.0) * kotlin.math.PI / 180.0
                 val tickStartX = pivotX + (arcRadius - 8.dp.toPx()) * cos(rad).toFloat()
                 val tickStartY = pivotY + (arcRadius - 8.dp.toPx()) * sin(rad).toFloat()
                 val tickEndX = pivotX + (arcRadius + 4.dp.toPx()) * cos(rad).toFloat()

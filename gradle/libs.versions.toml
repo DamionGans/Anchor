@@ -18,6 +18,8 @@ kotlinxCoroutinesAndroid = "1.11.0"
 kotlinxCoroutinesCore = "1.11.0"
 robolectric = "4.17"
 kotlinxSerializationJson = "1.9.0"
+composeMultiplatform = "1.12.2"
+composeMultiplatformMaterial3 = "1.9.0"
 secretsGradlePlugin = "2.0.1"
 
 
@@ -46,6 +48,12 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinxCoroutinesCore" }
+# Compose Multiplatform (shared UI for Android + Windows desktop)
+jetbrains-compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
+jetbrains-compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }
+jetbrains-compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }
+jetbrains-compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "composeMultiplatformMaterial3" }
 
 
 [plugins]
@@ -53,5 +61,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDevtoolsKsp" }
 secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }

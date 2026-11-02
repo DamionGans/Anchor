@@ -11,10 +11,10 @@ android {
 
   val appVersionName: String = (project.findProperty("versionName") as? String)
     ?: System.getenv("APP_VERSION_NAME")
-    ?: "1.5.5"
+    ?: "1.6.0"
   val appVersionCode: Int = (project.findProperty("versionCode") as? String)?.toIntOrNull()
     ?: System.getenv("APP_VERSION_CODE")?.toIntOrNull()
-    ?: 10505
+    ?: 10600
   val appReleaseTag: String = (project.findProperty("releaseTag") as? String)
     ?: System.getenv("RELEASE_TAG")
     ?: "v$appVersionName"
@@ -118,6 +118,7 @@ secrets {
 // Shared KMP logic module + pure AndroidX & Kotlin Coroutines dependencies (zero Google Play Services dependencies for full AOSP compatibility)
 dependencies {
   implementation(project(":shared"))
+  implementation(project(":sharedUi"))
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.compose.material3)

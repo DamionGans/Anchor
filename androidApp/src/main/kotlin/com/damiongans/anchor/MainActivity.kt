@@ -14,11 +14,13 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.damiongans.anchor.ui.MetronomeScreen
+import com.damiongans.anchor.ui.platform.LocalAppVersionName
 import com.damiongans.anchor.ui.theme.MyApplicationTheme
 import com.damiongans.anchor.viewmodel.MetronomeViewModel
 
@@ -57,7 +59,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MetronomeScreen(viewModel = viewModel)
+                    CompositionLocalProvider(LocalAppVersionName provides BuildConfig.VERSION_NAME) {
+                        MetronomeScreen(controller = viewModel.controller)
+                    }
                 }
             }
         }

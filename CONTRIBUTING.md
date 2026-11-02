@@ -5,9 +5,12 @@ Thanks for helping improve Anchor! Please read [`AGENTS.md`](./AGENTS.md) first.
 ## Repository layout
 
 ```text
-androidApp/   Android app (Jetpack Compose UI + Android platform code)
+androidApp/   Android app (Android platform code; hosts the shared Compose UI)
+desktopApp/   Windows app (Compose Multiplatform Desktop host + MSI packaging)
 iosApp/       iPhone app (SwiftUI) + XcodeGen project.yml
 shared/       Kotlin Multiplatform module with all shared app logic
+sharedUi/     Compose Multiplatform UI shared by Android and Windows
+scripts/      set-version.sh (version bumps)
 docs/         Developer documentation (architecture, distribution, Windows roadmap)
 website/      GitHub Pages site
 fastlane/     F-Droid / store listing metadata
@@ -28,6 +31,8 @@ The golden rule: **app logic goes in `shared/src/commonMain`**. Platform folders
 ./gradlew :androidApp:testGithubDebugUnitTest  # Android unit + Robolectric tests
 ./gradlew :androidApp:assembleGithubDebug      # Android debug APK
 ./gradlew :shared:iosSimulatorArm64Test        # shared tests on the iOS simulator (macOS)
+./gradlew :desktopApp:run                      # run the Windows/desktop app from source
+./gradlew :desktopApp:packageMsi               # Windows MSI for this machine's architecture (Windows)
 ```
 
 ```bash
@@ -37,8 +42,9 @@ cd iosApp && xcodegen generate && open Anchor.xcodeproj
 ## Pull requests
 - Branch from `main` and keep PRs focused on one change.
 - Update `AGENTS.md` whenever behavior, architecture, build setup, or standing rules change.
-- Apply user-facing changes to both the Compose and SwiftUI UIs.
+- Apply user-facing changes to both the shared Compose UI (`sharedUi/`, Android + Windows) and the SwiftUI UI.
 - Use a neutral, factual tone in commit messages and `CHANGELOG.md`.
+- Bump versions with `scripts/set-version.sh X.Y.Z`, then write the changelog text (see `AGENTS.md` §9).
 - CI (`android.yml`, `ios.yml`, `desktop.yml`) must be green before merging.
 
 ## Product principles

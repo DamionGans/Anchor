@@ -1,16 +1,16 @@
 {
-  "version": "1.5.5",
-  "versionCode": 10505,
-  "releaseTag": "v1.5.5",
+  "version": "1.6.0",
+  "versionCode": 10600,
+  "releaseTag": "v1.6.0",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.5.5.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.5.5/Anchor-v1.5.5.apk",
+  "apkName": "Anchor-v1.6.0.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.0/Anchor-v1.6.0.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Play starts the first beat immediately on Android and iPhone",
-    "Website and documentation cover Android, iPhone, and the upcoming Windows app"
+    "New Windows app for x64 and ARM PCs (MSI installers)",
+    "Android and Windows share one interface"
   ]
 }
