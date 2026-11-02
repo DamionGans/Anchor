@@ -24,5 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Anchor"
 
-include(":app")
+include(":androidApp")
 include(":shared")

@@ -1,12 +1,12 @@
 <div align="center">
-  <img src="docs/assets/anchor-logo.svg" alt="Anchor Metronome Logo" width="108" height="108" />
+  <img src="website/assets/anchor-logo.svg" alt="Anchor Metronome Logo" width="108" height="108" />
 
   # Anchor Metronome
 
   <p><strong>Rock-solid time for serious play</strong></p>
 
   [![Website & Download](https://img.shields.io/badge/Website-Download%20App-00E5FF.svg)](https://damiongans.github.io/Anchor/)
-  [![Latest Release](https://github.com/DamionGans/Anchor/actions/workflows/release.yml/badge.svg)](https://github.com/DamionGans/Anchor/releases/latest)
+  [![Latest Release](https://github.com/DamionGans/Anchor/actions/workflows/android.yml/badge.svg)](https://github.com/DamionGans/Anchor/releases/latest)
   [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84.svg?logo=android&logoColor=white)](https://www.android.com/)
   [![Platform](https://img.shields.io/badge/Platform-iPhone%20iOS%2016%2B-000000.svg?logo=apple&logoColor=white)](#iphone)
   [![iOS Build](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml/badge.svg)](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml)
@@ -42,7 +42,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.5.0.apk` file and open it to install.
+2. Download the latest `Anchor-v1.5.1.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone
@@ -60,10 +60,27 @@ Curious how Anchor achieves sample-accurate timing, prevents Android audio hardw
 
 Detailed engineering documentation is kept separate so this README stays focused on musicians:
 
-* 📄 **[Technical Architecture & Audio Engine Guide (`ARCHITECTURE.md`)](./ARCHITECTURE.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android and iPhone apps.
+* 📄 **[Technical Architecture & Audio Engine Guide (`docs/architecture.md`)](./docs/architecture.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android and iPhone apps.
 * 🌐 **[Web Technical Deep-Dive (`architecture.html`)](https://damiongans.github.io/Anchor/architecture.html)** — Visual waveform diagrams and system breakdown on the project website.
+* 🧭 **[Distribution & Store Release Guide (`docs/distribution.md`)](./docs/distribution.md)** — GitHub, F-Droid, Google Play, and App Store channels and the release process.
 * 🤖 **[Developer & AI Agent Guidelines (`AGENTS.md`)](./AGENTS.md)** — Authoritative contributor rules, testing invariants, and release checklists for human developers and AI coding agents.
 * 📋 **[Changelog (`CHANGELOG.md`)](./CHANGELOG.md)** — Full version history.
+
+---
+
+## Contributing
+
+Anchor is a Kotlin Multiplatform project:
+
+```text
+androidApp/   Android app (Jetpack Compose)
+iosApp/       iPhone app (SwiftUI)
+shared/       Shared Kotlin logic used by both apps
+docs/         Developer documentation
+website/      Project website (GitHub Pages)
+```
+
+See **[`CONTRIBUTING.md`](./CONTRIBUTING.md)** for build and test commands, and **[`SECURITY.md`](./SECURITY.md)** to report a vulnerability.
 
 ---
 

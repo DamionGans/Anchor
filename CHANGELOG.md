@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.5.1] — Repository Restructure
+
+### Project Structure
+- Renamed the Android module from `app/` to `androidApp/` (Kotlin Multiplatform convention alongside `shared/` and `iosApp/`) and moved Kotlin sources from `src/*/java/` to `src/*/kotlin/`.
+- Moved the GitHub Pages website from `docs/` to `website/`; `docs/` now holds developer documentation (`docs/architecture.md`, formerly `ARCHITECTURE.md`, and the new `docs/distribution.md`).
+- Grouped iOS sources into `iosApp/Anchor/App/`, `Views/`, and `Resources/`.
+- Renamed the Android workflow to `.github/workflows/android.yml` and removed the unused `generate_release_notes.py` script.
+
+### Contributor Tooling
+- Added `CONTRIBUTING.md`, `SECURITY.md`, issue and pull request templates, `.editorconfig`, and Dependabot updates for Gradle and GitHub Actions.
+
 ## [v1.5.0] — Store-Ready Distribution Builds, Privacy Policy & License
 
 ### Distribution Channels
