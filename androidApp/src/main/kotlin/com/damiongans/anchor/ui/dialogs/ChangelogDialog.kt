@@ -31,9 +31,7 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Steady Pulse on Live Changes", "Changing the time signature or subdivision while playing no longer shifts the beat; changes apply at the next beat or subdivision."),
-    ChangelogEntry("Smooth Pendulum & Beat Bar", "The pendulum stays continuous and the beat bar no longer jumps back to beat 1 when you change tempo, time signature, or subdivision."),
-    ChangelogEntry("Smoother Tempo Slider", "Rapid BPM changes no longer rebuild the playback notification on every step.")
+    ChangelogEntry("Up-to-Date Foundations", "Updated the build tools, Kotlin, and Jetpack Compose libraries to their latest versions. The app works exactly as before.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

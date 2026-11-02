@@ -52,7 +52,7 @@ class MetronomeViewModel @JvmOverloads constructor(
         settingsRepository = settingsRepository,
         updateRepository = updateRepository,
         appVersion = AppVersionInfo(
-            versionName = BuildConfig.VERSION_NAME.ifBlank { "1.5.2" },
+            versionName = BuildConfig.VERSION_NAME.ifBlank { "1.5.3" },
             releaseTag = BuildConfig.APP_RELEASE_TAG,
             channel = DistributionChannel.fromName(BuildConfig.DISTRIBUTION_CHANNEL)
         ),
