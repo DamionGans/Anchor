@@ -1,18 +1,15 @@
 {
-  "version": "1.5.2",
-  "versionCode": 10502,
-  "releaseTag": "v1.5.2",
+  "version": "1.5.3",
+  "versionCode": 10503,
+  "releaseTag": "v1.5.3",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.5.2.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.5.2/Anchor-v1.5.2.apk",
+  "apkName": "Anchor-v1.5.3.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.5.3/Anchor-v1.5.3.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Steady pulse when changing time signature, subdivision, or BPM during playback",
-    "Continuous pendulum and beat bar with no resets or jumps on live changes",
-    "Smoother tempo slider (debounced notification updates)",
-    "Website preview pendulum now in sync with the highlighted beats"
+    "Updated build tools, Kotlin, and Jetpack Compose libraries (no behavior changes)"
   ]
 }

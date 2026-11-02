@@ -1,5 +1,12 @@
 # Changelog
 
+## [v1.5.3] — Toolchain & Library Updates
+
+### Build
+- Updated the Android Gradle Plugin to 9.5.0, Kotlin to 2.4.21, KSP to 2.3.12, and kotlinx-coroutines to 1.11.0 (Gradle 9.8.2 and Robolectric 4.17 were updated separately).
+- Updated the Jetpack Compose BOM to 2026.09.00 and AndroidX Core to 1.19.1, and raised `compileSdk` to 37 as the new Compose libraries require (`targetSdk` unchanged).
+- No changes to app behavior.
+
 ## [v1.5.2] — Steady Pulse During Live Tempo & Time-Signature Changes
 
 ### Timing

@@ -132,7 +132,7 @@ class AnchorIosApp {
             // (GITHUB for the unsigned CI build, APP_STORE for App Store archives).
             val channel = bundle.objectForInfoDictionaryKey("AnchorDistribution") as? String
             return AppVersionInfo(
-                versionName = version?.takeIf { it.isNotBlank() } ?: "1.5.2",
+                versionName = version?.takeIf { it.isNotBlank() } ?: "1.5.3",
                 channel = DistributionChannel.fromName(channel)
             )
         }

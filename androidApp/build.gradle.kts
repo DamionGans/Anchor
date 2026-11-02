@@ -11,10 +11,10 @@ android {
 
   val appVersionName: String = (project.findProperty("versionName") as? String)
     ?: System.getenv("APP_VERSION_NAME")
-    ?: "1.5.2"
+    ?: "1.5.3"
   val appVersionCode: Int = (project.findProperty("versionCode") as? String)?.toIntOrNull()
     ?: System.getenv("APP_VERSION_CODE")?.toIntOrNull()
-    ?: 10502
+    ?: 10503
   val appReleaseTag: String = (project.findProperty("releaseTag") as? String)
     ?: System.getenv("RELEASE_TAG")
     ?: "v$appVersionName"
