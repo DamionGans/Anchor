@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 // Shared Kotlin Multiplatform module: all platform-agnostic Anchor logic (models, timing/delay
 // compensation, click synthesis & sequencing, settings, update checks, and the MetronomeController
-// state holder). Platform implementations live in `:app` (Android) and in
+// state holder). Platform implementations live in `:androidApp` (Android) and in
 // `iosMain` + `iosApp/` (iOS).
 plugins {
   alias(libs.plugins.kotlin.multiplatform)
