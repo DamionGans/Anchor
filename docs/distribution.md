@@ -40,6 +40,6 @@ The channel is the shared `DistributionChannel` (`shared/src/commonMain/.../upda
 2. Listing text and changelogs come from `fastlane/metadata/android/en-US/`. Add `changelogs/<versionCode>.txt` for every release.
 
 ## Releasing a version
-1. Follow the version sync checklist in `AGENTS.md`, section 8.
+1. Run `scripts/set-version.sh X.Y.Z` and write the changelog text (`AGENTS.md` §9).
 2. Merge to `main`. The Android workflow publishes the GitHub Release APK and deploys `website/`.
 3. Push a `v*` tag to trigger the store uploads (each skips until its secrets exist).

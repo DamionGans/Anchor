@@ -10,6 +10,7 @@ desktopApp/   Windows app (Compose Multiplatform Desktop host + MSI packaging)
 iosApp/       iPhone app (SwiftUI) + XcodeGen project.yml
 shared/       Kotlin Multiplatform module with all shared app logic
 sharedUi/     Compose Multiplatform UI shared by Android and Windows
+scripts/      set-version.sh (version bumps)
 docs/         Developer documentation (architecture, distribution, Windows roadmap)
 website/      GitHub Pages site
 fastlane/     F-Droid / store listing metadata
@@ -43,6 +44,7 @@ cd iosApp && xcodegen generate && open Anchor.xcodeproj
 - Update `AGENTS.md` whenever behavior, architecture, build setup, or standing rules change.
 - Apply user-facing changes to both the shared Compose UI (`sharedUi/`, Android + Windows) and the SwiftUI UI.
 - Use a neutral, factual tone in commit messages and `CHANGELOG.md`.
+- Bump versions with `scripts/set-version.sh X.Y.Z`, then write the changelog text (see `AGENTS.md` §9).
 - CI (`android.yml`, `ios.yml`, `desktop.yml`) must be green before merging.
 
 ## Product principles

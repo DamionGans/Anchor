@@ -11,7 +11,7 @@
 - [ ] App logic lives in `shared/src/commonMain`; platform folders contain only platform code and UI
 - [ ] User-facing changes applied to both the Compose and SwiftUI UIs
 - [ ] `AGENTS.md` updated if behavior, architecture, or build setup changed
-- [ ] Version & changelog synced (AGENTS.md section 8) if this is a release change
+- [ ] Version bumped with `scripts/set-version.sh` + changelog text (AGENTS.md §9) if this is a release change
 - [ ] Tests added or updated; CI green
 
 ## Testing

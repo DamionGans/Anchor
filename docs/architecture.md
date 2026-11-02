@@ -70,7 +70,11 @@ When a musician switches to a PDF sheet music reader or locks their phone screen
 **Android (`AndroidPlaybackSession` → `MetronomePlaybackService`)**
 - Runs as an explicit `foregroundServiceType="mediaPlayback"` service.
 - Acquires a partial `PowerManager.WakeLock` while playing (released when paused) so the CPU keeps servicing the high-priority PCM loop with the screen off.
-- An active `MediaSession` and `Notification.MediaStyle` controller provides `-1 BPM`, `Play/Pause`, and `+1 BPM` controls.
+- An active `MediaSession` and `Notification.MediaStyle` controller provides `-1 BPM`, `Play/Pause`, and `+1 BPM` controls, both as compact `Notification.Action`s and in the Android 13+ media carousel (`PlaybackState.CustomAction`).
+- Title `"120 BPM • Allegro"`, subtitle `"Playing • 4/4 Time"` / `"Paused • 4/4 Time"`. Pausing keeps the notification (with a Play button) instead of dismissing it.
+- Updates (GitHub flavor): `AppUpdateManager` checks `DamionGans/Anchor` (fallback `DamionGans/PulseMetronome`) over `HttpURLConnection` and opens the APK with a zero-permission `Intent.ACTION_VIEW`, so the app never needs `REQUEST_INSTALL_PACKAGES`.
+
+**Windows**: no system media controls yet (`NoOpPlaybackSession`; SMTC planned, see `windows.md`).
 
 **iOS (`IosPlaybackSession`)**
 - `AVAudioSession` playback category with the `audio` background mode keeps the engine running when the app is in the background or the screen is locked.
@@ -182,3 +186,16 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 ## 7. Contributing & AI Agent Guidelines
 
 For developer workflow rules, testing requirements, and release checklists, see [**`AGENTS.md`**](../AGENTS.md).
+
+---
+
+## 8. Test Inventory
+
+- **Shared** (`shared/src/commonTest`, `kotlin.test`; runs on the Android host, desktop JVM, and iOS simulator):
+  - `TapTempoCalculatorTest`
+  - `DelayCompensationEngineTest`: 0 ms exact frame match, negative/positive offsets, Bluetooth shift, subdivisions
+  - `MetronomeControllerTest`: state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update, output standby passthrough
+  - `MetronomeSequencerTest`: synthesis, warmup, exact beat frames, warm start on a running output, steady pulse under subdivision/meter changes, pendulum continuity, playhead estimator, route selection
+  - `KeyValueSettingsRepositoryTest`, `ReleaseVersioningTest`
+- **Desktop** (`shared/src/desktopTest`, run on Windows x64 + arm64): `DesktopAudioEngineTest` (lifecycle and standby without an audio device), `PreferencesKeyValueStoreTest`, `WindowsArchTest`, `DesktopUpdateRepositoryTest`.
+- **Android** (`androidApp/src/test`, Robolectric): `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`.
