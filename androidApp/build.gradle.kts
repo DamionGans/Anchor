@@ -7,7 +7,7 @@ plugins {
 
 android {
   namespace = "com.damiongans.anchor"
-  compileSdk { version = release(36) { minorApiLevel = 1 } }
+  compileSdk { version = release(37) }
 
   val appVersionName: String = (project.findProperty("versionName") as? String)
     ?: System.getenv("APP_VERSION_NAME")

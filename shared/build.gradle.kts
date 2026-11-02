@@ -14,7 +14,7 @@ plugins {
 kotlin {
   android {
     namespace = "com.damiongans.anchor.shared"
-    compileSdk = 36
+    compileSdk = 37
     minSdk = 24
 
     withHostTestBuilder {}
