@@ -10,8 +10,8 @@ class AppUpdateManagerTest {
 
     @Test
     fun testVersionComparison() {
-        // Current APK version is 1.6.3
-        assertEquals("1.6.3", BuildConfig.VERSION_NAME)
+        // Current APK version is 1.7.0
+        assertEquals("1.7.0", BuildConfig.VERSION_NAME)
 
         // Newer patch, minor, and major versions than 1.3.0
         assertTrue(AppUpdateManager.isVersionNewer("v1.3.1", "1.3.0"))

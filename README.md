@@ -38,6 +38,7 @@ On Android, Anchor uses pure platform APIs with zero reliance on Google Play Ser
 * **Instant, Unclipped First Beat**: Press Play and hear Beat 1 immediately at full clarity—no swallowed first clicks while your phone speaker wakes up.
 * **Everything on One Screen**: Adjust your tempo via the slider, quick steppers (`-5`, `-1`, `+1`, `+5`, `½`, `2×`), or **Tap Tempo** without digging through menus or scrolling.
 * **6 Musical Click Voices**: Choose between **Tick**, **Click**, **Woodblock**, **Cowbell**, **Beep**, and **Hi-Hat**—voiced to cut cleanly through acoustic instruments or headphones.
+* **Playlists & Song Library**: Save songs with their name, BPM, time signature, and custom beat accents into your library, arrange them into ordered setlists, and step through songs effortlessly on the main screen during rehearsals or gigs.
 * **Custom Accents & Subdivisions**: Tap any beat indicator to cycle between **Accented**, **Normal**, and **Muted** (great for testing your internal pulse), with per-count accents remembered across time signature changes. Supports quarter, eighth, triplet, and 16th-note subdivisions.
 * **See & Feel the Tempo**: Practice on a loud stage or without headphones using the **Beat Bar**, smooth **Pendulum** animation, **Full-Screen Flash**, and distinct **Haptic Vibrations** for accents, beats, and subdivisions.
 * **Plays While You Read Sheet Music**: Switch to your PDF score reader, chord chart app, or lock your phone screen—Anchor keeps your beat steady in the background with a multimedia player (**Play/Pause** and **Tempo −/+** buttons) right in your notification drawer.
@@ -52,7 +53,7 @@ On Android, Anchor uses pure platform APIs with zero reliance on Google Play Ser
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.6.3.apk` file and open it to install.
+2. Download the latest `Anchor-v1.7.0.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone
@@ -64,7 +65,7 @@ Anchor for iPhone (iOS 16+) is built automatically by the **[Build iOS App](http
 
 ### Windows
 
-1. Open the **[latest GitHub Release](https://github.com/DamionGans/Anchor/releases/latest)** and download `Anchor-v1.6.3-windows-x64.msi` (Intel/AMD PCs) or `Anchor-v1.6.3-windows-arm64.msi` (ARM PCs).
+1. Open the **[latest GitHub Release](https://github.com/DamionGans/Anchor/releases/latest)** and download `Anchor-v1.7.0-windows-x64.msi` (Intel/AMD PCs) or `Anchor-v1.7.0-windows-arm64.msi` (ARM PCs).
 2. Run the installer. It installs for your user account (no admin rights) and adds Anchor to the Start menu.
 3. The installer isn't code-signed yet: if SmartScreen shows "Windows protected your PC", choose **More info → Run anyway**.
 

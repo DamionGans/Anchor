@@ -1,0 +1,2 @@
+- Added Song Library to save songs with custom name, BPM, time signature, subdivision, and per-beat accent patterns.
+- Added Playlists (set lists) to organize songs in order and step through them from the main screen without interrupting playback.
