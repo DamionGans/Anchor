@@ -37,7 +37,7 @@ class IosUpdateRepository : IUpdateRepository {
         val request = NSMutableURLRequest.requestWithURL(url)
         request.setValue("application/vnd.github+json", forHTTPHeaderField = "Accept")
         request.setValue("Anchor-iOS/$currentVersionName", forHTTPHeaderField = "User-Agent")
-        request.timeoutInterval = REQUEST_TIMEOUT_SECONDS
+        request.setTimeoutInterval(REQUEST_TIMEOUT_SECONDS)
 
         val task = NSURLSession.sharedSession.dataTaskWithRequest(request) { data, response, error ->
             val status = (response as? NSHTTPURLResponse)?.statusCode ?: 0L

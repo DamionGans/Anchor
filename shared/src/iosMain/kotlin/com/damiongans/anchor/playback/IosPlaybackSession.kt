@@ -28,7 +28,7 @@ class IosPlaybackSession : IPlaybackSession {
         command.enabled = true
         val target = command.addTargetWithHandler { _ ->
             action()
-            MPRemoteCommandHandlerStatus.MPRemoteCommandHandlerStatusSuccess
+            MPRemoteCommandHandlerStatusSuccess
         }
         registeredTargets.add(command to target)
     }

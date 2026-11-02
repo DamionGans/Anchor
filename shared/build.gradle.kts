@@ -12,7 +12,7 @@ plugins {
 }
 
 kotlin {
-  androidLibrary {
+  android {
     namespace = "com.damiongans.anchor.shared"
     compileSdk = 36
     minSdk = 24
