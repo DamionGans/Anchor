@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.6.2] — Multiplatform Showcase, Build Fixes & Release Guards
+
+### Android & Build Setup
+- Fixed Compose Preview unit test generation failure on release variants with Android Gradle Plugin 9.5+.
+- Resolved Gradle 10 deprecation warnings in shared module dependencies and enabled parallel tooling execution.
+- Added comprehensive unit tests for tap tempo calculation.
+
+### Website & Documentation
+- Website expanded to showcase multiplatform support equally across Windows (x64 & arm64), Android, and iPhone, including platform-specific downloads and architecture deep-dive.
+- Added VS Code launch configurations and development tasks for running and debugging desktop and Android targets.
+- Contributor guidelines restored with mandatory branch/PR workflow, squash-merge checks, and store upload protection.
+
+### CI & Release Infrastructure
+- Release steps in `android.yml` and `desktop.yml` now guard against overwriting existing releases if a tag or release was already published for a different commit.
+
 ## [v1.6.1] — Touch-Friendly Windows App
 
 ### Windows

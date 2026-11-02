@@ -347,7 +347,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RELEASE_TAG="${{ steps.prepare_release.outputs.release_tag }}"
+          CURRENT_SHA="${{ github.sha }}"
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            EXISTING_COMMIT=$(gh release view "${RELEASE_TAG}" --json targetCommitish -q .targetCommitish 2>/dev/null || true)
+            TAG_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/${RELEASE_TAG}" --jq '.object.sha' 2>/dev/null || true)
+            if [ -n "$EXISTING_COMMIT" ] && [ "$EXISTING_COMMIT" != "$CURRENT_SHA" ] && [[ "$CURRENT_SHA" != "$EXISTING_COMMIT"* ]] && [ "$TAG_SHA" != "$CURRENT_SHA" ] && [[ "$CURRENT_SHA" != "$TAG_SHA"* ]]; then
+              echo "::error::version already released, bump with scripts/set-version.sh"
+              exit 1
+            fi
             echo "Updating existing GitHub release ${RELEASE_TAG}..."
             gh release edit "${RELEASE_TAG}" \
               --title "Anchor Metronome ${RELEASE_TAG}" \

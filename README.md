@@ -52,7 +52,7 @@ On Android, Anchor uses pure platform APIs with zero reliance on Google Play Ser
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.6.1.apk` file and open it to install.
+2. Download the latest `Anchor-v1.6.2.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone
@@ -64,7 +64,7 @@ Anchor for iPhone (iOS 16+) is built automatically by the **[Build iOS App](http
 
 ### Windows
 
-1. Open the **[latest GitHub Release](https://github.com/DamionGans/Anchor/releases/latest)** and download `Anchor-v1.6.1-windows-x64.msi` (Intel/AMD PCs) or `Anchor-v1.6.1-windows-arm64.msi` (ARM PCs).
+1. Open the **[latest GitHub Release](https://github.com/DamionGans/Anchor/releases/latest)** and download `Anchor-v1.6.2-windows-x64.msi` (Intel/AMD PCs) or `Anchor-v1.6.2-windows-arm64.msi` (ARM PCs).
 2. Run the installer. It installs for your user account (no admin rights) and adds Anchor to the Start menu.
 3. The installer isn't code-signed yet: if SmartScreen shows "Windows protected your PC", choose **More info → Run anyway**.
 
