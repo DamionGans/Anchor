@@ -10,6 +10,8 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+/desktopApp/build
+/sharedUi/build
 /captures
 .externalNativeBuild
 .cxx
@@ -25,3 +27,6 @@ debug.keystore
 /iosApp/Anchor/Info.plist
 /iosApp/build/
 xcuserdata/
+
+# Local cross-agent coordination log (untracked, machine-local)
+/AGENT_COMMS.md

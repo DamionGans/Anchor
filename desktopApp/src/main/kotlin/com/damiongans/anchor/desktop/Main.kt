@@ -43,7 +43,7 @@ fun main() {
 
     application {
         val state by controller.uiState.collectAsState()
-        val windowState = rememberWindowState(size = DpSize(460.dp, 880.dp))
+        val windowState = rememberWindowState(size = DpSize(900.dp, 620.dp))
 
         Window(
             onCloseRequest = {
@@ -58,7 +58,7 @@ fun main() {
                 event.type == KeyEventType.KeyDown && KeyboardShortcuts.handle(event, controller)
             }
         ) {
-            window.minimumSize = Dimension(380, 640)
+            window.minimumSize = Dimension(380, 560)
             MyApplicationTheme(themeMode = state.themeMode, accentColor = state.accentColor) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     CompositionLocalProvider(LocalAppVersionName provides versionName) {
@@ -78,4 +78,4 @@ private fun loadAppIcon(): BitmapPainter? = try {
     null
 }
 
-private const val DEV_VERSION = "1.6.2"
+private const val DEV_VERSION = "1.6.3"

@@ -2,7 +2,6 @@ package com.damiongans.anchor.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,13 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -33,6 +32,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,8 +51,16 @@ fun BeatBar(
     accents: List<BeatAccent>,
     isPlaying: Boolean,
     onBeatClick: (Int) -> Unit,
+    isExpanded: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val isDense = totalBeats > 8
+    val pillSpacing = when {
+        isDense -> 4.dp
+        isExpanded -> 10.dp
+        else -> 8.dp
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -63,8 +71,8 @@ fun BeatBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                .padding(horizontal = if (isDense) 2.dp else 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(pillSpacing, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically
         ) {
             for (index in 0 until totalBeats) {
@@ -74,8 +82,12 @@ fun BeatBar(
                     beatIndex = index + 1,
                     accent = accent,
                     isActive = isActive,
+                    isDense = isDense,
+                    isExpanded = isExpanded && !isDense,
                     onClick = { onBeatClick(index) },
-                    modifier = Modifier.weight(1f, fill = false)
+                    modifier = Modifier
+                        .weight(1f, fill = isExpanded && totalBeats <= 8)
+                        .widthIn(max = if (isExpanded) 96.dp else 80.dp)
                 )
             }
         }
@@ -86,7 +98,7 @@ fun BeatBar(
                 modifier = Modifier
                     .padding(top = 10.dp)
                     .height(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (isExpanded) 8.dp else 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 for (subIdx in 0 until subdivision.count) {
@@ -113,7 +125,7 @@ fun BeatBar(
                     Box(
                         modifier = Modifier
                             .scale(dotScale)
-                            .size(7.dp)
+                            .size(if (isExpanded) 8.dp else 7.dp)
                             .clip(CircleShape)
                             .background(dotColor)
                     )
@@ -128,6 +140,8 @@ private fun BeatPill(
     beatIndex: Int,
     accent: BeatAccent,
     isActive: Boolean,
+    isDense: Boolean,
+    isExpanded: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -151,6 +165,7 @@ private fun BeatPill(
 
     val shadowElevation = if (isActive) 10.dp else 1.dp
     val interactionSource = remember { MutableInteractionSource() }
+    val cornerRadius = if (isDense) 14.dp else 18.dp
 
     Box(
         modifier = modifier
@@ -158,10 +173,10 @@ private fun BeatPill(
             .scale(scale)
             .shadow(
                 elevation = shadowElevation,
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(cornerRadius),
                 spotColor = if (isActive) accentColor else Color.Transparent
             )
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(cornerRadius))
             .background(
                 if (isActive) {
                     Brush.verticalGradient(
@@ -176,14 +191,21 @@ private fun BeatPill(
             .border(
                 width = if (isActive) 2.dp else 1.dp,
                 color = if (isActive) accentColor else MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(18.dp)
+                shape = RoundedCornerShape(cornerRadius)
             )
             .clickable(
                 interactionSource = interactionSource,
                 indication = ripple(color = accentColor),
                 onClick = onClick
             )
-            .padding(vertical = 8.dp, horizontal = 10.dp),
+            .padding(
+                vertical = if (isExpanded) 10.dp else 8.dp,
+                horizontal = when {
+                    isDense -> 4.dp
+                    isExpanded -> 12.dp
+                    else -> 10.dp
+                }
+            ),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -197,7 +219,11 @@ private fun BeatPill(
                     fontWeight = FontWeight.Black,
                     fontFamily = FontFamily.SansSerif,
                     fontFeatureSettings = "tnum",
-                    fontSize = 19.sp
+                    fontSize = when {
+                        isDense -> 15.sp
+                        isExpanded -> 21.sp
+                        else -> 19.sp
+                    }
                 ),
                 color = if (isActive) accentColor else if (accent == BeatAccent.MUTE) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
             )
@@ -210,9 +236,9 @@ private fun BeatPill(
                 BeatAccent.MUTE -> "✕"
             }
             Text(
-                text = "$glyph ${accent.label.uppercase()}",
+                text = if (isDense) glyph else "$glyph ${accent.label.uppercase()}",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = 9.sp,
+                    fontSize = if (isExpanded) 10.sp else 9.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.5.sp
                 ),

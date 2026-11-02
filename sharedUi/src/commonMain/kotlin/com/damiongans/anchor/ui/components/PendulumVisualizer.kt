@@ -2,8 +2,8 @@ package com.damiongans.anchor.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,12 +18,15 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.damiongans.anchor.ui.theme.AmberGold
+import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.sin
 
 /**
  * Physical metronome pendulum with metallic arm, sliding weight,
- * and swing arcs.
+ * and swing arcs. Scales proportionally from compact phone screens
+ * up to large tablet and desktop studio layouts.
  */
 @Composable
 fun PendulumVisualizer(
@@ -38,7 +41,7 @@ fun PendulumVisualizer(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(120.dp)
+            .defaultMinSize(minHeight = 110.dp)
             .testTag("pendulum_visualizer"),
         contentAlignment = Alignment.Center
     ) {
@@ -46,23 +49,31 @@ fun PendulumVisualizer(
             val width = size.width
             val height = size.height
 
+            val baseRefArm = 98.dp.toPx()
+            // Cap arm length by both vertical height and horizontal swing clearance
+            val maxArmByHeight = height - 24.dp.toPx()
+            val maxArmByWidth = (width * 0.44f) / sin(28.0 * PI / 180.0).toFloat()
+            val armLength = min(maxArmByHeight, maxArmByWidth).coerceAtLeast(64.dp.toPx())
+            val scaleFactor = (armLength / baseRefArm).coerceIn(0.85f, 1.85f)
+
             val pivotX = width / 2f
-            val pivotY = height - 14.dp.toPx()
-            val armLength = height - 22.dp.toPx()
+            val pivotY = (height + armLength) / 2f - 4.dp.toPx() * scaleFactor
 
             val arcRadius = armLength * 0.85f
 
             // Measurement tick marks
             for (step in -4..4) {
                 val tickAngle = step * 6.5
-                val rad = (tickAngle - 90.0) * kotlin.math.PI / 180.0
-                val tickStartX = pivotX + (arcRadius - 8.dp.toPx()) * cos(rad).toFloat()
-                val tickStartY = pivotY + (arcRadius - 8.dp.toPx()) * sin(rad).toFloat()
-                val tickEndX = pivotX + (arcRadius + 4.dp.toPx()) * cos(rad).toFloat()
-                val tickEndY = pivotY + (arcRadius + 4.dp.toPx()) * sin(rad).toFloat()
+                val rad = (tickAngle - 90.0) * PI / 180.0
+                val tickInnerOffset = 8.dp.toPx() * scaleFactor
+                val tickOuterOffset = 4.dp.toPx() * scaleFactor
+                val tickStartX = pivotX + (arcRadius - tickInnerOffset) * cos(rad).toFloat()
+                val tickStartY = pivotY + (arcRadius - tickInnerOffset) * sin(rad).toFloat()
+                val tickEndX = pivotX + (arcRadius + tickOuterOffset) * cos(rad).toFloat()
+                val tickEndY = pivotY + (arcRadius + tickOuterOffset) * sin(rad).toFloat()
 
                 val tickColor = if (step == 0) AmberGold.copy(alpha = 0.7f) else outlineColor
-                val strokeW = if (step == 0) 2.5.dp.toPx() else 1.5.dp.toPx()
+                val strokeW = (if (step == 0) 2.5.dp.toPx() else 1.5.dp.toPx()) * scaleFactor
                 drawLine(
                     color = tickColor,
                     start = Offset(tickStartX, tickStartY),
@@ -93,27 +104,28 @@ fun PendulumVisualizer(
                     color = AmberGold.copy(alpha = 0.25f),
                     start = Offset(pivotX, pivotY),
                     end = Offset(pivotX, pivotY - armLength),
-                    strokeWidth = 6.dp.toPx(),
+                    strokeWidth = 6.dp.toPx() * scaleFactor,
                     cap = StrokeCap.Round
                 )
 
                 // Metallic rod
+                val rodHalfW = 2.dp.toPx() * scaleFactor
                 drawLine(
                     brush = Brush.linearGradient(
                         colors = listOf(AmberGold, Color(0xFFFFF8E1), AmberGold),
-                        start = Offset(pivotX - 2.dp.toPx(), pivotY),
-                        end = Offset(pivotX + 2.dp.toPx(), pivotY)
+                        start = Offset(pivotX - rodHalfW, pivotY),
+                        end = Offset(pivotX + rodHalfW, pivotY)
                     ),
-                    start = Offset(pivotX, pivotY + 12.dp.toPx()),
+                    start = Offset(pivotX, pivotY + 12.dp.toPx() * scaleFactor),
                     end = Offset(pivotX, pivotY - armLength),
-                    strokeWidth = 3.5.dp.toPx(),
+                    strokeWidth = 3.5.dp.toPx() * scaleFactor,
                     cap = StrokeCap.Round
                 )
 
                 // Pendulum weight (inverted trapezoid sliding weight)
                 val weightCenterY = pivotY - armLength * 0.68f
-                val weightWidth = 24.dp.toPx()
-                val weightHeight = 28.dp.toPx()
+                val weightWidth = 24.dp.toPx() * scaleFactor
+                val weightHeight = 28.dp.toPx() * scaleFactor
 
                 val weightPath = Path().apply {
                     moveTo(pivotX - weightWidth * 0.45f, weightCenterY - weightHeight * 0.5f)
@@ -134,7 +146,7 @@ fun PendulumVisualizer(
                 drawPath(
                     path = weightPath,
                     color = Color(0xFFFFF9C4),
-                    style = Stroke(width = 1.2.dp.toPx())
+                    style = Stroke(width = 1.2.dp.toPx() * scaleFactor)
                 )
 
                 // Center horizontal notch in the sliding weight
@@ -142,29 +154,29 @@ fun PendulumVisualizer(
                     color = Color(0xFF5D4037),
                     start = Offset(pivotX - weightWidth * 0.35f, weightCenterY),
                     end = Offset(pivotX + weightWidth * 0.35f, weightCenterY),
-                    strokeWidth = 1.5.dp.toPx()
+                    strokeWidth = 1.5.dp.toPx() * scaleFactor
                 )
             }
 
             // Pivot cap
             drawCircle(
                 color = surfaceColor,
-                radius = 11.dp.toPx(),
+                radius = 11.dp.toPx() * scaleFactor,
                 center = Offset(pivotX, pivotY)
             )
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(Color(0xFFFFF9C4), AmberGold, Color(0xFFE65100)),
                     center = Offset(pivotX, pivotY),
-                    radius = 8.dp.toPx()
+                    radius = 8.dp.toPx() * scaleFactor
                 ),
-                radius = 8.dp.toPx(),
+                radius = 8.dp.toPx() * scaleFactor,
                 center = Offset(pivotX, pivotY)
             )
             drawCircle(
                 color = Color.White.copy(alpha = 0.8f),
-                radius = 2.5.dp.toPx(),
-                center = Offset(pivotX - 2.dp.toPx(), pivotY - 2.dp.toPx())
+                radius = 2.5.dp.toPx() * scaleFactor,
+                center = Offset(pivotX - 2.dp.toPx() * scaleFactor, pivotY - 2.dp.toPx() * scaleFactor)
             )
         }
     }

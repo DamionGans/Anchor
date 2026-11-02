@@ -68,12 +68,16 @@ fun QuickControlsBar(
     onSubdivisionSelect: (Subdivision) -> Unit,
     onTapTempo: () -> Unit,
     onPlayPauseToggle: () -> Unit,
+    isExpanded: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val controlHeight = if (isExpanded) 44.dp else 40.dp
+    val transportHeight = if (isExpanded) 74.dp else 64.dp
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = if (isExpanded) 0.dp else 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Time Signature & Subdivisions Row
@@ -86,7 +90,7 @@ fun QuickControlsBar(
             Box(
                 modifier = Modifier
                     .minimumInteractiveComponentSize()
-                    .height(40.dp)
+                    .height(controlHeight)
                     .clip(RoundedCornerShape(14.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(14.dp))
@@ -95,7 +99,7 @@ fun QuickControlsBar(
                         indication = ripple(color = MaterialTheme.colorScheme.primary),
                         onClick = onTimeSignatureClick
                     )
-                    .padding(horizontal = 14.dp),
+                    .padding(horizontal = if (isExpanded) 18.dp else 14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -103,14 +107,14 @@ fun QuickControlsBar(
                         imageVector = AnchorIcons.MusicNote,
                         contentDescription = "Time Signature",
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(if (isExpanded) 18.dp else 16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "$totalBeats/${if (subdivision == Subdivision.EIGHTH) "8" else "4"}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = if (isExpanded) 15.sp else 14.sp
                         ),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -119,7 +123,7 @@ fun QuickControlsBar(
 
             // Subdivision Selectors
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(if (isExpanded) 8.dp else 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Subdivision.values().forEach { sub ->
@@ -136,7 +140,7 @@ fun QuickControlsBar(
                     Box(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
-                            .size(width = 42.dp, height = 40.dp)
+                            .size(width = if (isExpanded) 48.dp else 42.dp, height = controlHeight)
                             .clip(RoundedCornerShape(12.dp))
                             .background(bgColor)
                             .border(1.dp, borderColor, RoundedCornerShape(12.dp))
@@ -152,7 +156,7 @@ fun QuickControlsBar(
                             text = sub.symbol,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                fontSize = if (sub == Subdivision.TRIPLET) 13.sp else 16.sp
+                                fontSize = if (sub == Subdivision.TRIPLET) (if (isExpanded) 14.sp else 13.sp) else (if (isExpanded) 17.sp else 16.sp)
                             ),
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -161,12 +165,12 @@ fun QuickControlsBar(
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(if (isExpanded) 14.dp else 10.dp))
 
         // Bottom Deck: Tap Tempo & Main Play/Pause Button
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (isExpanded) 14.dp else 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Tap Tempo Touchpad
@@ -176,7 +180,7 @@ fun QuickControlsBar(
                 onTap = onTapTempo,
                 modifier = Modifier
                     .weight(1f)
-                    .height(64.dp)
+                    .height(transportHeight)
             )
 
             // Main Play/Pause Button
@@ -184,7 +188,7 @@ fun QuickControlsBar(
                 isPlaying = isPlaying,
                 buttonTriggerMode = buttonTriggerMode,
                 onClick = onPlayPauseToggle,
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(transportHeight)
             )
         }
     }

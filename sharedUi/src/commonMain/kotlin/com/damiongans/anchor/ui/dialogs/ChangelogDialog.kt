@@ -31,8 +31,8 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Multiplatform Showcase & Tooling", "Expanded multiplatform support across Windows, Android, and iPhone with developer setup and release guards."),
-    ChangelogEntry("Build & Reliability Fixes", "Resolved Compose Preview unit test packaging in Android Gradle Plugin and Gradle 10 deprecations.")
+    ChangelogEntry("Tablet & Desktop Studio Layout", "Wide screens on tablets, landscape phones, and desktop PCs now arrange the pendulum and beat bar alongside the tempo and transport controls."),
+    ChangelogEntry("Scalable Pendulum & Beat Bar", "The pendulum arm, counterweight, and beat pills scale proportionally to fit large studio displays as well as compact phone screens.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
