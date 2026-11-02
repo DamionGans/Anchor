@@ -1,15 +1,17 @@
 {
-  "version": "1.6.1",
-  "versionCode": 10601,
-  "releaseTag": "v1.6.1",
+  "version": "1.6.2",
+  "versionCode": 10602,
+  "releaseTag": "v1.6.2",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.6.1.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.1/Anchor-v1.6.1.apk",
+  "apkName": "Anchor-v1.6.2.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.2/Anchor-v1.6.2.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Windows: touchscreen scrolling and a scrollable audio output list"
+    "Multiplatform website & architecture overview across Windows, Android, and iPhone",
+    "AGP 9.5 Compose Preview unit test generation and Gradle 10 deprecation fixes",
+    "Release workflow guardrails and restored contributor guidelines"
   ]
 }

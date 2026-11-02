@@ -75,7 +75,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             RELEASE_TAG="${GITHUB_REF#refs/tags/}"
           else
-            RELEASE_TAG="v${CHANGELOG_VER:-1.6.1}"
+            RELEASE_TAG="v${CHANGELOG_VER:-1.6.2}"
           fi
           VERSION_NAME="${RELEASE_TAG#v}"
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
@@ -149,4 +149,11 @@ jobs:
             sleep 30
           done
           gh release view "$RELEASE_TAG" --repo "$REPO" >/dev/null
+          EXISTING_COMMIT=$(gh release view "$RELEASE_TAG" --repo "$REPO" --json targetCommitish -q .targetCommitish 2>/dev/null || true)
+          TAG_SHA=$(gh api "repos/${REPO}/git/ref/tags/${RELEASE_TAG}" --jq '.object.sha' 2>/dev/null || true)
+          CURRENT_SHA="${{ github.sha }}"
+          if [ -n "$EXISTING_COMMIT" ] && [ "$EXISTING_COMMIT" != "$CURRENT_SHA" ] && [[ "$CURRENT_SHA" != "$EXISTING_COMMIT"* ]] && [ "$TAG_SHA" != "$CURRENT_SHA" ] && [[ "$CURRENT_SHA" != "$TAG_SHA"* ]]; then
+            echo "::error::version already released, bump with scripts/set-version.sh"
+            exit 1
+          fi
           gh release upload "$RELEASE_TAG" release-artifacts/*.msi release-artifacts/*.sha256 --repo "$REPO" --clobber

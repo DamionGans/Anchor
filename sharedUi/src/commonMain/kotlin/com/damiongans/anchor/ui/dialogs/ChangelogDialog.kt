@@ -31,8 +31,8 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Touchscreen Support on Windows", "Lists, Settings, and dialogs now scroll with a finger on Windows touchscreens, with a wide scrollbar where needed."),
-    ChangelogEntry("Scrollable Output List", "The audio output list scrolls when many output devices are available, so the rest of the screen stays visible.")
+    ChangelogEntry("Multiplatform Showcase & Tooling", "Expanded multiplatform support across Windows, Android, and iPhone with developer setup and release guards."),
+    ChangelogEntry("Build & Reliability Fixes", "Resolved Compose Preview unit test packaging in Android Gradle Plugin and Gradle 10 deprecations.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
