@@ -60,7 +60,7 @@ struct ContentView: View {
         .alert(
             "Update available",
             isPresented: Binding(
-                get: { store.state.showUpdateDialog && store.state.availableUpdate != nil },
+                get: { store.state.canCheckForUpdates && store.state.showUpdateDialog && store.state.availableUpdate != nil },
                 set: { presented in if !presented { store.app.askLater() } }
             ),
             presenting: state.availableUpdate

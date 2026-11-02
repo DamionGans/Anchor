@@ -190,6 +190,8 @@ fun MetronomeScreen(
             isUpdateDeclined = state.isUpdateDeclined,
             isCheckingForUpdates = state.isCheckingForUpdates,
             updateCheckMessage = state.updateCheckMessage,
+            canCheckForUpdates = state.canCheckForUpdates,
+            updateStoreName = state.updateStoreName,
             onSoundSetSelect = { soundSet -> viewModel.setSoundSet(soundSet) },
             onPitchChange = { pitch -> viewModel.setPitchMultiplier(pitch) },
             onSelectAudioOutput = { deviceId -> viewModel.selectAudioOutputDevice(deviceId) },

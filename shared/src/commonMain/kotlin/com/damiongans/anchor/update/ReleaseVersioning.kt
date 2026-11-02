@@ -108,10 +108,29 @@ object ReleaseVersioning {
 }
 
 /**
- * Installed application version, supplied by each platform (Android `BuildConfig`,
- * iOS `CFBundleShortVersionString`).
+ * Where this build is distributed. Store builds (Google Play, App Store) and F-Droid receive
+ * updates from their store, so only [GITHUB] builds may check GitHub Releases and link to
+ * APK/IPA downloads (store policies forbid self-updating apps).
+ */
+enum class DistributionChannel(val selfUpdates: Boolean, val storeName: String?) {
+    GITHUB(selfUpdates = true, storeName = null),
+    FDROID(selfUpdates = false, storeName = "F-Droid"),
+    PLAY_STORE(selfUpdates = false, storeName = "Google Play"),
+    APP_STORE(selfUpdates = false, storeName = "the App Store");
+
+    companion object {
+        /** Parses a build-time channel name; unknown or blank values fall back to [GITHUB]. */
+        fun fromName(name: String?): DistributionChannel =
+            entries.firstOrNull { it.name.equals(name?.trim(), ignoreCase = true) } ?: GITHUB
+    }
+}
+
+/**
+ * Installed application version and distribution channel, supplied by each platform
+ * (Android `BuildConfig`, iOS Info.plist).
  */
 data class AppVersionInfo(
     val versionName: String,
-    val releaseTag: String = "v$versionName"
+    val releaseTag: String = "v$versionName",
+    val channel: DistributionChannel = DistributionChannel.GITHUB
 )

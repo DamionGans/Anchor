@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.5.0] — Store-Ready Distribution Builds, Privacy Policy & License
+
+### Distribution Channels
+- Added a shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`). Only GitHub builds check GitHub Releases for updates; store and F-Droid builds receive updates from their store and hide the update check in Settings.
+- Added Android product flavors `github`, `fdroid`, and `play`. The `fdroid` and `play` builds remove the `INTERNET` permission, so they make no network requests.
+- Added the `ANCHOR_DISTRIBUTION` iOS build setting (`GITHUB` for the unsigned CI build, `APP_STORE` for App Store archives).
+
+### Build & CI
+- The Android workflow builds the `github` APK for GitHub Releases, verifies the `fdroid` flavor, produces a Google Play App Bundle (`.aab`) artifact, and checks that the Play build does not request `INTERNET`.
+- Added optional tag-triggered uploads to the Google Play internal track and to App Store Connect / TestFlight; both are skipped until their signing and API secrets are configured.
+
+### Documentation & Compliance
+- Added a privacy policy (`docs/privacy.html`), the Apache 2.0 `LICENSE` file, and F-Droid metadata (`fastlane/metadata/android`).
+- Documented the distribution model: free and open source on GitHub and F-Droid, paid on Google Play and the App Store.
+
 ## [v1.4.0] — iPhone App & Shared Kotlin Multiplatform Core
 
 ### iPhone App

@@ -95,6 +95,8 @@ fun SettingsBottomSheet(
     isUpdateDeclined: Boolean = false,
     isCheckingForUpdates: Boolean = false,
     updateCheckMessage: String? = null,
+    canCheckForUpdates: Boolean = true,
+    updateStoreName: String? = null,
     onSoundSetSelect: (SoundSet) -> Unit,
     onPitchChange: (Float) -> Unit,
     onSelectAudioOutput: (Int?) -> Unit = {},
@@ -226,6 +228,8 @@ fun SettingsBottomSheet(
                         availableUpdate = availableUpdate,
                         isCheckingForUpdates = isCheckingForUpdates,
                         updateCheckMessage = updateCheckMessage,
+                        canCheckForUpdates = canCheckForUpdates,
+                        updateStoreName = updateStoreName,
                         onCheckForUpdates = onCheckForUpdates,
                         onUpdateNow = onUpdateNow,
                         onViewChangelog = { showChangelogDialog = true }
@@ -942,6 +946,8 @@ private fun AboutSettingsTab(
     availableUpdate: AppReleaseInfo?,
     isCheckingForUpdates: Boolean,
     updateCheckMessage: String?,
+    canCheckForUpdates: Boolean,
+    updateStoreName: String?,
     onCheckForUpdates: () -> Unit,
     onUpdateNow: () -> Unit,
     onViewChangelog: () -> Unit
@@ -999,6 +1005,35 @@ private fun AboutSettingsTab(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        // Store / F-Droid builds receive updates from their store and never self-update.
+        if (!canCheckForUpdates) {
+            Text(
+                text = "Updates are delivered automatically by ${updateStoreName ?: "your app store"}.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            UpdateCheckSection(
+                availableUpdate = availableUpdate,
+                isCheckingForUpdates = isCheckingForUpdates,
+                updateCheckMessage = updateCheckMessage,
+                onCheckForUpdates = onCheckForUpdates,
+                onUpdateNow = onUpdateNow
+            )
+        }
+    }
+}
+
+/** GitHub builds only: manual update check and install button. */
+@Composable
+private fun UpdateCheckSection(
+    availableUpdate: AppReleaseInfo?,
+    isCheckingForUpdates: Boolean,
+    updateCheckMessage: String?,
+    onCheckForUpdates: () -> Unit,
+    onUpdateNow: () -> Unit
+) {
+    Column {
         // Check for updates button
         Box(
             modifier = Modifier

@@ -20,6 +20,7 @@ import com.damiongans.anchor.repository.ISettingsRepository
 import com.damiongans.anchor.repository.SharedPreferencesSettingsRepository
 import com.damiongans.anchor.service.AndroidPlaybackSession
 import com.damiongans.anchor.update.AppVersionInfo
+import com.damiongans.anchor.update.DistributionChannel
 import com.damiongans.anchor.update.GitHubUpdateRepository
 import com.damiongans.anchor.update.IUpdateRepository
 import kotlinx.coroutines.flow.StateFlow
@@ -51,8 +52,9 @@ class MetronomeViewModel @JvmOverloads constructor(
         settingsRepository = settingsRepository,
         updateRepository = updateRepository,
         appVersion = AppVersionInfo(
-            versionName = BuildConfig.VERSION_NAME.ifBlank { "1.4.0" },
-            releaseTag = BuildConfig.APP_RELEASE_TAG
+            versionName = BuildConfig.VERSION_NAME.ifBlank { "1.5.0" },
+            releaseTag = BuildConfig.APP_RELEASE_TAG,
+            channel = DistributionChannel.fromName(BuildConfig.DISTRIBUTION_CHANNEL)
         ),
         scope = viewModelScope,
         playbackSession = playbackSession,

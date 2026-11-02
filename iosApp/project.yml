@@ -10,8 +10,9 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    MARKETING_VERSION: "1.4.0"
-    CURRENT_PROJECT_VERSION: "10400"
+    MARKETING_VERSION: "1.5.0"
+    CURRENT_PROJECT_VERSION: "10500"
+    ANCHOR_DISTRIBUTION: GITHUB
 targets:
   Anchor:
     type: application
@@ -32,6 +33,9 @@ targets:
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        # Distribution channel read by AnchorIosApp: GITHUB (unsigned CI build, self-updating via
+        # GitHub Releases) or APP_STORE (paid App Store build, updates via the App Store only).
+        AnchorDistribution: $(ANCHOR_DISTRIBUTION)
     settings:
       base:
         PRODUCT_NAME: Anchor

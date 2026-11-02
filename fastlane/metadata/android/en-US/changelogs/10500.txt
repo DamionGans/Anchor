@@ -1,0 +1,3 @@
+- Store-ready builds: Google Play, App Store, and F-Droid versions receive updates from their store and request no network access.
+- The free GitHub version keeps its built-in update check.
+- Added a privacy policy and the Apache 2.0 license file.

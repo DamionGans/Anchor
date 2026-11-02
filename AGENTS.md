@@ -25,6 +25,11 @@ This document is the authoritative source of truth for all AI coding agents (AI 
   - **Short Name / References**: **Anchor** (kept for the home screen launcher icon label `<activity android:label="@string/app_name">`, the iOS home screen name `CFBundleDisplayName` in `iosApp/project.yml`, the top-bar header `"ANCHOR"` in `MetronomeScreen.kt`, package namespace and applicationId `com.damiongans.anchor`, APK filename `Anchor-vX.Y.Z.apk`, and concise body copy).
   - **Canonical Tagline**: **"Rock-solid time for serious play"** across `README.md`, `docs/index.html`, `metadata.json`, `MetronomeScreen.kt`, and the in-app About sheet (`SettingsBottomSheet.kt`). Never describe Anchor as a general "timekeeping" app—it is a musical metronome.
   - **Repository URL**: **`DamionGans/Anchor`** (`https://github.com/DamionGans/Anchor`, Pages `https://damiongans.github.io/Anchor/`). Both `AppUpdateManager.kt` and `docs/app.js` check `DamionGans/Anchor` first and automatically fall back to `DamionGans/PulseMetronome` so releases resolve seamlessly before and after renaming the GitHub repository.
+- **Distribution Channels & Monetization (standing decision)**: Anchor is **free and open source on GitHub and F-Droid** and sold as an **upfront paid app (one-time price, identical features) on Google Play and the Apple App Store** for side income. Rules:
+  - **Never** add ads, subscriptions, in-app purchases/billing SDKs (Play Billing, StoreKit), analytics, accounts, or feature gating between channels. All channels ship the same features.
+  - The channel is a shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`) in `update/ReleaseVersioning.kt`, passed via `AppVersionInfo.channel`. Only `GITHUB` builds self-update (`selfUpdates`); `MetronomeController` skips update checks otherwise and exposes `canCheckForUpdates` / `updateStoreName` so both UIs hide the update section. Store builds must **never** download or link to APK/IPA updates (Play Device & Network Abuse policy, App Store guideline 2.5.2).
+  - Android flavors (`app/build.gradle.kts`, dimension `distribution`): `github` (GitHub Release APK), `fdroid`, `play` (AAB). `fdroid` and `play` remove `INTERNET` via `src/<flavor>/AndroidManifest.xml`, so those builds make no network requests. iOS: `ANCHOR_DISTRIBUTION` build setting → `AnchorDistribution` Info.plist key (`GITHUB` for the unsigned CI IPA, `APP_STORE` for App Store archives).
+  - Public copy must not claim the store versions are free. Use: "free and open source on GitHub and F-Droid; paid store versions support development". Keep `docs/privacy.html` accurate (no data collected) and linked from the website footer.
 - **No Feature Bloat**: Do **not** re-introduce the removed *Practice Timer* or *Speed Trainer* features, and do not add multi-screen navigation, accounts, analytics, or bloatware unless explicitly requested.
 - **Single-Screen Ergonomics**: The main metronome view (`MetronomeScreen.kt` on Android, `ContentView.swift` on iOS) must remain a non-scrolling, single-screen layout where BPM, beat indicators, pendulum, time signature, subdivisions, sound profile, and transport controls are immediately accessible.
 - **Musician-First Public Copy vs. Dedicated Technical Docs**:
@@ -149,21 +154,22 @@ iosApp/                                   # SwiftUI iPhone app (iOS 16+)
 
 ## 7. APK Size, Plain AOSP Independence, Google Play Store Compliance & Reproducible Builds
 
-- **Android CI** (`.github/workflows/release.yml`): builds, lints, and tests on pushes to **every branch** and on pull requests; GitHub Releases are published only for pushes to `main`, `v*` tags, or a manual `workflow_dispatch` with `create_release`, and GitHub Pages deploys only from `main`, `v*` tags, or `workflow_dispatch`.
-- **iOS builds**: `.github/workflows/ios.yml` (macOS runner, Xcode 16.4) runs `:shared:iosSimulatorArm64Test`, generates the project with XcodeGen, builds for the simulator, and uploads an unsigned `Anchor-vX.Y.Z-unsigned.ipa` (+ `.sha256`) as a workflow artifact. The shared framework is built by the Xcode pre-build phase `./gradlew :shared:embedAndSignAppleFrameworkForXcode`. The iOS app must not add third-party Swift packages, analytics, or tracking.
+- **Android CI** (`.github/workflows/release.yml`): builds, lints (`lintGithubDebug`), and tests (`testGithubDebugUnitTest`, `:shared:testAndroidHostTest`) on pushes to **every branch** and on pull requests; builds `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, and `assemblePlayRelease` + `bundlePlayRelease` (Play AAB workflow artifact) and fails if the play APK requests `INTERNET`. On `v*` tags, `publish-play` uploads the AAB to the Play internal track (draft) once `PLAY_SERVICE_ACCOUNT_JSON` and a real `SIGNING_KEYSTORE_BASE64` upload key exist (the first Play release must be uploaded manually). For Play, never sign with the committed debug keystore; GitHub Releases are published only for pushes to `main`, `v*` tags, or a manual `workflow_dispatch` with `create_release`, and GitHub Pages deploys only from `main`, `v*` tags, or `workflow_dispatch`.
+- **iOS builds**: `.github/workflows/ios.yml` (macOS runner, Xcode 16.4) runs `:shared:iosSimulatorArm64Test`, generates the project with XcodeGen, builds for the simulator, and uploads an unsigned `Anchor-vX.Y.Z-unsigned.ipa` (+ `.sha256`) as a workflow artifact. The shared framework is built by the Xcode pre-build phase `./gradlew :shared:embedAndSignAppleFrameworkForXcode`. The iOS app must not add third-party Swift packages, analytics, or tracking. On `v*` tags the `appstore` job archives with `ANCHOR_DISTRIBUTION=APP_STORE` and uploads to App Store Connect / TestFlight once `APPLE_TEAM_ID`, `APPLE_DIST_CERT_P12_BASE64`, `APPLE_DIST_CERT_PASSWORD`, `APPLE_PROVISIONING_PROFILE_BASE64`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_P8` secrets exist; otherwise it skips.
+- **F-Droid**: metadata lives in `fastlane/metadata/android/en-US/` (title, descriptions, `changelogs/<versionCode>.txt`, icon); add a `changelogs/<versionCode>.txt` for every release. F-Droid builds the `fdroid` flavor from source; the repository is licensed Apache 2.0 (`LICENSE`).
 
 - **Zero Google Play Services / 100% Plain AOSP Compatibility (CRITICAL)**:
   - The app must **never** depend on Google Play Services (`com.google.android.gms.*`), Firebase (`com.google.firebase.*`), or the `com.google.gms.google-services` Gradle plugin.
   - It must always build and run with full functionality on plain AOSP, LineageOS, GrapheneOS, and de-Googled Android phones as well as standard Google Play devices.
 - **Google Play Store Compliance**:
-  - Keep `AndroidManifest.xml` strictly least-privilege (`INTERNET`, `VIBRATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`) with `android:usesCleartextTraffic="false"` and no prohibited permissions (`REQUEST_INSTALL_PACKAGES`, `READ_EXTERNAL_STORAGE`, etc.).
+  - Keep `AndroidManifest.xml` strictly least-privilege (`INTERNET` — github flavor only, removed for `fdroid`/`play` — `VIBRATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`) with `android:usesCleartextTraffic="false"` and no prohibited permissions (`REQUEST_INSTALL_PACKAGES`, `READ_EXTERNAL_STORAGE`, etc.).
   - Keep app titles (`app_name` = `"Anchor"` for launcher icon, `app_full_name` and `metadata.json` = `"Anchor Metronome"` for full app name) concise (`<= 30` chars) without emojis or promotional buzzwords.
 - **Minimal Footprint**: Keep the release APK lightweight (~2 MB):
   - Do **not** add `androidx.compose.material:material-icons-extended` (adds several MBs); add custom vector icons in `AnchorIcons.kt`.
   - Do **not** add heavy networking/serialization/database libraries (Retrofit, OkHttp, Moshi, Room, Firebase) when Android platform APIs (`HttpURLConnection`, `org.json`, `SharedPreferences`) suffice.
 - **Release Optimization (`app/build.gradle.kts`)**:
   - Release builds must keep `isMinifyEnabled = true` and `isShrinkResources = true`.
-  - Release artifacts are built with `assembleRelease` (never ship debug builds as releases).
+  - Release artifacts are built with `assemble<Flavor>Release` / `bundlePlayRelease` (never ship debug builds as releases).
   - Reproducible build flags (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`) must remain enabled on `AbstractArchiveTask`.
 
 ---
@@ -196,7 +202,7 @@ Whenever updating the version or rewriting the current unreleased version's chan
 4. **`docs/version.json`, `docs/index.html` & `docs/app.js` (GitHub Pages Website)**:
    - Keep `version`, `versionCode`, `releaseDate`, `downloadUrl`, and `highlights` synchronized in `docs/version.json`.
    - Keep the fallback version badge, download link, and changelog list synchronized in `docs/index.html` and `docs/app.js`.
-5. **`app/src/test/java/com/damiongans/anchor/AppUpdateManagerTest.kt`**:
+5. **`app/src/test/java/com/damiongans/anchor/AppUpdateManagerTest.kt`** (plus `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` for F-Droid):
    - Ensure the `BuildConfig.VERSION_NAME` assertion in `testVersionComparison()` matches the active `X.Y.Z` version.
 6. **iOS version (`iosApp/project.yml`)**:
    - Keep `MARKETING_VERSION: "X.Y.Z"` and `CURRENT_PROJECT_VERSION: "<versionCode>"` in sync, plus the `"X.Y.Z"` fallbacks in `AnchorIosApp.currentAppVersion()` and `MetronomeViewModel` (`BuildConfig.VERSION_NAME.ifBlank { ... }`). CI overrides both from `CHANGELOG.md`.
@@ -207,13 +213,13 @@ Whenever updating the version or rewriting the current unreleased version's chan
 
 Before completing any task that modifies code or configuration:
 
-1. **Compile Check**: Verify the project compiles cleanly (`compile_applet` or `gradle assembleDebug`).
+1. **Compile Check**: Verify the project compiles cleanly (`gradle assembleGithubDebug`; store-channel changes also `assemblePlayRelease bundlePlayRelease assembleFdroidRelease`).
 2. **Shared tests** (`shared/src/commonTest`, `kotlin.test`): run `./gradlew :shared:testAndroidHostTest` (any OS) and `./gradlew :shared:iosSimulatorArm64Test` (macOS):
    - `TapTempoCalculatorTest`, `DelayCompensationEngineTest` (0ms exact frame match, negative/positive offsets, Bluetooth shift, subdivisions)
-   - `MetronomeControllerTest` (state, persistence, calibration clamping, playback session commands, update flow)
+   - `MetronomeControllerTest` (state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update)
    - `MetronomeSequencerTest` (synthesis, warmup, exact beat frames, playhead estimator, route selection)
    - `KeyValueSettingsRepositoryTest`, `ReleaseVersioningTest`
-3. **Android Unit & Robolectric Tests**: run `./gradlew :app:testDebugUnitTest`:
+3. **Android Unit & Robolectric Tests**: run `./gradlew :app:testGithubDebugUnitTest`:
    - `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service integration), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`
 4. **iOS build**: on macOS, `cd iosApp && xcodegen generate && xcodebuild -scheme Anchor -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (or rely on the `Build iOS App` workflow).
 5. **Update `AGENTS.md`**: Confirm whether your changes introduced or modified any architectural rules or user requirements, and update this file if so.

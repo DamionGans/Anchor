@@ -166,17 +166,23 @@ struct SettingsView: View {
                     LabeledContent("Anchor Metronome", value: "v\(app.versionName)")
                     Text("Rock-solid time for serious play")
                         .foregroundStyle(.secondary)
-                    Button(state.isCheckingForUpdates ? "Checking…" : "Check for updates") {
-                        app.checkForUpdates()
-                    }
-                    .disabled(state.isCheckingForUpdates)
-                    if let message = state.updateCheckMessage {
-                        Text(message)
+                    if state.canCheckForUpdates {
+                        Button(state.isCheckingForUpdates ? "Checking…" : "Check for updates") {
+                            app.checkForUpdates()
+                        }
+                        .disabled(state.isCheckingForUpdates)
+                        if let message = state.updateCheckMessage {
+                            Text(message)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        if let release = state.availableUpdate {
+                            Button("View release \(release.tagName)") { app.acceptUpdate() }
+                        }
+                    } else {
+                        Text("Updates are delivered automatically by \(state.updateStoreName ?? "the App Store").")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                    }
-                    if let release = state.availableUpdate {
-                        Button("View release \(release.tagName)") { app.acceptUpdate() }
                     }
                 }
             }
