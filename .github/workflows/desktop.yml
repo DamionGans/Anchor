@@ -1,0 +1,86 @@
+name: Desktop (Windows x64 + arm64)
+
+# Tests the shared Kotlin logic and the desktop (JVM) platform code on real Windows machines for
+# both CPU architectures the future Windows app targets. No desktop app is built yet
+# (see docs/windows.md).
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'shared/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/desktop.yml'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shared-desktop-tests:
+    name: Shared desktop tests (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: windows-latest
+            java-arch: x64
+          - arch: arm64
+            runner: windows-11-arm
+            java-arch: aarch64
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21 (${{ matrix.java-arch }})
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          architecture: ${{ matrix.java-arch }}
+
+      # The shared module also declares the Android target, which needs an Android SDK to
+      # configure (nothing Android is compiled by this workflow).
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          # The action's default package list includes the removed `tools` package; only a valid
+          # SDK root is needed here.
+          packages: 'platform-tools'
+          log-accepted-android-sdk-licenses: false
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Show platform
+        run: |
+          java -version
+          java -XshowSettings:properties -version 2>&1 | grep -E "os.name|os.arch"
+
+      - name: Run shared desktop tests
+        run: ./gradlew :shared:desktopTest --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-test-reports-${{ matrix.arch }}
+          path: shared/build/reports/tests/desktopTest/
+          retention-days: 7

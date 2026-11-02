@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.5.4] — Windows Preparation (x64 & arm64)
+
+### Shared Core
+- Added a JVM `desktop` target to the shared module so the shared logic is built and tested for a future Windows app on both x64 and arm64 (Kotlin/Native has no Windows ARM64 target).
+- Added desktop platform implementations without a desktop app: `javax.sound` audio output on the shared sequencer, `java.util.prefs` settings storage, a GitHub update check that selects the installer for the machine's architecture, Windows architecture detection, and a composition root for the future Compose Multiplatform Desktop app.
+- Release version selection accepts an optional per-architecture asset marker (`windows-x64` / `windows-arm64`).
+
+### CI & Documentation
+- Added the `desktop.yml` workflow, which runs the shared and desktop tests on Windows x64 and Windows arm64 runners.
+- Added `docs/windows.md` with the Windows architecture and remaining steps (desktop app module, shared Compose UI, per-architecture MSI packaging, signing, media keys).
+- No changes to the Android or iPhone apps.
+
 ## [v1.5.3] — Toolchain & Library Updates
 
 ### Build

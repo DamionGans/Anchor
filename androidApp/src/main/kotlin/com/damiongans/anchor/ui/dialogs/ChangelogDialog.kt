@@ -31,7 +31,7 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Up-to-Date Foundations", "Updated the build tools, Kotlin, and Jetpack Compose libraries to their latest versions. The app works exactly as before.")
+    ChangelogEntry("Groundwork for Windows", "Anchor's shared timing engine and settings are now prepared and tested for a future Windows app on both x64 and ARM PCs. The Android and iPhone apps are unchanged.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

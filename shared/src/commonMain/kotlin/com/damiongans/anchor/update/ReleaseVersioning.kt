@@ -31,7 +31,10 @@ object ReleaseVersioning {
     /**
      * Builds an [AppReleaseInfo] from raw GitHub release fields.
      *
-     * @param assetExtension Platform package extension to prefer (e.g. ".apk" or ".ipa").
+     * @param assetExtension Platform package extension to prefer (e.g. ".apk", ".ipa", ".msi").
+     * @param preferredAssetMarker Optional name fragment selecting a per-architecture asset among
+     *   those with [assetExtension] (e.g. "windows-arm64" vs "windows-x64"); falls back to the first
+     *   asset with the extension, then to the release page.
      * @return `null` when the release has no tag.
      */
     fun buildReleaseInfo(
@@ -42,15 +45,20 @@ object ReleaseVersioning {
         assets: List<ReleaseAsset>,
         assetExtension: String,
         currentVersionName: String,
-        currentReleaseTag: String
+        currentReleaseTag: String,
+        preferredAssetMarker: String? = null
     ): AppReleaseInfo? {
         val tag = tagName?.trim().orEmpty()
         if (tag.isEmpty()) return null
 
         val pageUrl = htmlUrl?.takeIf { it.isNotBlank() } ?: GitHubReleaseConfig.RELEASES_PAGE_URL
-        val assetUrl = assets.firstOrNull {
+        val candidates = assets.filter {
             it.name.endsWith(assetExtension, ignoreCase = true) && it.downloadUrl.isNotEmpty()
-        }?.downloadUrl ?: pageUrl
+        }
+        val asset = preferredAssetMarker
+            ?.let { marker -> candidates.firstOrNull { it.name.contains(marker, ignoreCase = true) } }
+            ?: candidates.firstOrNull()
+        val assetUrl = asset?.downloadUrl ?: pageUrl
 
         return AppReleaseInfo(
             tagName = tag,

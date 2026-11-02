@@ -1,15 +1,15 @@
 {
-  "version": "1.5.3",
-  "versionCode": 10503,
-  "releaseTag": "v1.5.3",
+  "version": "1.5.4",
+  "versionCode": 10504,
+  "releaseTag": "v1.5.4",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.5.3.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.5.3/Anchor-v1.5.3.apk",
+  "apkName": "Anchor-v1.5.4.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.5.4/Anchor-v1.5.4.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Updated build tools, Kotlin, and Jetpack Compose libraries (no behavior changes)"
+    "Groundwork for a future Windows app (x64 and ARM); Android and iPhone apps unchanged"
   ]
 }

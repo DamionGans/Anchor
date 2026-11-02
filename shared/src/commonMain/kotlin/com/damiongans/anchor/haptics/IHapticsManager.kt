@@ -9,3 +9,9 @@ interface IHapticsManager {
     fun triggerTick(isAccent: Boolean)
     fun cancel()
 }
+
+/** For platforms without a vibration motor (desktop). */
+class NoOpHapticsManager : IHapticsManager {
+    override fun triggerTick(isAccent: Boolean) = Unit
+    override fun cancel() = Unit
+}

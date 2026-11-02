@@ -49,4 +49,22 @@ class ReleaseVersioningTest {
 
         assertNull(ReleaseVersioning.buildReleaseInfo(" ", null, null, null, emptyList(), ".apk", "1.4.0", ""))
     }
+
+    @Test
+    fun buildReleaseInfo_picksThePerArchitectureWindowsInstaller() {
+        val assets = listOf(
+            ReleaseAsset("Anchor-v2.0.0.apk", "https://example.test/a.apk"),
+            ReleaseAsset("Anchor-v2.0.0-windows-x64.msi", "https://example.test/x64.msi"),
+            ReleaseAsset("Anchor-v2.0.0-windows-arm64.msi", "https://example.test/arm64.msi")
+        )
+        fun pick(marker: String?) = ReleaseVersioning.buildReleaseInfo(
+            "v2.0.0", null, null, "https://example.test/page", assets, ".msi", "1.5.4", "",
+            preferredAssetMarker = marker
+        )?.downloadUrl
+        assertEquals("https://example.test/arm64.msi", pick("windows-arm64"))
+        assertEquals("https://example.test/x64.msi", pick("windows-x64"))
+        // No marker, or a marker without a match: first installer with the extension
+        assertEquals("https://example.test/x64.msi", pick(null))
+        assertEquals("https://example.test/x64.msi", pick("windows-riscv64"))
+    }
 }
