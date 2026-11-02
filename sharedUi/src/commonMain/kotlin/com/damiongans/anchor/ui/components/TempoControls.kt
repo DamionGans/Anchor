@@ -49,13 +49,14 @@ fun TempoControls(
     onBpmChange: (Int) -> Unit,
     onAdjustBpm: (Int) -> Unit,
     onMultiplyBpm: (Double) -> Unit,
+    isExpanded: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .testTag("tempo_controls"),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(if (isExpanded) 28.dp else 24.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         tonalElevation = 2.dp
@@ -63,7 +64,10 @@ fun TempoControls(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(
+                    horizontal = if (isExpanded) 20.dp else 16.dp,
+                    vertical = if (isExpanded) 16.dp else 12.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Tempo Marking Badge & BPM Digits Row
@@ -78,12 +82,16 @@ fun TempoControls(
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surface)
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 5.dp)
+                        .padding(
+                            horizontal = if (isExpanded) 14.dp else 12.dp,
+                            vertical = if (isExpanded) 6.dp else 5.dp
+                        )
                 ) {
                     Text(
                         text = tempoMarking.uppercase(),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
+                            fontSize = if (isExpanded) 12.sp else 11.sp,
                             letterSpacing = 1.sp
                         ),
                         color = MaterialTheme.colorScheme.secondary
@@ -98,7 +106,7 @@ fun TempoControls(
                     Text(
                         text = bpm.toString(),
                         style = MaterialTheme.typography.displayMedium.copy(
-                            fontSize = 50.sp,
+                            fontSize = if (isExpanded) 58.sp else 50.sp,
                             fontWeight = FontWeight.Black,
                             fontFamily = FontFamily.SansSerif,
                             fontFeatureSettings = "tnum",
@@ -107,7 +115,7 @@ fun TempoControls(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.testTag("bpm_text")
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "BPM",
                         style = MaterialTheme.typography.labelMedium.copy(
@@ -115,7 +123,7 @@ fun TempoControls(
                             letterSpacing = 1.sp
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = if (isExpanded) 10.dp else 8.dp)
                     )
                 }
             }
@@ -132,11 +140,11 @@ fun TempoControls(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(30.dp)
+                    .height(if (isExpanded) 34.dp else 30.dp)
                     .testTag("tempo_slider")
             )
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(if (isExpanded) 6.dp else 2.dp))
 
             // Stepper Buttons Row (-5, -1, +1, +5, ½, 2×)
             Row(
@@ -148,6 +156,7 @@ fun TempoControls(
                 SmallQuickButton(
                     text = "½",
                     onClick = { onMultiplyBpm(0.5) },
+                    isExpanded = isExpanded,
                     testTag = "btn_half_tempo"
                 )
 
@@ -155,6 +164,7 @@ fun TempoControls(
                 SmallQuickButton(
                     text = "-5",
                     onClick = { onAdjustBpm(-5) },
+                    isExpanded = isExpanded,
                     testTag = "btn_minus_5"
                 )
 
@@ -163,6 +173,7 @@ fun TempoControls(
                     icon = AnchorIcons.Remove,
                     contentDesc = "Minus 1 BPM",
                     onClick = { onAdjustBpm(-1) },
+                    isExpanded = isExpanded,
                     testTag = "btn_minus_1"
                 )
 
@@ -171,6 +182,7 @@ fun TempoControls(
                     icon = AnchorIcons.Add,
                     contentDesc = "Plus 1 BPM",
                     onClick = { onAdjustBpm(1) },
+                    isExpanded = isExpanded,
                     testTag = "btn_plus_1"
                 )
 
@@ -178,6 +190,7 @@ fun TempoControls(
                 SmallQuickButton(
                     text = "+5",
                     onClick = { onAdjustBpm(5) },
+                    isExpanded = isExpanded,
                     testTag = "btn_plus_5"
                 )
 
@@ -185,6 +198,7 @@ fun TempoControls(
                 SmallQuickButton(
                     text = "2×",
                     onClick = { onMultiplyBpm(2.0) },
+                    isExpanded = isExpanded,
                     testTag = "btn_double_tempo"
                 )
             }
@@ -197,6 +211,7 @@ private fun RoundIconButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     contentDesc: String,
     onClick: () -> Unit,
+    isExpanded: Boolean,
     testTag: String
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -211,7 +226,7 @@ private fun RoundIconButton(
         modifier = Modifier
             .minimumInteractiveComponentSize()
             .scale(scale)
-            .size(40.dp)
+            .size(if (isExpanded) 44.dp else 40.dp)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surface)
             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
@@ -227,7 +242,7 @@ private fun RoundIconButton(
             imageVector = icon,
             contentDescription = contentDesc,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(if (isExpanded) 22.dp else 20.dp)
         )
     }
 }
@@ -236,6 +251,7 @@ private fun RoundIconButton(
 private fun SmallQuickButton(
     text: String,
     onClick: () -> Unit,
+    isExpanded: Boolean,
     testTag: String
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -250,7 +266,7 @@ private fun SmallQuickButton(
         modifier = Modifier
             .minimumInteractiveComponentSize()
             .scale(scale)
-            .height(38.dp)
+            .height(if (isExpanded) 42.dp else 38.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surface)
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
@@ -259,7 +275,7 @@ private fun SmallQuickButton(
                 indication = ripple(color = MaterialTheme.colorScheme.secondary),
                 onClick = onClick
             )
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = if (isExpanded) 14.dp else 12.dp)
             .testTag(testTag),
         contentAlignment = Alignment.Center
     ) {
@@ -269,7 +285,7 @@ private fun SmallQuickButton(
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.SansSerif,
                 fontFeatureSettings = "tnum",
-                fontSize = 13.sp
+                fontSize = if (isExpanded) 14.sp else 13.sp
             ),
             color = MaterialTheme.colorScheme.onSurface
         )

@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.6.3] — Tablet & Desktop Studio Layout
+
+### Shared UI & iOS
+- Adaptive two-pane studio layout on tablets, landscape screens, and desktop windows (visual stage with dynamically scaling pendulum and beat bar on the left; tempo and transport control deck on the right), while keeping the single-column layout on phones and narrow windows.
+- Pendulum visualizer now scales its arm length, swing arc, tick marks, and counterweight proportionally to the available canvas size.
+- Beat bar pills scale cleanly from wide studio layouts down to dense 16-beat meters.
+
+### Windows & Documentation
+- Desktop window now opens in a landscape studio layout (900x620 dp) that fits standard laptop and desktop displays out of the box and adapts seamlessly when resized.
+- Condensed AGENTS.md for lower token usage while preserving all rules and identifiers.
+
 ## [v1.6.2] — Multiplatform Showcase, Build Fixes & Release Guards
 
 ### Android & Build Setup

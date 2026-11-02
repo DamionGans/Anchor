@@ -70,7 +70,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION_NAME="${GITHUB_REF#refs/tags/v}"
           fi
-          VERSION_NAME=${VERSION_NAME:-1.6.2}
+          VERSION_NAME=${VERSION_NAME:-1.6.3}
           IFS='.' read -r V_MAJOR V_MINOR V_PATCH <<< "${VERSION_NAME}"
           VERSION_CODE=$(( ${V_MAJOR:-1} * 10000 + ${V_MINOR:-0} * 100 + ${V_PATCH:-0} ))
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"

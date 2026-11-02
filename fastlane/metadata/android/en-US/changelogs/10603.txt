@@ -1,0 +1,2 @@
+- Adaptive two-pane studio layout for tablets and landscape screens.
+- Proportionally scaling pendulum visualizer and beat bar across all screen sizes.

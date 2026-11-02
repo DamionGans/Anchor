@@ -75,7 +75,7 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             RELEASE_TAG="${GITHUB_REF#refs/tags/}"
           else
-            RELEASE_TAG="v${CHANGELOG_VER:-1.6.2}"
+            RELEASE_TAG="v${CHANGELOG_VER:-1.6.3}"
           fi
           VERSION_NAME="${RELEASE_TAG#v}"
           echo "release_tag=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"

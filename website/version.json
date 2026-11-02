@@ -1,17 +1,16 @@
 {
-  "version": "1.6.2",
-  "versionCode": 10602,
-  "releaseTag": "v1.6.2",
+  "version": "1.6.3",
+  "versionCode": 10603,
+  "releaseTag": "v1.6.3",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.6.2.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.2/Anchor-v1.6.2.apk",
+  "apkName": "Anchor-v1.6.3.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.3/Anchor-v1.6.3.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Multiplatform website & architecture overview across Windows, Android, and iPhone",
-    "AGP 9.5 Compose Preview unit test generation and Gradle 10 deprecation fixes",
-    "Release workflow guardrails and restored contributor guidelines"
+    "Adaptive two-pane studio layout for tablets, landscape displays, and desktop windows",
+    "Proportionally scaling pendulum visualizer and beat bar pills across all screen sizes"
   ]
 }
