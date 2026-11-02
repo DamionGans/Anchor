@@ -33,7 +33,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 * **Plays While You Read Sheet Music**: Switch to your PDF score reader, chord chart app, or lock your phone screen—Anchor keeps your beat steady in the background with a multimedia player (**Play/Pause** and **Tempo −/+** buttons) right in your notification drawer.
 * **Dial In Your Headphones**: Using wireless Bluetooth earbuds or an external speaker? Fine-tune Visual, Vibration, and Bluetooth timing offsets in `1 ms` steps so what you see, feel, and hear line up together.
 * **Remembers Your Setup**: Your tempo, time signature, sound choice, accent pattern, calibration offsets, and theme (Light, Dark, or Android Material You colors) are saved automatically.
-* **100% Free, Private & AOSP-Ready**: ~2 MB download, works completely offline with zero Google Play Services dependencies, zero ads, and zero tracking.
+* **Free, Open Source & Private**: the full app is free on GitHub (and F-Droid). Paid Google Play and App Store versions—identical features, one-time price, automatic store updates—are coming soon as a way to support development. Every version has zero ads, zero tracking, zero accounts, and zero Google Play Services dependencies (~2 MB, works offline).
 
 ---
 
@@ -42,7 +42,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.4.0.apk` file and open it to install.
+2. Download the latest `Anchor-v1.5.0.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone

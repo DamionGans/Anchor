@@ -11,10 +11,10 @@ android {
 
   val appVersionName: String = (project.findProperty("versionName") as? String)
     ?: System.getenv("APP_VERSION_NAME")
-    ?: "1.4.0"
+    ?: "1.5.0"
   val appVersionCode: Int = (project.findProperty("versionCode") as? String)?.toIntOrNull()
     ?: System.getenv("APP_VERSION_CODE")?.toIntOrNull()
-    ?: 10400
+    ?: 10500
   val appReleaseTag: String = (project.findProperty("releaseTag") as? String)
     ?: System.getenv("RELEASE_TAG")
     ?: "v$appVersionName"
@@ -28,6 +28,29 @@ android {
 
     buildConfigField("String", "APP_RELEASE_TAG", "\"$appReleaseTag\"")
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+  }
+
+  // Distribution channels (see AGENTS.md "Distribution Channels & Monetization"):
+  // - github: APK on GitHub Releases; checks GitHub Releases for updates (self-updating).
+  // - fdroid: built by F-Droid; updates come from F-Droid, no update checker and no INTERNET
+  //           permission (src/fdroid/AndroidManifest.xml).
+  // - play:   paid Google Play listing (AAB); updates come from Play, no update checker and
+  //           no INTERNET permission (src/play/AndroidManifest.xml).
+  // No flavor adds billing, ads, analytics, or Google Play Services dependencies.
+  flavorDimensions += "distribution"
+  productFlavors {
+    create("github") {
+      dimension = "distribution"
+      buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"GITHUB\"")
+    }
+    create("fdroid") {
+      dimension = "distribution"
+      buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"FDROID\"")
+    }
+    create("play") {
+      dimension = "distribution"
+      buildConfigField("String", "DISTRIBUTION_CHANNEL", "\"PLAY_STORE\"")
+    }
   }
 
   // Do not remove or modify these signingConfigs. They are necessary for building, installing,

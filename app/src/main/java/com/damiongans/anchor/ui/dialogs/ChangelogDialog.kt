@@ -31,10 +31,9 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Anchor for iPhone", "Added a native iPhone app with the same single-screen metronome, sounds, accents, time signatures, tap tempo, screen flash, haptics, calibration offsets, and Lock Screen controls."),
-    ChangelogEntry("Shared Multiplatform Core", "Timing, delay compensation, click synthesis, settings, update checks, and app state now live in one shared Kotlin Multiplatform module used by both Android and iPhone."),
-    ChangelogEntry("Android Platform Layer", "The Android app now contains only Android-specific audio output, haptics, storage, notification, and update code on top of the shared core."),
-    ChangelogEntry("iPhone Build Workflow", "A new GitHub Actions workflow tests the shared logic on the iOS simulator and builds an unsigned iPhone app package.")
+    ChangelogEntry("Store-Ready Builds", "Google Play, App Store, and F-Droid versions now receive updates from their store and make no network requests at all."),
+    ChangelogEntry("GitHub Version Unchanged", "The free GitHub version keeps its built-in update check and install button."),
+    ChangelogEntry("Privacy Policy & License", "Published a privacy policy (Anchor collects no data) and added the Apache 2.0 license file.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

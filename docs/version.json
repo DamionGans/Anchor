@@ -1,19 +1,18 @@
 {
-  "version": "1.4.0",
-  "versionCode": 10400,
-  "releaseTag": "v1.4.0",
+  "version": "1.5.0",
+  "versionCode": 10500,
+  "releaseTag": "v1.5.0",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.4.0.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.4.0/Anchor-v1.4.0.apk",
+  "apkName": "Anchor-v1.5.0.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.5.0/Anchor-v1.5.0.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "New native iPhone app with the same single-screen metronome, sounds, accents, time signatures, tap tempo, screen flash, and haptics",
-    "Shared Kotlin Multiplatform core: timing, delay compensation, click synthesis, settings, and app state are identical on Android and iPhone",
-    "iPhone background playback with Lock Screen / Control Center Now Playing controls",
-    "Calibration offsets (visual, vibration, Bluetooth) available on both platforms",
-    "New GitHub Actions workflow that tests the shared logic on the iOS simulator and builds an unsigned iPhone app package"
+    "Store-ready builds: Google Play, App Store, and F-Droid versions receive updates from their store and make no network requests",
+    "The free GitHub version keeps its built-in update check",
+    "Privacy policy published: Anchor collects no data",
+    "Apache 2.0 license file and F-Droid metadata added"
   ]
 }

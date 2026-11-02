@@ -14,6 +14,7 @@ import com.damiongans.anchor.repository.ISettingsRepository
 import com.damiongans.anchor.repository.KeyValueSettingsRepository
 import com.damiongans.anchor.repository.NSUserDefaultsKeyValueStore
 import com.damiongans.anchor.update.AppVersionInfo
+import com.damiongans.anchor.update.DistributionChannel
 import com.damiongans.anchor.update.IosUpdateRepository
 import com.damiongans.anchor.viewmodel.MetronomeController
 import com.damiongans.anchor.viewmodel.MetronomeUiState
@@ -125,8 +126,15 @@ class AnchorIosApp {
 
     private companion object {
         fun currentAppVersion(): AppVersionInfo {
-            val version = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String
-            return AppVersionInfo(versionName = version?.takeIf { it.isNotBlank() } ?: "1.4.0")
+            val bundle = NSBundle.mainBundle
+            val version = bundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String
+            // "AnchorDistribution" is set from the ANCHOR_DISTRIBUTION build setting
+            // (GITHUB for the unsigned CI build, APP_STORE for App Store archives).
+            val channel = bundle.objectForInfoDictionaryKey("AnchorDistribution") as? String
+            return AppVersionInfo(
+                versionName = version?.takeIf { it.isNotBlank() } ?: "1.5.0",
+                channel = DistributionChannel.fromName(channel)
+            )
         }
     }
 }

@@ -144,8 +144,10 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 
 ## 6. Builds & CI
 
-- **Android** (`.github/workflows/release.yml`, every branch push and PRs; publishing only from `main` / `v*` tags): lint, `testDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleRelease`, GitHub Release, and Pages deployment.
-- **iPhone** (`.github/workflows/ios.yml`, macOS runner): `:shared:iosSimulatorArm64Test`, `xcodegen generate`, simulator build, and an unsigned device build packaged as `Anchor-vX.Y.Z-unsigned.ipa` (+ SHA-256) uploaded as a workflow artifact.
+- **Distribution channels**: shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`). Only GitHub builds run the GitHub Releases update checker; Android `fdroid` and `play` flavors also drop the `INTERNET` permission. iOS selects the channel with the `ANCHOR_DISTRIBUTION` build setting.
+
+- **Android** (`.github/workflows/release.yml`, every branch push and PRs; publishing only from `main` / `v*` tags): lint, `testGithubDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, `bundlePlayRelease` (Play AAB, optional tag upload to the internal track), GitHub Release, and Pages deployment.
+- **iPhone** (`.github/workflows/ios.yml`, macOS runner): `:shared:iosSimulatorArm64Test`, `xcodegen generate`, simulator build, and an unsigned device build packaged as `Anchor-vX.Y.Z-unsigned.ipa` (+ SHA-256) uploaded as a workflow artifact; on tags, an optional App Store Connect upload (`ANCHOR_DISTRIBUTION=APP_STORE`).
 - **Local iOS build**: `brew install xcodegen`, `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`. The "Build Kotlin shared framework" phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
 
 ---

@@ -67,7 +67,11 @@ data class MetronomeUiState(
     val showUpdateDialog: Boolean = false,
     val isUpdateDeclined: Boolean = false,
     val isCheckingForUpdates: Boolean = false,
-    val updateCheckMessage: String? = null
+    val updateCheckMessage: String? = null,
+    /** False for store / F-Droid builds, which are updated by their store. */
+    val canCheckForUpdates: Boolean = true,
+    /** Store that delivers updates for this build (e.g. "Google Play"), or null for GitHub builds. */
+    val updateStoreName: String? = null
 ) {
     val effectiveVisualDelayMs: Int
         get() = flashDelayMs + (if (audioInfo.deviceType == AudioDeviceType.BLUETOOTH) bluetoothCompensationMs else 0)
@@ -133,7 +137,9 @@ class MetronomeController(
             bluetoothCompensationMs = settingsRepository.getBluetoothCompensationMs(),
             themeMode = settingsRepository.getThemeMode(),
             accentColor = settingsRepository.getAccentColor(),
-            audioInfo = audioEngine.currentAudioInfo
+            audioInfo = audioEngine.currentAudioInfo,
+            canCheckForUpdates = appVersion.channel.selfUpdates,
+            updateStoreName = appVersion.channel.storeName
         )
     )
     val uiState: StateFlow<MetronomeUiState> = _uiState.asStateFlow()
@@ -193,7 +199,7 @@ class MetronomeController(
         }
         syncPlaybackSession()
 
-        if (autoCheckForUpdates) {
+        if (autoCheckForUpdates && appVersion.channel.selfUpdates) {
             // Check for the latest GitHub release in the background on app launch
             scope.launch {
                 delay(1200L)
@@ -468,8 +474,12 @@ class MetronomeController(
         _uiState.update { it.copy(isFlashEnabled = next) }
     }
 
-    /** Checks GitHub Releases (DamionGans/Anchor) for a newer version. */
+    /**
+     * Checks GitHub Releases (DamionGans/Anchor) for a newer version.
+     * No-op for store / F-Droid builds, which must not self-update.
+     */
     fun checkForUpdates(manual: Boolean = false) {
+        if (!appVersion.channel.selfUpdates) return
         scope.launch {
             _uiState.update { it.copy(isCheckingForUpdates = true, updateCheckMessage = null) }
             val currentVersion = appVersion.versionName
@@ -498,6 +508,7 @@ class MetronomeController(
     }
 
     fun onAcceptUpdate() {
+        if (!appVersion.channel.selfUpdates) return
         val release = _uiState.value.availableUpdate ?: return
         _uiState.update { it.copy(showUpdateDialog = false) }
         updateRepository.openUpdateUrl(release.downloadUrl.ifBlank { release.releasePageUrl })

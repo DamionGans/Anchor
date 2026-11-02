@@ -145,13 +145,13 @@ jobs:
       # Security Check 3: Static Analysis & Android Security Lint
       # -----------------------------------------------------------------------
       - name: Security Check - Run Android Security Lint
-        run: ./gradlew lintDebug
+        run: ./gradlew lintGithubDebug
 
       # -----------------------------------------------------------------------
       # Unit Tests & Audio Engine Verification
       # -----------------------------------------------------------------------
       - name: Run Unit Tests (Android app + shared KMP logic)
-        run: ./gradlew testDebugUnitTest :shared:testAndroidHostTest --continue
+        run: ./gradlew testGithubDebugUnitTest :shared:testAndroidHostTest --continue
 
       # -----------------------------------------------------------------------
       # Deterministic Versioning & Packaging (Reproducible Builds)
@@ -202,9 +202,11 @@ jobs:
           fi
           echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT
 
-      - name: Build Reproducible Release APK
+      # github flavor -> GitHub Release APK; fdroid flavor -> build check (F-Droid builds and signs
+      # its own copy); play flavor -> AAB for the paid Google Play listing.
+      - name: Build Reproducible Release APK & Play Bundle
         run: |
-          ./gradlew assembleRelease \
+          ./gradlew assembleGithubRelease assembleFdroidRelease assemblePlayRelease bundlePlayRelease \
             -PversionName="${{ steps.prepare_release.outputs.version_name }}" \
             -PversionCode="${{ steps.prepare_release.outputs.version_code }}" \
             -PreleaseTag="${{ steps.prepare_release.outputs.release_tag }}"
@@ -212,7 +214,7 @@ jobs:
       - name: Stage APK and Generate SHA-256 Checksum
         run: |
           APK_FILE="${{ steps.prepare_release.outputs.apk_name }}"
-          cp app/build/outputs/apk/release/app-release.apk "release-artifacts/${APK_FILE}"
+          cp app/build/outputs/apk/github/release/app-github-release.apk "release-artifacts/${APK_FILE}"
           (cd release-artifacts && sha256sum "${APK_FILE}" > "${APK_FILE}.sha256")
           echo "Staged APK and SHA-256 checksum:"
           cat "release-artifacts/${APK_FILE}.sha256"
@@ -236,6 +238,43 @@ jobs:
             keytool -printcert -jarfile "$APK_PATH" | grep -E "(Owner:|SHA256:)" || true
           fi
           echo "APK signature verified successfully."
+
+      # -----------------------------------------------------------------------
+      # Security Check 5: Store builds must not self-update (Play policy) and the
+      # Play build must not request the INTERNET permission
+      # -----------------------------------------------------------------------
+      - name: Security Check - Play Build Permissions
+        run: |
+          AAPT2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 2>/dev/null | sort -V | tail -n1)
+          if [ -z "$AAPT2" ]; then
+            echo "::error::aapt2 not found"; exit 1
+          fi
+          PLAY_APK=app/build/outputs/apk/play/release/app-play-release.apk
+          GITHUB_APK=app/build/outputs/apk/github/release/app-github-release.apk
+          "$AAPT2" dump permissions "$PLAY_APK"
+          if "$AAPT2" dump permissions "$PLAY_APK" | grep -q "android.permission.INTERNET"; then
+            echo "::error::The play flavor must not request android.permission.INTERNET."
+            exit 1
+          fi
+          if ! "$AAPT2" dump permissions "$GITHUB_APK" | grep -q "android.permission.INTERNET"; then
+            echo "::error::The github flavor needs android.permission.INTERNET for its update checker."
+            exit 1
+          fi
+          echo "Play build has no INTERNET permission; GitHub build keeps it for update checks."
+
+      - name: Stage Play Store Bundle
+        run: |
+          mkdir -p store-artifacts
+          cp app/build/outputs/bundle/playRelease/app-play-release.aab \
+            "store-artifacts/Anchor-${{ steps.prepare_release.outputs.release_tag }}-play.aab"
+          ls -la store-artifacts/
+
+      - name: Upload Play Store Bundle to Workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-bundle
+          path: store-artifacts/*.aab
+          retention-days: 14
 
       # -----------------------------------------------------------------------
       # Release Notes & Deployment
@@ -328,6 +367,50 @@ jobs:
               --notes-file release-artifacts/RELEASE_NOTES.md \
               --target "${{ github.sha }}"
           fi
+
+  # ===========================================================================
+  # Google Play Upload (v* tags only; skipped until the Play secrets exist)
+  # Requires secrets: PLAY_SERVICE_ACCOUNT_JSON (Play Console API service account)
+  # and SIGNING_KEYSTORE_BASE64 (real upload key; never the committed debug keystore).
+  # The very first Play release must be uploaded manually in the Play Console.
+  # ===========================================================================
+  publish-play:
+    name: Upload to Google Play (internal track)
+    needs: [build-test-release]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      HAS_UPLOAD_KEY: ${{ secrets.SIGNING_KEYSTORE_BASE64 != '' }}
+    steps:
+      - name: Check Play Publishing Secrets
+        id: secrets
+        run: |
+          if [ -z "${PLAY_SERVICE_ACCOUNT_JSON}" ] || [ "${HAS_UPLOAD_KEY}" != "true" ]; then
+            echo "Play publishing secrets are not configured; skipping upload."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download Play Bundle
+        if: steps.secrets.outputs.ready == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: play-bundle
+          path: store-artifacts
+
+      - name: Upload Bundle to Google Play
+        if: steps.secrets.outputs.ready == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.damiongans.anchor
+          releaseFiles: store-artifacts/*.aab
+          track: internal
+          status: draft
 
   # ===========================================================================
   # GitHub Pages Website Deployment

@@ -1,0 +1,10 @@
+<p><b>Anchor Metronome</b> is a fast, distraction-free metronome for musicians, drummers, teachers, and ensembles. Every essential control sits on one uncluttered screen.</p>
+<ul>
+<li><b>Instant, unclipped first beat</b>: press Play and Beat 1 sounds immediately at full clarity.</li>
+<li><b>Tempo your way</b>: slider, -5/-1/+1/+5 steps, half and double time, and tap tempo with outlier filtering.</li>
+<li><b>Accents & subdivisions</b>: tap any beat to cycle Accent, Normal, Soft, or Mute; accents are remembered per count across time signatures. Quarter, eighth, triplet, and 16th subdivisions.</li>
+<li><b>See and feel the beat</b>: beat bar, pendulum, full-screen flash, and haptic vibration, all synchronized to the actual audio output.</li>
+<li><b>Calibration</b>: visual, vibration, and Bluetooth offsets in 1 ms steps.</li>
+<li><b>Background playback</b> with notification and lock-screen controls (Play/Pause, Tempo -/+).</li>
+<li><b>Private</b>: no ads, no tracking, no accounts, no Google Play Services, and no network access.</li>
+</ul>

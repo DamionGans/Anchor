@@ -14,6 +14,7 @@ import com.damiongans.anchor.model.TimeSignaturePreset
 import com.damiongans.anchor.playback.NoOpPlaybackSession
 import com.damiongans.anchor.update.AppReleaseInfo
 import com.damiongans.anchor.update.AppVersionInfo
+import com.damiongans.anchor.update.DistributionChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -52,13 +53,14 @@ class MetronomeControllerTest {
     private fun newController(
         engine: FakeAudioEngine = audio,
         autoCheck: Boolean = false,
-        clock: () -> Long = { 0L }
+        clock: () -> Long = { 0L },
+        channel: DistributionChannel = DistributionChannel.GITHUB
     ) = MetronomeController(
         audioEngine = engine,
         hapticsManager = haptics,
         settingsRepository = settings,
         updateRepository = updates,
-        appVersion = AppVersionInfo("1.4.0"),
+        appVersion = AppVersionInfo("1.4.0", channel = channel),
         scope = scope,
         playbackSession = session,
         clockMs = clock,
@@ -243,5 +245,31 @@ class MetronomeControllerTest {
         scope.advanceUntilIdle()
         assertEquals("Anchor is up to date (v1.4.0)", controller.uiState.value.updateCheckMessage)
         assertFalse(controller.uiState.value.isCheckingForUpdates)
+    }
+
+    @Test
+    fun storeBuilds_neverCheckGitHubForUpdates() {
+        updates.mockRelease = AppReleaseInfo(
+            tagName = "v2.0.0",
+            releaseName = "Anchor 2.0",
+            releaseNotes = "",
+            releasePageUrl = "https://github.com/DamionGans/Anchor/releases",
+            downloadUrl = "https://github.com/DamionGans/Anchor/releases/download/v2.0.0/app.apk",
+            isNewerVersion = true
+        )
+        for (channel in listOf(DistributionChannel.PLAY_STORE, DistributionChannel.APP_STORE, DistributionChannel.FDROID)) {
+            val store = newController(autoCheck = true, channel = channel)
+            store.checkForUpdates(manual = true)
+            scope.advanceUntilIdle()
+            val state = store.uiState.value
+            assertFalse(state.canCheckForUpdates)
+            assertEquals(channel.storeName, state.updateStoreName)
+            assertNull(state.availableUpdate)
+            assertFalse(state.showUpdateDialog)
+            assertNull(state.updateCheckMessage)
+        }
+        assertTrue(controller.uiState.value.canCheckForUpdates)
+        assertEquals(DistributionChannel.PLAY_STORE, DistributionChannel.fromName("play_store"))
+        assertEquals(DistributionChannel.GITHUB, DistributionChannel.fromName(""))
     }
 }
