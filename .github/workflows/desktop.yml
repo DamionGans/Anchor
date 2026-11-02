@@ -60,6 +60,11 @@ jobs:
       # configure (nothing Android is compiled by this workflow).
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default package list includes the removed `tools` package; only a valid
+          # SDK root is needed here.
+          packages: 'platform-tools'
+          log-accepted-android-sdk-licenses: false
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
