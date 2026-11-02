@@ -42,7 +42,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.5.3.apk` file and open it to install.
+2. Download the latest `Anchor-v1.5.4.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone
@@ -63,6 +63,7 @@ Detailed engineering documentation is kept separate so this README stays focused
 * 📄 **[Technical Architecture & Audio Engine Guide (`docs/architecture.md`)](./docs/architecture.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android and iPhone apps.
 * 🌐 **[Web Technical Deep-Dive (`architecture.html`)](https://damiongans.github.io/Anchor/architecture.html)** — Visual waveform diagrams and system breakdown on the project website.
 * 🧭 **[Distribution & Store Release Guide (`docs/distribution.md`)](./docs/distribution.md)** — GitHub, F-Droid, Google Play, and App Store channels and the release process.
+* 🪟 **[Windows Support Roadmap (`docs/windows.md`)](./docs/windows.md)** — How the shared core is prepared for a future Windows app on x64 and arm64.
 * 🤖 **[Developer & AI Agent Guidelines (`AGENTS.md`)](./AGENTS.md)** — Authoritative contributor rules, testing invariants, and release checklists for human developers and AI coding agents.
 * 📋 **[Changelog (`CHANGELOG.md`)](./CHANGELOG.md)** — Full version history.
 

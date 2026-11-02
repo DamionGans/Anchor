@@ -50,17 +50,18 @@ Anchor/
 ├── androidApp/            # Android app module (Jetpack Compose UI + Android platform code)
 │   └── src/{main,test,androidTest}/kotlin/   + flavor overlays src/fdroid, src/play
 ├── iosApp/                # iPhone app (SwiftUI) + XcodeGen project.yml
-├── shared/                # Kotlin Multiplatform module: ALL shared app logic (commonMain) + iosMain
-├── docs/                  # Developer documentation (Markdown): architecture.md, distribution.md
+├── shared/                # Kotlin Multiplatform module: ALL shared app logic (commonMain) + iosMain + desktopMain
+├── docs/                  # Developer documentation (Markdown): architecture.md, distribution.md, windows.md
 ├── website/               # GitHub Pages site (index, architecture, privacy, version.json, assets)
 ├── fastlane/metadata/     # F-Droid / store listing metadata
 ├── signing/               # Debug/CI keystore (base64) — never a production upload key
 ├── gradle/                # Gradle wrapper + libs.versions.toml (version catalog)
-├── .github/               # workflows (android.yml, ios.yml, pages.yml), scripts, issue/PR templates, dependabot
+├── .github/               # workflows (android.yml, ios.yml, pages.yml, desktop.yml), scripts, issue/PR templates, dependabot
 ├── AGENTS.md · CLAUDE.md  # Contributor & AI agent rules (this file is canonical)
 ├── README.md · CHANGELOG.md · CONTRIBUTING.md · SECURITY.md · LICENSE
 └── build.gradle.kts · settings.gradle.kts · gradle.properties · .editorconfig
 ```
+- `desktopApp/` is reserved for the future Windows (Compose Multiplatform Desktop) app; do not create it until requested (see `docs/windows.md`).
 - Kotlin sources always live in `src/<sourceSet>/kotlin/` (never `java/`). New top-level folders require updating this layout, `README.md`, and `CONTRIBUTING.md`.
 - `website/` is published by its own workflow, `.github/workflows/pages.yml` (GitHub Pages source = GitHub Actions), independent of the Android and iOS builds. Markdown documentation belongs in `docs/`, never in `website/`.
 - `metadata.json` and `.env.example` (Secrets Gradle Plugin defaults) stay at the root for Google AI Studio compatibility.
@@ -87,7 +88,14 @@ shared/                                   # Kotlin Multiplatform (androidLibrary
     │   ├── update/IUpdateRepository.kt            # Update contract & AppReleaseInfo
     │   ├── update/ReleaseVersioning.kt            # GitHubReleaseConfig, ReleaseAsset, SemVer comparison, AppVersionInfo
     │   └── viewmodel/MetronomeController.kt       # MetronomeUiState + every user action (shared state holder)
-    ├── commonTest/                                # Shared tests (kotlin.test), run on Android host + iOS simulator
+    ├── commonTest/                                # Shared tests (kotlin.test), run on Android host, iOS simulator, and desktop JVM
+    ├── desktopMain/kotlin/com/damiongans/anchor/   # Desktop JVM (future Windows x64 + arm64 app) platform code
+    │   ├── audio/DesktopAudioEngine.kt            # javax.sound SourceDataLine I/O loop on the shared sequencer
+    │   ├── repository/PreferencesKeyValueStore.kt # java.util.prefs (Windows registry)
+    │   ├── update/DesktopUpdateRepository.kt      # java.net.http + kotlinx-serialization-json, per-arch .msi selection
+    │   ├── platform/WindowsArch.kt                # os.arch -> X64 / ARM64, asset markers
+    │   └── desktop/AnchorDesktop.kt               # Composition root for the future desktop app
+    ├── desktopTest/                               # Desktop-only tests (run on Windows x64 + arm64 in CI)
     └── iosMain/kotlin/com/damiongans/anchor/      # iOS platform implementations
         ├── audio/IosAudioEngine.kt                # AVAudioEngine + AVAudioPlayerNode I/O loop
         ├── haptics/IosHapticsManager.kt           # UIImpactFeedbackGenerator
@@ -120,7 +128,14 @@ iosApp/                                   # SwiftUI iPhone app (iOS 16+)
 - **Platform code only does platform work**: Android (`androidApp/`) and iOS (`shared/src/iosMain` + `iosApp/`) contain only OS API calls (audio I/O & playhead, device routing, haptics, key-value storage, HTTP/JSON transport, system media controls, URL opening) and UI. If new behavior is not inherently platform-specific, add it to `commonMain` and call it from both platforms.
 - **Zero platform imports in `commonMain`**: no `android.*`, `androidx.*`, `java.*`, `platform.*`, or JVM-only annotations (`@Synchronized`). Use `kotlin.concurrent.Volatile`. `DelayCompensationEngine` timeline methods are single-threaded (called only from the platform audio loop).
 - **Swift interop**: Swift talks only to `AnchorIosApp` (methods without default arguments, `change*` naming, catalog lists, `observe(onChange:)` delivering on the main thread). Kotlin `description` properties are exposed through helpers (`soundSetSummary`, `buttonTriggerModeSummary`) because `description` collides with `NSObject`. Swift compares Kotlin enums by `name`.
-- **UI parity**: Feature changes must be applied to both the Compose UI and the SwiftUI UI unless explicitly platform-specific. Desktop targets are not added unless requested.
+- **UI parity**: Feature changes must be applied to both the Compose UI and the SwiftUI UI unless explicitly platform-specific.
+
+### Windows / Desktop Preparation (no desktop app yet)
+- Windows support (x64 **and** arm64) is a **JVM** target: `jvm("desktop")` in `shared/` (JVM 17 bytecode). Kotlin/Native has no Windows-on-ARM64 target, so never add `mingwX64` for Windows.
+- The planned UI is **Compose Multiplatform Desktop** in a future `desktopApp/` module; do not create it, packaging, or release jobs until the user asks. Roadmap: `docs/windows.md`.
+- The shared-logic boundary applies: desktop code in `desktopMain` contains only JVM/OS integration (audio I/O, preferences, HTTP/JSON, architecture detection). `kotlinx-serialization-json` is a **desktopMain-only** dependency and must never enter `commonMain` or the Android APK.
+- Release assets for Windows are named `Anchor-vX.Y.Z-windows-x64.msi` / `Anchor-vX.Y.Z-windows-arm64.msi`; `DesktopUpdateRepository` selects by `WindowsArch.assetMarker` via `ReleaseVersioning.buildReleaseInfo(preferredAssetMarker = ...)`.
+- `desktop.yml` must stay green on **both** `windows-latest` (x64) and `windows-11-arm` (arm64).
 
 ### Critical DI & ViewModel Rule
 - `MetronomeController` takes all platform implementations (`IAudioEngine`, `IHapticsManager`, `ISettingsRepository`, `IUpdateRepository`, `IPlaybackSession`), `AppVersionInfo`, and a `CoroutineScope` via its constructor so shared tests inject fakes (`shared/src/commonTest/.../fakes/TestFakes.kt`) and a `TestScope`.
@@ -248,7 +263,7 @@ Whenever updating the version or rewriting the current unreleased version's chan
 Before completing any task that modifies code or configuration:
 
 1. **Compile Check**: Verify the project compiles cleanly (`gradle assembleGithubDebug`; store-channel changes also `assemblePlayRelease bundlePlayRelease assembleFdroidRelease`).
-2. **Shared tests** (`shared/src/commonTest`, `kotlin.test`): run `./gradlew :shared:testAndroidHostTest` (any OS) and `./gradlew :shared:iosSimulatorArm64Test` (macOS):
+2. **Shared tests** (`shared/src/commonTest`, `kotlin.test`): run `./gradlew :shared:testAndroidHostTest` (any OS), `./gradlew :shared:desktopTest` (any OS; also runs `desktopTest`), and `./gradlew :shared:iosSimulatorArm64Test` (macOS):
    - `TapTempoCalculatorTest`, `DelayCompensationEngineTest` (0ms exact frame match, negative/positive offsets, Bluetooth shift, subdivisions)
    - `MetronomeControllerTest` (state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update)
    - `MetronomeSequencerTest` (synthesis, warmup, exact beat frames, playhead estimator, route selection)

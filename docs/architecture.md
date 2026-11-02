@@ -69,7 +69,7 @@ When a musician switches to a PDF sheet music reader or locks their phone screen
 
 ---
 
-## 4. Kotlin Multiplatform Architecture (Android + iPhone)
+## 4. Kotlin Multiplatform Architecture (Android + iPhone, Windows-ready)
 
 All application logic lives once in the `shared` Kotlin Multiplatform module. Platform code is limited to I/O and UI: the Android app (`androidApp/`, Jetpack Compose) and the iPhone app (`iosApp/`, SwiftUI) plus the iOS implementations in `shared/src/iosMain`.
 
@@ -103,6 +103,13 @@ shared/src/iosMain/kotlin/com/damiongans/anchor/        # iOS platform implement
 ├── update/IosUpdateRepository.kt       # NSURLSession + NSJSONSerialization transport
 ├── playback/IosPlaybackSession.kt      # Now Playing + remote commands
 └── ios/AnchorIosApp.kt                 # Swift entry point (wires iOS implementations)
+
+shared/src/desktopMain/kotlin/com/damiongans/anchor/    # Desktop JVM (future Windows x64 + arm64 app)
+├── audio/DesktopAudioEngine.kt         # javax.sound SourceDataLine I/O loop on the shared sequencer
+├── repository/PreferencesKeyValueStore.kt  # java.util.prefs (Windows registry)
+├── update/DesktopUpdateRepository.kt   # java.net.http, per-architecture .msi selection
+├── platform/WindowsArch.kt             # X64 / ARM64 detection
+└── desktop/AnchorDesktop.kt            # Composition root for the future desktop app (see windows.md)
 
 androidApp/src/main/kotlin/com/damiongans/anchor/       # Android platform layer
 ├── audio/MetronomeAudioEngine.kt       # AudioTrack Fast Path I/O loop & device routing
@@ -149,6 +156,7 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 - **Distribution channels**: shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`). Only GitHub builds run the GitHub Releases update checker; Android `fdroid` and `play` flavors also drop the `INTERNET` permission. iOS selects the channel with the `ANCHOR_DISTRIBUTION` build setting.
 
 - **Android** (`.github/workflows/android.yml`, every branch push and PRs; publishing only from `main` / `v*` tags): lint, `testGithubDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, `bundlePlayRelease` (Play AAB, optional tag upload to the internal track), and the GitHub Release.
+- **Desktop** (`.github/workflows/desktop.yml`): runs `:shared:desktopTest` (shared logic + desktop platform code) on Windows x64 (`windows-latest`) and Windows arm64 (`windows-11-arm`). No desktop app is built yet; see [`windows.md`](./windows.md).
 - **Website** (`.github/workflows/pages.yml`): deploys `website/` to GitHub Pages on `main` / `v*` pushes that touch `website/**` or `CHANGELOG.md`, independent of the app builds.
 - **iPhone** (`.github/workflows/ios.yml`, macOS runner): `:shared:iosSimulatorArm64Test`, `xcodegen generate`, simulator build, and an unsigned device build packaged as `Anchor-vX.Y.Z-unsigned.ipa` (+ SHA-256) uploaded as a workflow artifact; on tags, an optional App Store Connect upload (`ANCHOR_DISTRIBUTION=APP_STORE`).
 - **Local iOS build**: `brew install xcodegen`, `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`. The "Build Kotlin shared framework" phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
