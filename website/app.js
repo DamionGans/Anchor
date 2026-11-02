@@ -11,10 +11,10 @@
 
   // Fallback metadata from version.json
   const DEFAULT_METADATA = {
-    version: '1.5.4',
-    releaseTag: 'v1.5.4',
-    downloadUrl: 'https://github.com/DamionGans/Anchor/releases/download/v1.5.4/Anchor-v1.5.4.apk',
-    apkName: 'Anchor-v1.5.4.apk',
+    version: '1.5.5',
+    releaseTag: 'v1.5.5',
+    downloadUrl: 'https://github.com/DamionGans/Anchor/releases/download/v1.5.5/Anchor-v1.5.5.apk',
+    apkName: 'Anchor-v1.5.5.apk',
     fileSizeApprox: '~2.1 MB',
     releaseDate: 'November 2026',
     repoUrl: 'https://github.com/DamionGans/Anchor'

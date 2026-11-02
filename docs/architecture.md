@@ -1,6 +1,6 @@
 # Anchor Metronome — Technical Architecture & Implementation Guide
 
-Wait-free, sample-accurate timing on Android requires bypassing high-level media players and timer loops. This document explains how **Anchor Metronome** (**Anchor**) achieves rock-solid audio synthesis, zero-clipping first beats, frame-accurate visual and haptic synchronization, and a Kotlin Multiplatform core shared by the Android and iPhone apps.
+Wait-free, sample-accurate timing on Android requires bypassing high-level media players and timer loops. This document explains how **Anchor Metronome** (**Anchor**) achieves rock-solid audio synthesis, zero-clipping first beats, frame-accurate visual and haptic synchronization, and a Kotlin Multiplatform core shared by the Android and iPhone apps (and prepared for Windows x64 + arm64).
 
 > Looking for the musician overview and download links? See the main [README.md](../README.md) or visit the [Anchor Metronome Website](https://damiongans.github.io/Anchor/).
 
@@ -23,6 +23,13 @@ To guarantee Beat 1 plays in full without adding noticeable startup lag:
 1. Before sample `0` of Beat 1, `MetronomeAudioEngine` writes **`WARMUP_FRAMES = (44100 * 55) / 1000` (2,425 frames / 55ms)** of alternating `±1` PCM amplitude (sub-LSB dither at `-90.3 dBFS`).
 2. Why `±1` instead of `0`? Many OEM audio HALs employ zero-sample silence detection that keeps the amplifier gated until non-zero samples arrive. A `±1` LSB toggle forces the entire signal path awake while remaining completely inaudible to the human ear.
 3. Sample `0` of Beat 1 is written immediately after frame `2,425`, hitting an already-active DAC so the very first transient is crisp and intact.
+
+### Instant Start: Output Standby (Android)
+Creating an `AudioTrack`, starting it, and running the warmup on every press of Play adds a noticeable delay before Beat 1. While the app is visible (`MainActivity.onStart` → `setOutputStandby(true)`, `onStop` → `false`), `MetronomeAudioEngine` keeps **one `AudioTrack` and its output thread open in standby**, continuously writing the same inaudible `±1` dither:
+- On Play, the output thread aligns the sequencer with the running output timeline (`prepare(firstBeatFrame)` + `alignToOutputFrame(outputFrames)`) and places Beat 1 at the start of the very next chunk. The hardware is already awake, so no extra warmup is needed (the warmup only covers the part of the 55 ms not yet written).
+- On Pause, the output returns to standby dither; when the app leaves the foreground while paused, the track is closed (no background audio or battery cost). Playback started from the notification while the app is in the background takes the cold-start path with the full warmup.
+- `MetronomeController.play()` starts the audio engine **before** syncing the media session / foreground service, so service start-up never delays Beat 1.
+- A play-generation counter guarantees that a fast Pause → Play restarts cleanly at Beat 1.
 
 ---
 
@@ -128,11 +135,11 @@ iosApp/                                  # SwiftUI app (XcodeGen project.yml)
 ```
 
 ### Shared audio pipeline
-Both platform engines extend `BaseMetronomeAudioEngine` and drive the same `MetronomeSequencer`:
-1. `prepare()` resets the timeline; the platform writes `MetronomeSequencer.warmupChunkCount(...)` chunks of `±1` LSB dither (`advanceWarmup`).
+All platform engines (Android, iOS, desktop) extend `BaseMetronomeAudioEngine` and drive the same `MetronomeSequencer`:
+1. `prepare()` resets the timeline; the platform writes `MetronomeSequencer.warmupChunkCount(...)` chunks of `±1` LSB dither (`advanceWarmup`). A warm start on an output that is already running (Android standby) calls `alignToOutputFrame(outputFrames)` instead.
 2. `startFirstBeat()` anchors Beat 1 at the exact post-warmup frame.
 3. `renderChunk()` synthesizes clicks sample-accurately (slew-limited BPM changes) and records every tick in `DelayCompensationEngine`.
-4. The platform reports its hardware playhead (Android `AudioTrack.getPlaybackHeadPosition()`, iOS player-node sample time), smoothed by `PlayheadEstimator`, and `processPlayhead()` dispatches visual, vibration, bar, and pendulum-phase events.
+4. The platform reports its hardware playhead (Android `AudioTrack.getPlaybackHeadPosition()`, iOS player-node sample time, desktop `SourceDataLine.longFramePosition`), smoothed by `PlayheadEstimator`, and `processPlayhead()` dispatches visual, vibration, bar, and pendulum-phase events.
 
 The iOS loop keeps four 256-frame buffers scheduled ahead of the player-node playhead on a high-priority thread; Android writes blocking chunks to `AudioTrack`.
 

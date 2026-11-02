@@ -14,7 +14,7 @@ fastlane/     F-Droid / store listing metadata
 .github/      CI workflows, templates, Dependabot
 ```
 
-The golden rule: **app logic goes in `shared/src/commonMain`**. Platform folders (`androidApp/`, `shared/src/iosMain`, `iosApp/`) contain only OS integrations and UI. See [`docs/architecture.md`](./docs/architecture.md).
+The golden rule: **app logic goes in `shared/src/commonMain`**. Platform folders (`androidApp/`, `shared/src/iosMain`, `iosApp/`, `shared/src/desktopMain` for Windows) contain only OS integrations and UI. See [`docs/architecture.md`](./docs/architecture.md).
 
 ## Prerequisites
 - JDK 17+ and the Android SDK (API 37)
@@ -39,7 +39,7 @@ cd iosApp && xcodegen generate && open Anchor.xcodeproj
 - Update `AGENTS.md` whenever behavior, architecture, build setup, or standing rules change.
 - Apply user-facing changes to both the Compose and SwiftUI UIs.
 - Use a neutral, factual tone in commit messages and `CHANGELOG.md`.
-- CI (`android.yml`, `ios.yml`) must be green before merging.
+- CI (`android.yml`, `ios.yml`, `desktop.yml`) must be green before merging.
 
 ## Product principles
 No ads, subscriptions, in-app purchases, analytics, accounts, or Google Play Services. Keep the metronome a focused, single-screen instrument.

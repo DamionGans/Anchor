@@ -9,7 +9,9 @@
   [![Latest Release](https://github.com/DamionGans/Anchor/actions/workflows/android.yml/badge.svg)](https://github.com/DamionGans/Anchor/releases/latest)
   [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84.svg?logo=android&logoColor=white)](https://www.android.com/)
   [![Platform](https://img.shields.io/badge/Platform-iPhone%20iOS%2016%2B-000000.svg?logo=apple&logoColor=white)](#iphone)
+  [![Platform](https://img.shields.io/badge/Platform-Windows%20x64%20%7C%20arm64%20(in%20preparation)-0078D4.svg)](#windows)
   [![iOS Build](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml/badge.svg)](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml)
+  [![Windows Tests](https://github.com/DamionGans/Anchor/actions/workflows/desktop.yml/badge.svg)](https://github.com/DamionGans/Anchor/actions/workflows/desktop.yml)
   [![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](LICENSE)
 </div>
 
@@ -17,7 +19,15 @@
 
 **Anchor Metronome** (**Anchor**) is a fast, distraction-free metronome built for musicians, drummers, teachers, and ensembles.
 
-It puts every essential control on a single, uncluttered screen—giving you unwavering tempo, a crisp first beat that never gets cut off, and flexible visual and vibration cues without ads, pop-ups, or subscriptions. Built on pure Android platform APIs with zero reliance on Google Play Services and a platform-agnostic Kotlin core, Anchor runs seamlessly on both standard Google Play devices and plain AOSP phones—and now on iPhone too, with the same timing engine on both platforms.
+It puts every essential control on a single, uncluttered screen—giving you unwavering tempo, a crisp first beat that never gets cut off, and flexible visual and vibration cues without ads, pop-ups, or subscriptions. One shared Kotlin Multiplatform core (timing engine, click synthesis, settings, and update logic) powers every platform:
+
+| Platform | Status | Get it |
+|---|---|---|
+| **Android** 7.0+ | Available | APK from the [website](https://damiongans.github.io/Anchor/) / [GitHub Releases](https://github.com/DamionGans/Anchor/releases/latest); F-Droid and Google Play coming soon |
+| **iPhone** (iOS 16+) | Available (sideload / build from source) | [Unsigned IPA from CI](#iphone); App Store coming soon |
+| **Windows** (x64 + arm64) | In preparation | Shared core and Windows audio/settings/update code are tested on Windows x64 and arm64 in CI; [roadmap](./docs/windows.md) |
+
+On Android, Anchor uses pure platform APIs with zero reliance on Google Play Services, so it runs on standard Google Play devices and plain AOSP phones alike.
 
 👉 **[Visit the Website & Download the App](https://damiongans.github.io/Anchor/)**
 
@@ -42,7 +52,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.5.4.apk` file and open it to install.
+2. Download the latest `Anchor-v1.5.5.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone
@@ -52,15 +62,19 @@ Anchor for iPhone (iOS 16+) is built automatically by the **[Build iOS App](http
 * Download the `Anchor-vX.Y.Z-unsigned.ipa` artifact from the latest successful run and install it with your own signing certificate or a sideloading tool, or
 * Build it yourself on a Mac with Xcode: run `brew install xcodegen`, then `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`, choose your team, and press Run.
 
+### Windows
+
+A Windows app (x64 and arm64) is **in preparation** and not downloadable yet. The shared timing core and the Windows platform code (audio output, settings, update checks) already run and are tested on real Windows x64 and Windows on Arm machines in CI. See the **[Windows roadmap](./docs/windows.md)** for what remains (Compose Multiplatform Desktop UI and MSI installers).
+
 ---
 
 ## Under the Hood (Technical Documentation)
 
-Curious how Anchor achieves sample-accurate timing, prevents Android audio hardware from clipping Beat 1, synchronizes visuals and haptics to the hardware audio playhead, or shares one Kotlin Multiplatform core between Android and iPhone?
+Curious how Anchor achieves sample-accurate timing, prevents Android audio hardware from clipping Beat 1, synchronizes visuals and haptics to the hardware audio playhead, or shares one Kotlin Multiplatform core between Android, iPhone, and (soon) Windows?
 
 Detailed engineering documentation is kept separate so this README stays focused on musicians:
 
-* 📄 **[Technical Architecture & Audio Engine Guide (`docs/architecture.md`)](./docs/architecture.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android and iPhone apps.
+* 📄 **[Technical Architecture & Audio Engine Guide (`docs/architecture.md`)](./docs/architecture.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android, iPhone, and upcoming Windows apps.
 * 🌐 **[Web Technical Deep-Dive (`architecture.html`)](https://damiongans.github.io/Anchor/architecture.html)** — Visual waveform diagrams and system breakdown on the project website.
 * 🧭 **[Distribution & Store Release Guide (`docs/distribution.md`)](./docs/distribution.md)** — GitHub, F-Droid, Google Play, and App Store channels and the release process.
 * 🪟 **[Windows Support Roadmap (`docs/windows.md`)](./docs/windows.md)** — How the shared core is prepared for a future Windows app on x64 and arm64.
@@ -76,7 +90,7 @@ Anchor is a Kotlin Multiplatform project:
 ```text
 androidApp/   Android app (Jetpack Compose)
 iosApp/       iPhone app (SwiftUI)
-shared/       Shared Kotlin logic used by both apps
+shared/       Shared Kotlin logic used by every platform (incl. desktopMain for Windows)
 docs/         Developer documentation
 website/      Project website (GitHub Pages)
 ```

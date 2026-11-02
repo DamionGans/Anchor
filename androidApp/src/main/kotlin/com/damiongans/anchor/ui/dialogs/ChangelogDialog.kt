@@ -31,7 +31,8 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Groundwork for Windows", "Anchor's shared timing engine and settings are now prepared and tested for a future Windows app on both x64 and ARM PCs. The Android and iPhone apps are unchanged.")
+    ChangelogEntry("Instant First Beat", "Pressing Play now starts the first beat right away. While Anchor is open, the audio output stays ready in the background so there is no start-up delay."),
+    ChangelogEntry("Android, iPhone & Windows", "The website and documentation now cover every platform: Android, iPhone, and the upcoming Windows app for x64 and ARM PCs.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

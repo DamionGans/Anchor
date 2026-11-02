@@ -1,5 +1,18 @@
 # Changelog
 
+## [v1.5.5] — Instant First Beat on Android & Multi-Platform Documentation
+
+### Android
+- Pressing Play now starts the first beat without the previous start-up delay. While the app is on screen, the audio output stays open in standby (inaudible dither), so Beat 1 is placed in the next audio chunk instead of re-creating the output and waking the audio hardware first. The output closes when the app leaves the foreground while paused.
+- Playback starts before the media notification/service is updated, so service start-up no longer delays the first beat.
+- Starting playback from the notification while the app is in the background keeps the full hardware warmup.
+
+### Shared Core
+- Added `MetronomeSequencer.alignToOutputFrame` for warm starts on an already-running output and an optional `IAudioEngine.setOutputStandby` hook (no-op on iPhone and desktop).
+
+### Documentation & Website
+- README, website (new Platforms section, FAQ, hero, technical page), and developer docs now describe Android, iPhone, and the in-preparation Windows app (x64 and arm64).
+
 ## [v1.5.4] — Windows Preparation (x64 & arm64)
 
 ### Shared Core

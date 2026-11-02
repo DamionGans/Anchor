@@ -1,0 +1,2 @@
+- Play starts the first beat immediately: the audio output stays ready while the app is open.
+- Documentation and website now cover Android, iPhone, and the upcoming Windows app.

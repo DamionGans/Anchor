@@ -1,6 +1,6 @@
 # Anchor Metronome — AI Agent & Developer Guidelines (`AGENTS.md`)
 
-This document is the authoritative source of truth for all AI coding agents (AI Studio, Gemini, Claude Code, GitHub Copilot, Cursor, Windsurf, Codex) and human contributors working on **Anchor Metronome** (short name **Anchor**, formerly Pulse Metronome) for Android and iPhone.
+This document is the authoritative source of truth for all AI coding agents (AI Studio, Gemini, Claude Code, GitHub Copilot, Cursor, Windsurf, Codex) and human contributors working on **Anchor Metronome** (short name **Anchor**, formerly Pulse Metronome) for Android and iPhone, with a Windows (x64 + arm64) app in preparation.
 
 ---
 
@@ -37,11 +37,12 @@ This document is the authoritative source of truth for all AI coding agents (AI 
   - The website hero (`website/index.html`) displays a **non-interactive animated app preview** constructed from HTML/CSS UI elements (swinging pendulum, pulsing 4-beat bar, and tempo/transport cards mirroring `MetronomeScreen.kt`) with a **steady background color** (as if the Screen Flash background setting is disabled)—do not re-introduce an interactive web audio simulator, a flashing background overlay on the website preview, or a static raster image screenshot.
   - **Preview sync**: the preview's pendulum and beat bar run on one clock: `--mock-beat` (0.5 s = the displayed 120 BPM) on `.phone-frame` in `website/style.css`. The pendulum swings once per beat (`var(--mock-beat)`, `alternate`) and the beat-bar cycle is `calc(var(--mock-beat) * 4)`, so every swing reaches its extreme exactly when the next beat lights up. Change both only through `--mock-beat` (and the displayed BPM).
   - Deep technical implementation details (44.1 kHz PCM synthesis, 55ms sub-LSB warmup, `AudioTrack` / `AVAudioPlayerNode` playhead math, the shared Kotlin Multiplatform architecture) must be maintained in dedicated technical documentation (`docs/architecture.md` and `website/architecture.html` on the website) and linked cleanly from `README.md` and `website/index.html`.
+  - **All platforms are documented**: `README.md` (platform table + per-platform install sections), `website/index.html` (`#platforms` section, hero pill, meta description, FAQ), `website/architecture.html`, and `docs/` must describe every platform with its current status: Android (available), iPhone (available via unsigned IPA / Xcode; App Store coming), Windows x64 + arm64 (in preparation). Update all of them when a platform's status changes.
 - **Neutral, Factual Communication**: All changelogs, release notes, commit messages, and technical documentation must use a neutral, concise, factual engineering tone. Avoid emojis in changelogs or overly enthusiastic AI phrasing.
 
 ---
 
-## 3. Architecture: Kotlin Multiplatform Core (Android + iPhone) & Clean SDLC
+## 3. Architecture: Kotlin Multiplatform Core (Android + iPhone, Windows-ready) & Clean SDLC
 
 ### Repository Layout (keep this structure)
 
@@ -152,6 +153,7 @@ iosApp/                                   # SwiftUI iPhone app (iOS 16+)
 - **Android**: uses a dedicated high-priority thread (`Process.THREAD_PRIORITY_URGENT_AUDIO`) writing 16-bit mono PCM at native low-latency sample rate to a streaming `AudioTrack` configured with `AudioTrack.PERFORMANCE_MODE_LOW_LATENCY`.
 - All click waveforms (`SoundSet`: Woodblock, Mechanical, Digital Beep, Rimshot, 808 Percussion) are pre-synthesized by `ClickSynthesizer` into `ShortArray` buffers to guarantee zero allocations on the audio thread.
 - **First-Beat Hardware Warmup (Do Not Remove)**: Before sample `0` of Beat 1 is written, both platforms write **at least 55ms of sub-LSB dither (`±1` PCM amplitude)** (`MetronomeSequencer.fillWarmupDither` / `warmupChunkCount`). This forces Android's AudioFlinger mixer and the device DAC out of idle standby so the first beat is never clipped or swallowed, without introducing audible noise.
+- **Android Output Standby (Instant First Beat)**: While `MainActivity` is started, `MetronomeAudioEngine` keeps one `AudioTrack` + output thread open writing the same `±1` dither (`IAudioEngine.setOutputStandby(true)`, called from `onStart`; `false` from `onStop`). Play then aligns the sequencer to the running output (`prepare(firstBeatFrame)` + `MetronomeSequencer.alignToOutputFrame(Long)`) and anchors Beat 1 at the next chunk; the warmup only runs for frames the output has not yet covered (full warmup on a cold start). Stop returns to standby, or closes the track when standby is off. A play-generation counter makes a fast stop→start restart at Beat 1. The head counter is sampled every standby chunk so 32-bit wraps stay tracked. `MetronomeController.play()` must call `audioEngine.start()` **before** `syncPlaybackSession()`. iOS and desktop use the default no-op `setOutputStandby` (candidate follow-up).
 - **Always-Visible Audio Output Selection**: Platform engines enumerate media outputs and `AudioRouteSelector.normalize` guarantees `Built-in Speaker` is always included even when it is the only output. Both the top bar output selector and `SettingsBottomSheet` (`AudioSettingsTab`) must always display all available outputs (even when only 1 output exists) and allow routing via `AudioTrack.setPreferredDevice`.
 
 ### 4.2 Vendor-Agnostic Delay Compensation (`DelayCompensationEngine`)
