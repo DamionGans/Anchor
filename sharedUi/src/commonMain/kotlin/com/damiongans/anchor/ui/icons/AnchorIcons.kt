@@ -592,6 +592,190 @@ object AnchorIcons {
         }
     }
 
+    val QueueMusic: ImageVector by lazy {
+        vectorIcon("QueueMusic") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(15f, 6f)
+                horizontalLineTo(3f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(12f)
+                verticalLineTo(6f)
+                close()
+                moveTo(15f, 10f)
+                horizontalLineTo(3f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(12f)
+                verticalLineToRelative(-2f)
+                close()
+                moveTo(3f, 16f)
+                horizontalLineToRelative(8f)
+                verticalLineToRelative(-2f)
+                horizontalLineTo(3f)
+                verticalLineToRelative(2f)
+                close()
+                moveTo(17f, 6f)
+                verticalLineToRelative(8.18f)
+                curveTo(16.69f, 14.07f, 16.35f, 14f, 16f, 14f)
+                curveToRelative(-1.66f, 0f, -3f, 1.34f, -3f, 3f)
+                reflectiveCurveToRelative(1.34f, 3f, 3f, 3f)
+                reflectiveCurveToRelative(3f, -1.34f, 3f, -3f)
+                verticalLineTo(8f)
+                horizontalLineToRelative(3f)
+                verticalLineTo(6f)
+                horizontalLineToRelative(-5f)
+                close()
+            }
+        }
+    }
+
+    val LibraryMusic: ImageVector by lazy {
+        vectorIcon("LibraryMusic") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(20f, 2f)
+                horizontalLineTo(8f)
+                curveToRelative(-1.1f, 0f, -2f, 0.9f, -2f, 2f)
+                verticalLineToRelative(12f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(12f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                verticalLineTo(4f)
+                curveToRelative(0f, -1.1f, -0.9f, -2f, -2f, -2f)
+                close()
+                moveTo(18f, 7f)
+                horizontalLineToRelative(-3f)
+                verticalLineToRelative(5.5f)
+                curveToRelative(0f, 1.38f, -1.12f, 2.5f, -2.5f, 2.5f)
+                reflectiveCurveTo(10f, 13.88f, 10f, 12.5f)
+                reflectiveCurveToRelative(1.12f, -2.5f, 2.5f, -2.5f)
+                curveToRelative(0.57f, 0f, 1.08f, 0.19f, 1.5f, 0.51f)
+                verticalLineTo(5f)
+                horizontalLineToRelative(4f)
+                verticalLineToRelative(2f)
+                close()
+                moveTo(4f, 6f)
+                horizontalLineTo(2f)
+                verticalLineToRelative(14f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(14f)
+                verticalLineToRelative(-2f)
+                horizontalLineTo(4f)
+                verticalLineTo(6f)
+                close()
+            }
+        }
+    }
+
+    val ChevronLeft: ImageVector by lazy {
+        vectorIcon("ChevronLeft") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(15.41f, 7.41f)
+                lineTo(14f, 6f)
+                lineToRelative(-6f, 6f)
+                lineToRelative(6f, 6f)
+                lineToRelative(1.41f, -1.41f)
+                lineTo(10.83f, 12f)
+                close()
+            }
+        }
+    }
+
+    val ChevronRight: ImageVector by lazy {
+        vectorIcon("ChevronRight") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(10f, 6f)
+                lineTo(8.59f, 7.41f)
+                lineTo(13.17f, 12f)
+                lineToRelative(-4.58f, 4.59f)
+                lineTo(10f, 18f)
+                lineToRelative(6f, -6f)
+                close()
+            }
+        }
+    }
+
+    val ArrowUpward: ImageVector by lazy {
+        vectorIcon("ArrowUpward") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(4f, 12f)
+                lineToRelative(1.41f, 1.41f)
+                lineTo(11f, 7.83f)
+                verticalLineTo(20f)
+                horizontalLineToRelative(2f)
+                verticalLineTo(7.83f)
+                lineToRelative(5.58f, 5.59f)
+                lineTo(20f, 12f)
+                lineToRelative(-8f, -8f)
+                lineToRelative(-8f, 8f)
+                close()
+            }
+        }
+    }
+
+    val ArrowDownward: ImageVector by lazy {
+        vectorIcon("ArrowDownward") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(20f, 12f)
+                lineToRelative(-1.41f, -1.41f)
+                lineTo(13f, 16.17f)
+                verticalLineTo(4f)
+                horizontalLineToRelative(-2f)
+                verticalLineToRelative(12.17f)
+                lineToRelative(-5.58f, -5.59f)
+                lineTo(4f, 12f)
+                lineToRelative(8f, 8f)
+                lineToRelative(8f, -8f)
+                close()
+            }
+        }
+    }
+
+    val Delete: ImageVector by lazy {
+        vectorIcon("Delete") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(6f, 19f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(8f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                verticalLineTo(7f)
+                horizontalLineTo(6f)
+                verticalLineToRelative(12f)
+                close()
+                moveTo(19f, 4f)
+                horizontalLineToRelative(-3.5f)
+                lineToRelative(-1f, -1f)
+                horizontalLineToRelative(-5f)
+                lineToRelative(-1f, 1f)
+                horizontalLineTo(5f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(14f)
+                verticalLineTo(4f)
+                close()
+            }
+        }
+    }
+
+    val Edit: ImageVector by lazy {
+        vectorIcon("Edit") {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(3f, 17.25f)
+                verticalLineTo(21f)
+                horizontalLineToRelative(3.75f)
+                lineTo(17.81f, 9.94f)
+                lineToRelative(-3.75f, -3.75f)
+                lineTo(3f, 17.25f)
+                close()
+                moveTo(20.71f, 7.04f)
+                curveToRelative(0.39f, -0.39f, 0.39f, -1.02f, 0f, -1.41f)
+                lineToRelative(-2.34f, -2.34f)
+                curveToRelative(-0.39f, -0.39f, -1.02f, -0.39f, -1.41f, 0f)
+                lineToRelative(-1.83f, 1.83f)
+                lineToRelative(3.75f, 3.75f)
+                lineToRelative(1.83f, -1.83f)
+                close()
+            }
+        }
+    }
+
     private inline fun vectorIcon(
         name: String,
         block: ImageVector.Builder.() -> Unit
