@@ -31,6 +31,8 @@ dependencies {
   // Skiko/AWT natives for the machine that builds the MSI (windows-x64 or windows-arm64).
   implementation(compose.desktop.currentOs)
   implementation(libs.kotlinx.coroutines.swing)
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlinx.coroutines.test)
 }
 
 compose.desktop {

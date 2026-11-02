@@ -8,7 +8,7 @@ import androidx.compose.ui.input.key.key
 import com.damiongans.anchor.viewmodel.MetronomeController
 
 /**
- * Desktop keyboard shortcuts (key-down events, window-wide):
+ * Desktop keyboard shortcuts (key-down events, window-wide) (`SPEC-UI-004`):
  * - Space: play / pause
  * - Up / Down (or + / -): tempo ±1 BPM; with Shift: ±5 BPM
  * - T: tap tempo
@@ -17,9 +17,23 @@ import com.damiongans.anchor.viewmodel.MetronomeController
 internal object KeyboardShortcuts {
 
     fun handle(event: KeyEvent, controller: MetronomeController): Boolean {
-        if (event.isCtrlPressed) return false
-        val step = if (event.isShiftPressed) 5 else 1
-        return when (event.key) {
+        return handleKey(
+            key = event.key,
+            isShiftPressed = event.isShiftPressed,
+            isCtrlPressed = event.isCtrlPressed,
+            controller = controller
+        )
+    }
+
+    internal fun handleKey(
+        key: Key,
+        isShiftPressed: Boolean = false,
+        isCtrlPressed: Boolean = false,
+        controller: MetronomeController
+    ): Boolean {
+        if (isCtrlPressed) return false
+        val step = if (isShiftPressed) 5 else 1
+        return when (key) {
             Key.Spacebar -> {
                 controller.togglePlayPause(); true
             }
