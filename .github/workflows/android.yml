@@ -38,18 +38,18 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
@@ -269,7 +269,7 @@ jobs:
           ls -la store-artifacts/
 
       - name: Upload Play Store Bundle to Workflow
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: play-bundle
           path: store-artifacts/*.aab
@@ -333,7 +333,7 @@ jobs:
           EOF
 
       - name: Upload Build Artifact to Workflow
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.prepare_release.outputs.apk_name }}
           path: |
@@ -396,7 +396,7 @@ jobs:
 
       - name: Download Play Bundle
         if: steps.secrets.outputs.ready == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: play-bundle
           path: store-artifacts
