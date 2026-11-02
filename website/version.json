@@ -1,0 +1,16 @@
+{
+  "version": "1.5.1",
+  "versionCode": 10501,
+  "releaseTag": "v1.5.1",
+  "releaseDate": "2026-11-02",
+  "apkName": "Anchor-v1.5.1.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.5.1/Anchor-v1.5.1.apk",
+  "repoUrl": "https://github.com/DamionGans/Anchor",
+  "minSdk": 24,
+  "targetSdk": 36,
+  "fileSizeApprox": "~2.1 MB",
+  "highlights": [
+    "Reorganized source repository with standard Android / iPhone / shared folder structure (no app changes)",
+    "Added contributing and security guides"
+  ]
+}

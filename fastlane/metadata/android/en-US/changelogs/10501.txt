@@ -1,0 +1,2 @@
+- Reorganized the source repository; the app itself is unchanged.
+- Added contributing and security guides.

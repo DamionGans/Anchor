@@ -21,28 +21,50 @@ This document is the authoritative source of truth for all AI coding agents (AI 
 
 - **Focused, High-Precision Instrument**: **Anchor Metronome** (**Anchor**) is a clean, distraction-free, sample-accurate metronome.
 - **Brand Name (Full vs. Short) & Canonical Tagline**:
-  - **Full App Name**: **Anchor Metronome** (used to prevent trademark infringement in `metadata.json`, `<application android:label="@string/app_full_name">`, the in-app About sheet in `SettingsBottomSheet.kt`, `MediaMetadata.METADATA_KEY_ALBUM`, `README.md` / `ARCHITECTURE.md` headings, website `<title>` / Open Graph tags, and GitHub Release titles).
+  - **Full App Name**: **Anchor Metronome** (used to prevent trademark infringement in `metadata.json`, `<application android:label="@string/app_full_name">`, the in-app About sheet in `SettingsBottomSheet.kt`, `MediaMetadata.METADATA_KEY_ALBUM`, `README.md` / `docs/architecture.md` headings, website `<title>` / Open Graph tags, and GitHub Release titles).
   - **Short Name / References**: **Anchor** (kept for the home screen launcher icon label `<activity android:label="@string/app_name">`, the iOS home screen name `CFBundleDisplayName` in `iosApp/project.yml`, the top-bar header `"ANCHOR"` in `MetronomeScreen.kt`, package namespace and applicationId `com.damiongans.anchor`, APK filename `Anchor-vX.Y.Z.apk`, and concise body copy).
-  - **Canonical Tagline**: **"Rock-solid time for serious play"** across `README.md`, `docs/index.html`, `metadata.json`, `MetronomeScreen.kt`, and the in-app About sheet (`SettingsBottomSheet.kt`). Never describe Anchor as a general "timekeeping" app—it is a musical metronome.
-  - **Repository URL**: **`DamionGans/Anchor`** (`https://github.com/DamionGans/Anchor`, Pages `https://damiongans.github.io/Anchor/`). Both `AppUpdateManager.kt` and `docs/app.js` check `DamionGans/Anchor` first and automatically fall back to `DamionGans/PulseMetronome` so releases resolve seamlessly before and after renaming the GitHub repository.
+  - **Canonical Tagline**: **"Rock-solid time for serious play"** across `README.md`, `website/index.html`, `metadata.json`, `MetronomeScreen.kt`, and the in-app About sheet (`SettingsBottomSheet.kt`). Never describe Anchor as a general "timekeeping" app—it is a musical metronome.
+  - **Repository URL**: **`DamionGans/Anchor`** (`https://github.com/DamionGans/Anchor`, Pages `https://damiongans.github.io/Anchor/`). Both `AppUpdateManager.kt` and `website/app.js` check `DamionGans/Anchor` first and automatically fall back to `DamionGans/PulseMetronome` so releases resolve seamlessly before and after renaming the GitHub repository.
 - **Distribution Channels & Monetization (standing decision)**: Anchor is **free and open source on GitHub and F-Droid** and sold as an **upfront paid app (one-time price, identical features) on Google Play and the Apple App Store** for side income. Rules:
   - **Never** add ads, subscriptions, in-app purchases/billing SDKs (Play Billing, StoreKit), analytics, accounts, or feature gating between channels. All channels ship the same features.
   - The channel is a shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`) in `update/ReleaseVersioning.kt`, passed via `AppVersionInfo.channel`. Only `GITHUB` builds self-update (`selfUpdates`); `MetronomeController` skips update checks otherwise and exposes `canCheckForUpdates` / `updateStoreName` so both UIs hide the update section. Store builds must **never** download or link to APK/IPA updates (Play Device & Network Abuse policy, App Store guideline 2.5.2).
-  - Android flavors (`app/build.gradle.kts`, dimension `distribution`): `github` (GitHub Release APK), `fdroid`, `play` (AAB). `fdroid` and `play` remove `INTERNET` via `src/<flavor>/AndroidManifest.xml`, so those builds make no network requests. iOS: `ANCHOR_DISTRIBUTION` build setting → `AnchorDistribution` Info.plist key (`GITHUB` for the unsigned CI IPA, `APP_STORE` for App Store archives).
-  - Public copy must not claim the store versions are free. Use: "free and open source on GitHub and F-Droid; paid store versions support development". Keep `docs/privacy.html` accurate (no data collected) and linked from the website footer.
+  - Android flavors (`androidApp/build.gradle.kts`, dimension `distribution`): `github` (GitHub Release APK), `fdroid`, `play` (AAB). `fdroid` and `play` remove `INTERNET` via `src/<flavor>/AndroidManifest.xml`, so those builds make no network requests. iOS: `ANCHOR_DISTRIBUTION` build setting → `AnchorDistribution` Info.plist key (`GITHUB` for the unsigned CI IPA, `APP_STORE` for App Store archives).
+  - Public copy must not claim the store versions are free. Use: "free and open source on GitHub and F-Droid; paid store versions support development". Keep `website/privacy.html` accurate (no data collected) and linked from the website footer.
 - **No Feature Bloat**: Do **not** re-introduce the removed *Practice Timer* or *Speed Trainer* features, and do not add multi-screen navigation, accounts, analytics, or bloatware unless explicitly requested.
 - **Single-Screen Ergonomics**: The main metronome view (`MetronomeScreen.kt` on Android, `ContentView.swift` on iOS) must remain a non-scrolling, single-screen layout where BPM, beat indicators, pendulum, time signature, subdivisions, sound profile, and transport controls are immediately accessible.
 - **Musician-First Public Copy vs. Dedicated Technical Docs**:
-  - The main `README.md` (featuring the `docs/assets/anchor-logo.svg` app logo at the top) and landing page (`docs/index.html`) must remain **musician-focused and benefit-driven** (written for players who want a reliable, high-precision metronome without low-level audio DSP jargon front-and-center).
-  - The website hero (`docs/index.html`) displays a **non-interactive animated app preview** constructed from HTML/CSS UI elements (swinging pendulum, pulsing 4-beat bar, and tempo/transport cards mirroring `MetronomeScreen.kt`) with a **steady background color** (as if the Screen Flash background setting is disabled)—do not re-introduce an interactive web audio simulator, a flashing background overlay on the website preview, or a static raster image screenshot.
-  - Deep technical implementation details (44.1 kHz PCM synthesis, 55ms sub-LSB warmup, `AudioTrack` / `AVAudioPlayerNode` playhead math, the shared Kotlin Multiplatform architecture) must be maintained in dedicated technical documentation (`ARCHITECTURE.md` in the repo root and `docs/architecture.html` on the website) and linked cleanly from `README.md` and `docs/index.html`.
+  - The main `README.md` (featuring the `website/assets/anchor-logo.svg` app logo at the top) and landing page (`website/index.html`) must remain **musician-focused and benefit-driven** (written for players who want a reliable, high-precision metronome without low-level audio DSP jargon front-and-center).
+  - The website hero (`website/index.html`) displays a **non-interactive animated app preview** constructed from HTML/CSS UI elements (swinging pendulum, pulsing 4-beat bar, and tempo/transport cards mirroring `MetronomeScreen.kt`) with a **steady background color** (as if the Screen Flash background setting is disabled)—do not re-introduce an interactive web audio simulator, a flashing background overlay on the website preview, or a static raster image screenshot.
+  - Deep technical implementation details (44.1 kHz PCM synthesis, 55ms sub-LSB warmup, `AudioTrack` / `AVAudioPlayerNode` playhead math, the shared Kotlin Multiplatform architecture) must be maintained in dedicated technical documentation (`docs/architecture.md` and `website/architecture.html` on the website) and linked cleanly from `README.md` and `website/index.html`.
 - **Neutral, Factual Communication**: All changelogs, release notes, commit messages, and technical documentation must use a neutral, concise, factual engineering tone. Avoid emojis in changelogs or overly enthusiastic AI phrasing.
 
 ---
 
 ## 3. Architecture: Kotlin Multiplatform Core (Android + iPhone) & Clean SDLC
 
-Anchor ships an **Android app** (`app/`, Jetpack Compose) and an **iPhone app** (`iosApp/`, SwiftUI) on top of one **shared Kotlin Multiplatform module** (`shared/`). Packages stay under `com.damiongans.anchor`.
+### Repository Layout (keep this structure)
+
+```text
+Anchor/
+├── androidApp/            # Android app module (Jetpack Compose UI + Android platform code)
+│   └── src/{main,test,androidTest}/kotlin/   + flavor overlays src/fdroid, src/play
+├── iosApp/                # iPhone app (SwiftUI) + XcodeGen project.yml
+├── shared/                # Kotlin Multiplatform module: ALL shared app logic (commonMain) + iosMain
+├── docs/                  # Developer documentation (Markdown): architecture.md, distribution.md
+├── website/               # GitHub Pages site (index, architecture, privacy, version.json, assets)
+├── fastlane/metadata/     # F-Droid / store listing metadata
+├── signing/               # Debug/CI keystore (base64) — never a production upload key
+├── gradle/                # Gradle wrapper + libs.versions.toml (version catalog)
+├── .github/               # workflows (android.yml, ios.yml), scripts, issue/PR templates, dependabot
+├── AGENTS.md · CLAUDE.md  # Contributor & AI agent rules (this file is canonical)
+├── README.md · CHANGELOG.md · CONTRIBUTING.md · SECURITY.md · LICENSE
+└── build.gradle.kts · settings.gradle.kts · gradle.properties · .editorconfig
+```
+- Kotlin sources always live in `src/<sourceSet>/kotlin/` (never `java/`). New top-level folders require updating this layout, `README.md`, and `CONTRIBUTING.md`.
+- `website/` is published by the `deploy-pages` job in `android.yml` (GitHub Pages source = GitHub Actions). Markdown documentation belongs in `docs/`, never in `website/`.
+- `metadata.json` and `.env.example` (Secrets Gradle Plugin defaults) stay at the root for Google AI Studio compatibility.
+
+Anchor ships an **Android app** (`androidApp/`, Jetpack Compose) and an **iPhone app** (`iosApp/`, SwiftUI) on top of one **shared Kotlin Multiplatform module** (`shared/`). Packages stay under `com.damiongans.anchor`.
 
 ```text
 shared/                                   # Kotlin Multiplatform (androidLibrary + iosX64/iosArm64/iosSimulatorArm64)
@@ -73,7 +95,7 @@ shared/                                   # Kotlin Multiplatform (androidLibrary
         ├── playback/IosPlaybackSession.kt         # MPNowPlayingInfoCenter + MPRemoteCommandCenter
         └── ios/AnchorIosApp.kt                    # Swift entry point wiring iOS implementations into MetronomeController
 
-app/src/main/java/com/damiongans/anchor/  # Android platform layer only
+androidApp/src/main/kotlin/com/damiongans/anchor/  # Android platform layer only
 ├── MainActivity.kt                       # Edge-to-edge host, lifecycle & update prompt trigger
 ├── audio/MetronomeAudioEngine.kt         # AudioTrack Fast Path I/O, device discovery/routing, wake lock
 ├── haptics/AndroidHapticsManager.kt      # VibrationEffect haptics
@@ -86,12 +108,15 @@ app/src/main/java/com/damiongans/anchor/  # Android platform layer only
 
 iosApp/                                   # SwiftUI iPhone app (iOS 16+)
 ├── project.yml                           # XcodeGen spec (generate with `xcodegen generate`; .xcodeproj is git-ignored)
-└── Anchor/                               # AnchorApp.swift, MetronomeStore.swift, Theme.swift, Views/, Assets.xcassets
+└── Anchor/
+    ├── App/                              # AnchorApp.swift (entry), MetronomeStore.swift (Kotlin bridge), Theme.swift
+    ├── Views/                            # ContentView, SettingsView, TimeSignatureView
+    └── Resources/Assets.xcassets         # App icon & accent color
 ```
 
 ### Shared-Logic Boundary (CRITICAL)
-- **All app logic lives in `shared/src/commonMain`**: state, user actions, persistence rules (keys, defaults, clamping, accent memory), timing/delay compensation, click synthesis, sequencing/warmup/dispatch, route list rules, update version comparison and asset selection. Never duplicate this logic in `app/`, `iosMain`, or Swift.
-- **Platform code only does platform work**: Android (`app/`) and iOS (`shared/src/iosMain` + `iosApp/`) contain only OS API calls (audio I/O & playhead, device routing, haptics, key-value storage, HTTP/JSON transport, system media controls, URL opening) and UI. If new behavior is not inherently platform-specific, add it to `commonMain` and call it from both platforms.
+- **All app logic lives in `shared/src/commonMain`**: state, user actions, persistence rules (keys, defaults, clamping, accent memory), timing/delay compensation, click synthesis, sequencing/warmup/dispatch, route list rules, update version comparison and asset selection. Never duplicate this logic in `androidApp/`, `iosMain`, or Swift.
+- **Platform code only does platform work**: Android (`androidApp/`) and iOS (`shared/src/iosMain` + `iosApp/`) contain only OS API calls (audio I/O & playhead, device routing, haptics, key-value storage, HTTP/JSON transport, system media controls, URL opening) and UI. If new behavior is not inherently platform-specific, add it to `commonMain` and call it from both platforms.
 - **Zero platform imports in `commonMain`**: no `android.*`, `androidx.*`, `java.*`, `platform.*`, or JVM-only annotations (`@Synchronized`). Use `kotlin.concurrent.Volatile`. `DelayCompensationEngine` timeline methods are single-threaded (called only from the platform audio loop).
 - **Swift interop**: Swift talks only to `AnchorIosApp` (methods without default arguments, `change*` naming, catalog lists, `observe(onChange:)` delivering on the main thread). Kotlin `description` properties are exposed through helpers (`soundSetSummary`, `buttonTriggerModeSummary`) because `description` collides with `NSObject`. Swift compares Kotlin enums by `name`.
 - **UI parity**: Feature changes must be applied to both the Compose UI and the SwiftUI UI unless explicitly platform-specific. Desktop targets are not added unless requested.
@@ -154,7 +179,8 @@ iosApp/                                   # SwiftUI iPhone app (iOS 16+)
 
 ## 7. APK Size, Plain AOSP Independence, Google Play Store Compliance & Reproducible Builds
 
-- **Android CI** (`.github/workflows/release.yml`): builds, lints (`lintGithubDebug`), and tests (`testGithubDebugUnitTest`, `:shared:testAndroidHostTest`) on pushes to **every branch** and on pull requests; builds `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, and `assemblePlayRelease` + `bundlePlayRelease` (Play AAB workflow artifact) and fails if the play APK requests `INTERNET`. On `v*` tags, `publish-play` uploads the AAB to the Play internal track (draft) once `PLAY_SERVICE_ACCOUNT_JSON` and a real `SIGNING_KEYSTORE_BASE64` upload key exist (the first Play release must be uploaded manually). For Play, never sign with the committed debug keystore; GitHub Releases are published only for pushes to `main`, `v*` tags, or a manual `workflow_dispatch` with `create_release`, and GitHub Pages deploys only from `main`, `v*` tags, or `workflow_dispatch`.
+- **Workflows**: `.github/workflows/android.yml` (Android build/test/release + GitHub Pages deploy of `website/`) and `.github/workflows/ios.yml` (iOS). Dependabot (`.github/dependabot.yml`) opens weekly update PRs for Gradle and GitHub Actions.
+- **Android CI** (`.github/workflows/android.yml`): builds, lints (`lintGithubDebug`), and tests (`testGithubDebugUnitTest`, `:shared:testAndroidHostTest`) on pushes to **every branch** and on pull requests; builds `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, and `assemblePlayRelease` + `bundlePlayRelease` (Play AAB workflow artifact) and fails if the play APK requests `INTERNET`. On `v*` tags, `publish-play` uploads the AAB to the Play internal track (draft) once `PLAY_SERVICE_ACCOUNT_JSON` and a real `SIGNING_KEYSTORE_BASE64` upload key exist (the first Play release must be uploaded manually). For Play, never sign with the committed debug keystore; GitHub Releases are published only for pushes to `main`, `v*` tags, or a manual `workflow_dispatch` with `create_release`, and GitHub Pages deploys only from `main`, `v*` tags, or `workflow_dispatch`.
 - **iOS builds**: `.github/workflows/ios.yml` (macOS runner, Xcode 16.4) runs `:shared:iosSimulatorArm64Test`, generates the project with XcodeGen, builds for the simulator, and uploads an unsigned `Anchor-vX.Y.Z-unsigned.ipa` (+ `.sha256`) as a workflow artifact. The shared framework is built by the Xcode pre-build phase `./gradlew :shared:embedAndSignAppleFrameworkForXcode`. The iOS app must not add third-party Swift packages, analytics, or tracking. On `v*` tags the `appstore` job archives with `ANCHOR_DISTRIBUTION=APP_STORE` and uploads to App Store Connect / TestFlight once `APPLE_TEAM_ID`, `APPLE_DIST_CERT_P12_BASE64`, `APPLE_DIST_CERT_PASSWORD`, `APPLE_PROVISIONING_PROFILE_BASE64`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_P8` secrets exist; otherwise it skips.
 - **F-Droid**: metadata lives in `fastlane/metadata/android/en-US/` (title, descriptions, `changelogs/<versionCode>.txt`, icon); add a `changelogs/<versionCode>.txt` for every release. F-Droid builds the `fdroid` flavor from source; the repository is licensed Apache 2.0 (`LICENSE`).
 
@@ -167,7 +193,7 @@ iosApp/                                   # SwiftUI iPhone app (iOS 16+)
 - **Minimal Footprint**: Keep the release APK lightweight (~2 MB):
   - Do **not** add `androidx.compose.material:material-icons-extended` (adds several MBs); add custom vector icons in `AnchorIcons.kt`.
   - Do **not** add heavy networking/serialization/database libraries (Retrofit, OkHttp, Moshi, Room, Firebase) when Android platform APIs (`HttpURLConnection`, `org.json`, `SharedPreferences`) suffice.
-- **Release Optimization (`app/build.gradle.kts`)**:
+- **Release Optimization (`androidApp/build.gradle.kts`)**:
   - Release builds must keep `isMinifyEnabled = true` and `isShrinkResources = true`.
   - Release artifacts are built with `assemble<Flavor>Release` / `bundlePlayRelease` (never ship debug builds as releases).
   - Reproducible build flags (`isPreserveFileTimestamps = false`, `isReproducibleFileOrder = true`) must remain enabled on `AbstractArchiveTask`.
@@ -186,23 +212,23 @@ Version numbers use standard Semantic Versioning (`MAJOR.MINOR.PATCH`, with `ver
 1. **Check Published GitHub Releases First**: Before adding a new version section, check `https://api.github.com/repos/DamionGans/Anchor/releases` (and fallback `https://api.github.com/repos/DamionGans/PulseMetronome/releases`) to see what version was most recently published as an APK release on GitHub.
 2. **If the Current Version in the Repo Has NOT Been Released on GitHub Yet**:
    - **Do NOT stack a second unreleased version entry.** Maintain a single unreleased version entry at the top of `CHANGELOG.md`.
-   - **Adjust the Unreleased SemVer Level If Needed & Combine the Changelog**: You may adjust the unreleased version's semantic level relative to the last published GitHub release (e.g., upgrading an unreleased patch bump to a minor bump `1.3.0` if new features were added since the last published release), and merge/rewrite all changes since the last GitHub release into that single unreleased version section across `CHANGELOG.md`, `ChangelogDialog.kt`, `docs/version.json`, and `docs/index.html`.
+   - **Adjust the Unreleased SemVer Level If Needed & Combine the Changelog**: You may adjust the unreleased version's semantic level relative to the last published GitHub release (e.g., upgrading an unreleased patch bump to a minor bump `1.3.0` if new features were added since the last published release), and merge/rewrite all changes since the last GitHub release into that single unreleased version section across `CHANGELOG.md`, `ChangelogDialog.kt`, `website/version.json`, and `website/index.html`.
 3. **If the Current Version in the Repo HAS Already Been Released on GitHub**:
    - Increment the semantic version (`PATCH`, `MINOR`, or `MAJOR` as appropriate) and prepend a new changelog entry.
 
 Whenever updating the version or rewriting the current unreleased version's changelog, you **must keep all 6 locations in lockstep**:
 
-1. **`app/build.gradle.kts`**:
+1. **`androidApp/build.gradle.kts`**:
    - Keep or update `val appVersionName = "X.Y.Z"` and `val appVersionCode = X * 10000 + Y * 100 + Z`.
 2. **`CHANGELOG.md`**:
    - Prepend (if bumping after a published release) or rewrite (if unreleased on GitHub) the top `## [vX.Y.Z]` section in a neutral, concise, factual tone.
-   - Note: `.github/workflows/release.yml` automatically extracts the top section of `CHANGELOG.md` for GitHub Release notes.
-3. **`app/src/main/java/com/damiongans/anchor/ui/dialogs/ChangelogDialog.kt`**:
+   - Note: `.github/workflows/android.yml` automatically extracts the top section of `CHANGELOG.md` for GitHub Release notes.
+3. **`androidApp/src/main/kotlin/com/damiongans/anchor/ui/dialogs/ChangelogDialog.kt`**:
    - Update `CURRENT_RELEASE_CHANGELOG` to match the combined changes in `CHANGELOG.md`.
-4. **`docs/version.json`, `docs/index.html` & `docs/app.js` (GitHub Pages Website)**:
-   - Keep `version`, `versionCode`, `releaseDate`, `downloadUrl`, and `highlights` synchronized in `docs/version.json`.
-   - Keep the fallback version badge, download link, and changelog list synchronized in `docs/index.html` and `docs/app.js`.
-5. **`app/src/test/java/com/damiongans/anchor/AppUpdateManagerTest.kt`** (plus `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` for F-Droid):
+4. **`website/version.json`, `website/index.html` & `website/app.js` (GitHub Pages Website)**:
+   - Keep `version`, `versionCode`, `releaseDate`, `downloadUrl`, and `highlights` synchronized in `website/version.json`.
+   - Keep the fallback version badge, download link, and changelog list synchronized in `website/index.html` and `website/app.js`.
+5. **`androidApp/src/test/kotlin/com/damiongans/anchor/AppUpdateManagerTest.kt`** (plus `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` for F-Droid):
    - Ensure the `BuildConfig.VERSION_NAME` assertion in `testVersionComparison()` matches the active `X.Y.Z` version.
 6. **iOS version (`iosApp/project.yml`)**:
    - Keep `MARKETING_VERSION: "X.Y.Z"` and `CURRENT_PROJECT_VERSION: "<versionCode>"` in sync, plus the `"X.Y.Z"` fallbacks in `AnchorIosApp.currentAppVersion()` and `MetronomeViewModel` (`BuildConfig.VERSION_NAME.ifBlank { ... }`). CI overrides both from `CHANGELOG.md`.
@@ -219,7 +245,7 @@ Before completing any task that modifies code or configuration:
    - `MetronomeControllerTest` (state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update)
    - `MetronomeSequencerTest` (synthesis, warmup, exact beat frames, playhead estimator, route selection)
    - `KeyValueSettingsRepositoryTest`, `ReleaseVersioningTest`
-3. **Android Unit & Robolectric Tests**: run `./gradlew :app:testGithubDebugUnitTest`:
+3. **Android Unit & Robolectric Tests**: run `./gradlew :androidApp:testGithubDebugUnitTest`:
    - `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service integration), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`
 4. **iOS build**: on macOS, `cd iosApp && xcodegen generate && xcodebuild -scheme Anchor -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` (or rely on the `Build iOS App` workflow).
 5. **Update `AGENTS.md`**: Confirm whether your changes introduced or modified any architectural rules or user requirements, and update this file if so.

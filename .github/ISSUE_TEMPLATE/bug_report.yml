@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in Anchor doesn't work as expected
+labels: [bug]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Android
+        - iPhone
+        - Both
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Anchor version
+      description: Settings → About
+      placeholder: "1.5.0"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device & OS version
+      placeholder: "Pixel 8, Android 15 / iPhone 15, iOS 18"
+  - type: dropdown
+    id: channel
+    attributes:
+      label: Installed from
+      options:
+        - GitHub
+        - F-Droid
+        - Google Play
+        - App Store
+        - Built from source
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Set tempo to 120 BPM
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: audio
+    attributes:
+      label: Audio output & timing settings (if relevant)
+      description: Speaker / wired / Bluetooth, and your visual, vibration, and Bluetooth offsets.
