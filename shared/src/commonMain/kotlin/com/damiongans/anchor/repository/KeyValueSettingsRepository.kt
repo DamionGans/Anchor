@@ -44,9 +44,12 @@ class InMemoryKeyValueStore : IKeyValueStore {
 /**
  * Shared [ISettingsRepository] implementation: storage keys, defaults, clamping, legacy
  * fallbacks, and per-count accent memory live here once for every platform. Platforms only
- * provide an [IKeyValueStore].
+ * provide an [IKeyValueStore]. The song library and playlists share the same store
+ * ([KeyValueSongLibraryRepository]), so every platform persists them without extra wiring.
  */
-open class KeyValueSettingsRepository(private val store: IKeyValueStore) : ISettingsRepository {
+open class KeyValueSettingsRepository(private val store: IKeyValueStore) :
+    ISettingsRepository,
+    ISongLibraryRepository by KeyValueSongLibraryRepository(store) {
 
     override fun getBpm(): Int = store.getInt(KEY_BPM, 120).coerceIn(20, 300)
 

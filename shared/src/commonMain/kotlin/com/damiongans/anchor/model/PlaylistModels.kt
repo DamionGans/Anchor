@@ -14,7 +14,7 @@ data class Song(
     val accents: List<BeatAccent>
 ) {
     /** Display label for the meter, e.g. "4/4" or "6/8" (same rule as `MetronomeUiState.timeSignatureDenominator`). */
-    val timeSignatureLabel: String
+    val timeSignatureDisplay: String
         get() = "$totalBeats/${if (subdivision == Subdivision.EIGHTH) 8 else 4}"
 }
 

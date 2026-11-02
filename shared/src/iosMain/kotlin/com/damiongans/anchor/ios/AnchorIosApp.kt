@@ -4,7 +4,10 @@ import com.damiongans.anchor.audio.IosAudioEngine
 import com.damiongans.anchor.domain.DelayCompensationEngine
 import com.damiongans.anchor.haptics.IosHapticsManager
 import com.damiongans.anchor.model.AccentColorOption
+import com.damiongans.anchor.model.BeatAccent
 import com.damiongans.anchor.model.ButtonTriggerMode
+import com.damiongans.anchor.model.Playlist
+import com.damiongans.anchor.model.Song
 import com.damiongans.anchor.model.SoundSet
 import com.damiongans.anchor.model.Subdivision
 import com.damiongans.anchor.model.ThemeMode
@@ -119,6 +122,30 @@ class AnchorIosApp {
     fun acceptUpdate() = controller.onAcceptUpdate()
     fun askLater() = controller.onAskLater()
     fun declineUpdate() = controller.onDeclineUpdate()
+
+    // Song library & playlists (see MetronomeController for semantics)
+    val beatAccents: List<BeatAccent> = BeatAccent.entries
+    fun saveCurrentAsSong(name: String): Song = controller.saveCurrentAsSong(name)
+    fun createSong(name: String, bpm: Int, totalBeats: Int, subdivision: Subdivision, accents: List<BeatAccent>): Song =
+        controller.createSong(name, bpm, totalBeats, subdivision, accents)
+    fun updateSong(songId: String, name: String, bpm: Int, totalBeats: Int, subdivision: Subdivision, accents: List<BeatAccent>) =
+        controller.updateSong(songId, name, bpm, totalBeats, subdivision, accents)
+    fun updateSongFromCurrent(songId: String) = controller.updateSongFromCurrent(songId)
+    fun renameSong(songId: String, name: String) = controller.renameSong(songId, name)
+    fun deleteSong(songId: String) = controller.deleteSong(songId)
+    fun loadSong(songId: String) = controller.loadSong(songId)
+    fun createPlaylist(name: String): Playlist = controller.createPlaylist(name)
+    fun renamePlaylist(playlistId: String, name: String) = controller.renamePlaylist(playlistId, name)
+    fun deletePlaylist(playlistId: String) = controller.deletePlaylist(playlistId)
+    fun addSongToPlaylist(playlistId: String, songId: String) = controller.addSongToPlaylist(playlistId, songId)
+    fun removeSongFromPlaylist(playlistId: String, index: Int) = controller.removeSongFromPlaylist(playlistId, index)
+    fun moveSongInPlaylist(playlistId: String, fromIndex: Int, toIndex: Int) =
+        controller.moveSongInPlaylist(playlistId, fromIndex, toIndex)
+    fun selectPlaylist(playlistId: String) = controller.selectPlaylist(playlistId)
+    fun clearActivePlaylist() = controller.selectPlaylist(null)
+    fun selectPlaylistSong(index: Int) = controller.selectPlaylistSong(index)
+    fun nextSong() = controller.nextSong()
+    fun previousSong() = controller.previousSong()
 
     /** Stops playback and releases audio / media resources. */
     fun dispose() {
