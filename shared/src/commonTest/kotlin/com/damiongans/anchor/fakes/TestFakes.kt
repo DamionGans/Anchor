@@ -53,6 +53,11 @@ class FakeAudioEngine : IAudioEngine {
 
     var isStarted: Boolean = false
     var isReleased: Boolean = false
+    var standbyEnabled: Boolean = false
+
+    override fun setOutputStandby(enabled: Boolean) {
+        standbyEnabled = enabled
+    }
 
     fun invokeVisualTickOnly(beatIndex: Int, isAccent: Boolean, subdivisionIndex: Int) {
         _onBeatTick?.invoke(beatIndex, isAccent, subdivisionIndex)

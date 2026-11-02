@@ -41,9 +41,16 @@ class MetronomeAudioEngine(private val context: Context) :
 
     @Volatile private var preferredDeviceId: Int? = null
 
-    private val isRunning = AtomicBoolean(false)
+    /** True while the AudioTrack + output thread exist (playing or in standby). */
+    private val outputActive = AtomicBoolean(false)
+    /** Metronome playback requested (start() .. stop()). Read by the output thread. */
+    @Volatile private var playRequested = false
+    /** Incremented by every start(), so a fast stop()+start() still restarts at Beat 1. */
+    @Volatile private var playGeneration = 0
+    /** Keep the output open between plays (app on screen) for an instant first beat. */
+    @Volatile private var standbyRequested = false
     private var audioThread: Thread? = null
-    private var audioTrack: AudioTrack? = null
+    @Volatile private var audioTrack: AudioTrack? = null
 
     private val deviceCallback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         object : AudioDeviceCallback() {
@@ -241,14 +248,64 @@ class MetronomeAudioEngine(private val context: Context) :
     }
 
     /**
-     * Starts continuous low-latency audio playback on the highest priority audio thread.
+     * Output standby: while enabled (the app is on screen), the `AudioTrack` stays open and keeps
+     * the audio path awake with inaudible +/-1 LSB dither, so [start] can place Beat 1 in the very
+     * next chunk instead of paying for track creation, HAL wake-up, and the cold-start warmup.
+     * Disabling it closes the output unless the metronome is playing.
+     */
+    @Synchronized
+    override fun setOutputStandby(enabled: Boolean) {
+        standbyRequested = enabled
+        if (enabled) {
+            openOutputIfNeeded()
+        } else if (!playRequested) {
+            closeOutput()
+        }
+    }
+
+    /**
+     * Starts metronome playback. With the output in standby, Beat 1 is synthesized into the next
+     * chunk; otherwise the output is opened cold and the hardware warmup runs first.
      */
     @Synchronized
     override fun start() {
-        if (isRunning.get()) return
+        if (playRequested) return
+        acquireAudioWakeLock()
+        playGeneration++
+        playRequested = true
+        openOutputIfNeeded()
+    }
+
+    /**
+     * Stops metronome playback. The output returns to standby when requested, otherwise it closes.
+     */
+    @Synchronized
+    override fun stop() {
+        if (!playRequested) return
+        playRequested = false
+        releaseAudioWakeLock()
+        if (!standbyRequested) closeOutput()
+    }
+
+    /**
+     * Releases audio callbacks and resources.
+     */
+    @Synchronized
+    override fun release() {
+        standbyRequested = false
+        stop()
+        closeOutput()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && deviceCallback != null) {
+            try {
+                audioManager.unregisterAudioDeviceCallback(deviceCallback)
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun openOutputIfNeeded() {
+        if (outputActive.get()) return
 
         detectCurrentAudioDevice()
-        acquireAudioWakeLock()
 
         val minBufSize = AudioTrack.getMinBufferSize(
             sampleRate,
@@ -271,46 +328,46 @@ class MetronomeAudioEngine(private val context: Context) :
             .setSampleRate(sampleRate)
             .build()
 
-        val track = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            AudioTrack.Builder()
-                .setAudioAttributes(attributes)
-                .setAudioFormat(format)
-                .setBufferSizeInBytes(bufferSizeBytes)
-                .setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY)
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .build()
-        } else {
-            @Suppress("DEPRECATION")
-            AudioTrack(
-                AudioManager.STREAM_MUSIC,
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufferSizeBytes,
-                AudioTrack.MODE_STREAM
-            )
+        val track = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                AudioTrack.Builder()
+                    .setAudioAttributes(attributes)
+                    .setAudioFormat(format)
+                    .setBufferSizeInBytes(bufferSizeBytes)
+                    .setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY)
+                    .setTransferMode(AudioTrack.MODE_STREAM)
+                    .build()
+            } else {
+                @Suppress("DEPRECATION")
+                AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSizeBytes,
+                    AudioTrack.MODE_STREAM
+                )
+            }
+        } catch (_: Exception) {
+            return
         }
 
         applyPreferredDeviceToTrack(track, preferredDeviceId)
         audioTrack = track
-        isRunning.set(true)
+        outputActive.set(true)
 
         audioThread = Thread {
             // Linux kernel urgent audio scheduling (-19)
             Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
-            runAudioLoop(track)
+            runOutputLoop(track)
         }.apply {
             name = "MetronomeFastAudioThread"
             start()
         }
     }
 
-    /**
-     * Stops metronome playback immediately.
-     */
-    @Synchronized
-    override fun stop() {
-        if (!isRunning.getAndSet(false)) return
+    private fun closeOutput() {
+        if (!outputActive.getAndSet(false)) return
 
         audioThread?.interrupt()
         audioThread = null
@@ -324,43 +381,35 @@ class MetronomeAudioEngine(private val context: Context) :
             } catch (_: Exception) {}
         }
         audioTrack = null
-        releaseAudioWakeLock()
     }
 
-    /**
-     * Releases audio callbacks and resources.
-     */
-    @Synchronized
-    override fun release() {
-        stop()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && deviceCallback != null) {
-            try {
-                audioManager.unregisterAudioDeviceCallback(deviceCallback)
-            } catch (_: Exception) {}
-        }
-    }
-
-    private fun shouldRun(): Boolean = isRunning.get() && !Thread.currentThread().isInterrupted
+    private fun outputAlive(): Boolean = outputActive.get() && !Thread.currentThread().isInterrupted
 
     /**
-     * Android I/O loop: writes the shared sequencer's warmup dither and click chunks to the
-     * `AudioTrack` and feeds the hardware playhead back for playhead-anchored dispatch.
+     * Android I/O loop for the lifetime of one `AudioTrack`. Writes inaudible dither while idle
+     * (standby), and the shared sequencer's clicks while playing; the hardware playhead is fed back
+     * for playhead-anchored dispatch.
+     *
+     * Frame bookkeeping: [outputFrames] counts every frame written since the track was created,
+     * which is the same timeline as `getPlaybackHeadPosition()`. When playback starts, the sequencer
+     * is aligned to it (`prepare(firstBeatFrame)` + `advanceWarmup(outputFrames)`).
      */
-    private fun runAudioLoop(track: AudioTrack) {
+    private fun runOutputLoop(track: AudioTrack) {
         val chunkFrames = bufferChunkFrames
         val chunk = ShortArray(chunkFrames)
+        val dither = ShortArray(chunkFrames).also { MetronomeSequencer.fillWarmupDither(it, chunkFrames) }
 
-        // Warmup: 2 pre-prime chunks + >= 55ms of -90 dBFS (+/-1 LSB) dither so AudioFlinger's
-        // 20ms ramp-in and the DAC's 35ms wake-up complete before sample 0 of Beat 1.
+        // Cold-start warmup target: 2 pre-prime chunks + >= 55 ms of -90 dBFS (+/-1 LSB) dither so
+        // AudioFlinger's ramp-in and the DAC's wake-up complete before sample 0 of Beat 1. In
+        // standby the output has already been running longer than this, so no extra warmup runs.
         val warmupPostPlayChunks = MetronomeSequencer.warmupChunkCount(sampleRate, chunkFrames, minimumChunks = 8)
-        val plannedWarmupFrames = (2 + warmupPostPlayChunks).toLong() * chunkFrames
-
-        syncCompensatorSettings()
-        sequencer.prepare(sampleRate, plannedWarmupFrames)
+        val warmupTargetFrames = (2 + warmupPostPlayChunks).toLong() * chunkFrames
 
         val headCounter = WrappingFrameCounter()
         val playhead = PlayheadEstimator(sampleRate, maxInterpolationFrames = chunkFrames * 2L)
-        playhead.reset(SystemClock.elapsedRealtimeNanos())
+        var outputFrames = 0L
+        var playing = false
+        var playingGeneration = -1
 
         fun readPlayheadFrame(): Long {
             val rawHead = try {
@@ -371,52 +420,71 @@ class MetronomeAudioEngine(private val context: Context) :
             return playhead.estimate(
                 hardwareFrames = headCounter.unwrap(rawHead),
                 nowNanos = SystemClock.elapsedRealtimeNanos(),
-                totalWritten = sequencer.totalFramesWritten
+                totalWritten = outputFrames
             )
         }
 
-        // 1. Hardware mixer & DAC warmup
-        if (shouldRun()) {
-            try {
-                MetronomeSequencer.fillWarmupDither(chunk, chunkFrames)
-                // Pre-fill 2 chunks before play() to satisfy the MODE_STREAM start threshold
-                repeat(2) {
-                    val written = track.write(chunk, 0, chunkFrames)
-                    if (written > 0) sequencer.advanceWarmup(written)
-                }
-
-                track.play()
-                playhead.reset(SystemClock.elapsedRealtimeNanos())
-
-                for (w in 0 until warmupPostPlayChunks) {
-                    if (!shouldRun()) break
-                    val written = track.write(chunk, 0, chunkFrames)
-                    if (written < 0) return
-                    sequencer.advanceWarmup(written)
-                    // Dispatch early (negative-offset) Beat 1 triggers due during warmup
-                    sequencer.processPlayhead(readPlayheadFrame(), emitPhase = false)
-                }
-            } catch (_: Exception) {
-                return
-            }
-        }
-
-        if (!shouldRun()) return
-
-        // 2. Anchor Beat 1 (seqId = 0) at the exact post-warmup frame
-        sequencer.startFirstBeat()
-
-        // 3. Continuous real-time synthesis & playhead-synchronized dispatch
-        while (shouldRun()) {
-            sequencer.renderChunk(chunk, chunkFrames)
-            if (!isRunning.get()) break
+        fun writeChunk(data: ShortArray): Boolean {
             val written = try {
-                track.write(chunk, 0, chunkFrames)
+                track.write(data, 0, chunkFrames)
             } catch (_: Exception) {
                 -1
             }
-            if (written < 0) break
-            sequencer.processPlayhead(readPlayheadFrame())
+            if (written > 0) outputFrames += written
+            return written >= 0
+        }
+
+        try {
+            // Pre-fill 2 chunks before play() to satisfy the MODE_STREAM start threshold
+            repeat(2) { if (!writeChunk(dither)) return }
+            track.play()
+            playhead.reset(SystemClock.elapsedRealtimeNanos())
+
+            while (outputAlive()) {
+                val generation = playGeneration
+                if (playRequested && (!playing || generation != playingGeneration)) {
+                    // Begin playback: align the sequencer to the output timeline and run only the
+                    // part of the warmup the output has not already covered.
+                    val extraWarmupChunks = ((warmupTargetFrames - outputFrames).coerceAtLeast(0L) + chunkFrames - 1) / chunkFrames
+                    syncCompensatorSettings()
+                    sequencer.prepare(sampleRate, outputFrames + extraWarmupChunks * chunkFrames)
+                    sequencer.alignToOutputFrame(outputFrames)
+                    var warmupOk = true
+                    for (w in 0 until extraWarmupChunks) {
+                        if (!outputAlive() || !writeChunk(dither)) return
+                        if (!playRequested) {
+                            warmupOk = false
+                            break
+                        }
+                        sequencer.advanceWarmup(chunkFrames)
+                        // Dispatch early (negative-offset) Beat 1 triggers due during warmup
+                        sequencer.processPlayhead(readPlayheadFrame(), emitPhase = false)
+                    }
+                    if (!warmupOk) {
+                        playing = false
+                        continue
+                    }
+                    // Anchor Beat 1 (seqId = 0) at the exact next frame
+                    sequencer.startFirstBeat()
+                    playing = true
+                    playingGeneration = generation
+                } else if (!playRequested && playing) {
+                    playing = false
+                }
+
+                if (playing) {
+                    sequencer.renderChunk(chunk, chunkFrames)
+                    if (!writeChunk(chunk)) break
+                    sequencer.processPlayhead(readPlayheadFrame())
+                } else {
+                    // Standby: keep the audio path awake with inaudible dither
+                    if (!writeChunk(dither)) break
+                    // Keep sampling the 32-bit head so the wrap counter stays continuous
+                    readPlayheadFrame()
+                }
+            }
+        } catch (_: Exception) {
+            // Track released while writing; closeOutput() owns the state.
         }
     }
 

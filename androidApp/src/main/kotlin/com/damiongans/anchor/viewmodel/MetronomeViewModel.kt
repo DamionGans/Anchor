@@ -64,6 +64,7 @@ class MetronomeViewModel @JvmOverloads constructor(
     val uiState: StateFlow<MetronomeUiState> = controller.uiState
 
     fun syncPlaybackService() = controller.syncPlaybackSession()
+    fun setOutputStandby(enabled: Boolean) = controller.setOutputStandby(enabled)
     fun setThemeMode(mode: ThemeMode) = controller.setThemeMode(mode)
     fun setAccentColor(accent: AccentColorOption) = controller.setAccentColor(accent)
     fun setFlashDelay(delayMs: Int) = controller.setFlashDelay(delayMs)

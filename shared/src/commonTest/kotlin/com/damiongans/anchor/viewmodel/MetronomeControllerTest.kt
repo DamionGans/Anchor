@@ -83,6 +83,17 @@ class MetronomeControllerTest {
     }
 
     @Test
+    fun setOutputStandby_isPassedToTheAudioEngine() {
+        controller.setOutputStandby(true)
+        assertTrue(audio.standbyEnabled)
+        controller.play()
+        assertTrue(audio.isStarted)
+        controller.setOutputStandby(false)
+        assertFalse(audio.standbyEnabled)
+        assertTrue(audio.isStarted, "Leaving the foreground must not stop playback")
+    }
+
+    @Test
     fun setBpm_clampsUpdatesMarkingAndPersists() {
         controller.setBpm(60)
         assertEquals(60, controller.uiState.value.bpm)
