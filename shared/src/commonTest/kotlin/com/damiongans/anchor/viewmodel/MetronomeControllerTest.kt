@@ -100,6 +100,7 @@ class MetronomeControllerTest {
         assertEquals(MetronomeController.MIN_BPM, controller.uiState.value.bpm)
         controller.setBpm(999)
         assertEquals(MetronomeController.MAX_BPM, controller.uiState.value.bpm)
+        scope.advanceUntilIdle()
         assertEquals("300 BPM • Prestissimo", session.lastState?.title)
     }
 
@@ -132,6 +133,7 @@ class MetronomeControllerTest {
         assertEquals(BeatAccent.SUB, state.accents[1])
         assertEquals(BeatAccent.MUTE, state.accents[3])
         assertEquals(6, audio.totalBeats)
+        scope.advanceUntilIdle()
         assertEquals("Paused • 6/8 Time", session.lastState?.subtitle)
     }
 
@@ -271,5 +273,37 @@ class MetronomeControllerTest {
         assertTrue(controller.uiState.value.canCheckForUpdates)
         assertEquals(DistributionChannel.PLAY_STORE, DistributionChannel.fromName("play_store"))
         assertEquals(DistributionChannel.GITHUB, DistributionChannel.fromName(""))
+    }
+
+    @Test
+    fun meterChangesWhilePlaying_doNotResetTheVisualBeat() {
+        controller.play()
+        audio.onBeatTick?.invoke(2, false, 1)
+        controller.selectTimeSignature(TimeSignaturePreset.SIX_EIGHT)
+        controller.setSubdivision(Subdivision.SIXTEENTH)
+        val state = controller.uiState.value
+        assertEquals(2, state.currentBeat)
+        assertEquals(1, state.currentSubdivisionIndex)
+        assertTrue(state.isPlaying)
+        assertTrue(audio.isStarted)
+    }
+
+    @Test
+    fun rapidBpmChanges_updateTheMediaSessionOnceAfterSettling() {
+        val updatesBefore = session.updateCount
+        for (bpm in 100..140) controller.setBpm(bpm)
+        assertEquals(140, controller.uiState.value.bpm)
+        assertEquals(140.0, audio.bpm, 0.01)
+        assertEquals(updatesBefore, session.updateCount, "no media-session rebuild while still changing")
+
+        scope.advanceTimeBy(MetronomeController.SESSION_SYNC_DEBOUNCE_MS + 1)
+        scope.runCurrent()
+        assertEquals(updatesBefore + 1, session.updateCount)
+        assertEquals("140 BPM • Allegro", session.lastState?.title)
+
+        // Play / pause still update immediately.
+        controller.play()
+        assertEquals(updatesBefore + 2, session.updateCount)
+        assertEquals(true, session.lastState?.isPlaying)
     }
 }

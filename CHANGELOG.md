@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.5.2] — Steady Pulse During Live Tempo & Time-Signature Changes
+
+### Timing
+- Reworked the shared sequencer around a single beat-phase accumulator. Changing the subdivision or time signature during playback no longer shifts the downbeat; subdivision changes apply at the next subdivision of the current beat and time-signature changes at the next beat.
+- BPM changes, including rapid slider movement, continue to glide smoothly without interrupting the pulse.
+
+### Visuals
+- The pendulum position is now interpolated from per-chunk beat-phase checkpoints recorded by the sequencer, so it stays continuous through tempo, subdivision, and time-signature changes.
+- The beat bar and subdivision indicator no longer reset to the first beat when the time signature or subdivision changes during playback.
+- Notification (Android) and Now Playing (iOS) updates during rapid BPM or meter changes are debounced (150 ms) to avoid UI stutter; play and pause still update immediately.
+
+### Website & CI
+- Synchronized the website's animated preview: the pendulum and the highlighted beat share one clock, so each swing ends exactly on the next lit beat at the displayed 120 BPM.
+- Moved the GitHub Pages deployment into its own workflow (`.github/workflows/pages.yml`), separate from the Android build.
+
 ## [v1.5.1] — Repository Restructure
 
 ### Project Structure

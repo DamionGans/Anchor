@@ -1,0 +1,3 @@
+- Steady pulse when changing time signature, subdivision, or BPM during playback.
+- Continuous pendulum and beat bar with no resets on live changes.
+- Smoother tempo slider.
