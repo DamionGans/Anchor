@@ -37,7 +37,9 @@ kotlin {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)
     }
-    iosMain {
+    // Kotlin/Native cinterop opt-ins for every iOS source set (dependent source sets such as
+    // iosArm64Main must use the same opt-ins as iosMain).
+    matching { it.name.startsWith("ios") }.configureEach {
       languageSettings {
         optIn("kotlinx.cinterop.ExperimentalForeignApi")
         optIn("kotlinx.cinterop.BetaInteropApi")
