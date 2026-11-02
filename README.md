@@ -8,6 +8,8 @@
   [![Website & Download](https://img.shields.io/badge/Website-Download%20App-00E5FF.svg)](https://damiongans.github.io/Anchor/)
   [![Latest Release](https://github.com/DamionGans/Anchor/actions/workflows/release.yml/badge.svg)](https://github.com/DamionGans/Anchor/releases/latest)
   [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84.svg?logo=android&logoColor=white)](https://www.android.com/)
+  [![Platform](https://img.shields.io/badge/Platform-iPhone%20iOS%2016%2B-000000.svg?logo=apple&logoColor=white)](#iphone)
+  [![iOS Build](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml/badge.svg)](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml)
   [![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](LICENSE)
 </div>
 
@@ -15,7 +17,7 @@
 
 **Anchor Metronome** (**Anchor**) is a fast, distraction-free metronome built for musicians, drummers, teachers, and ensembles.
 
-It puts every essential control on a single, uncluttered screen—giving you unwavering tempo, a crisp first beat that never gets cut off, and flexible visual and vibration cues without ads, pop-ups, or subscriptions. Built on pure Android platform APIs with zero reliance on Google Play Services and a platform-agnostic Kotlin core, Anchor runs seamlessly on both standard Google Play devices and plain AOSP phones.
+It puts every essential control on a single, uncluttered screen—giving you unwavering tempo, a crisp first beat that never gets cut off, and flexible visual and vibration cues without ads, pop-ups, or subscriptions. Built on pure Android platform APIs with zero reliance on Google Play Services and a platform-agnostic Kotlin core, Anchor runs seamlessly on both standard Google Play devices and plain AOSP phones—and now on iPhone too, with the same timing engine on both platforms.
 
 👉 **[Visit the Website & Download the App](https://damiongans.github.io/Anchor/)**
 
@@ -37,19 +39,28 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 
 ## Download & Installation
 
+### Android
+
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.3.0.apk` file and open it to install.
+2. Download the latest `Anchor-v1.4.0.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
+
+### iPhone
+
+Anchor for iPhone (iOS 16+) is built automatically by the **[Build iOS App](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml)** workflow:
+
+* Download the `Anchor-vX.Y.Z-unsigned.ipa` artifact from the latest successful run and install it with your own signing certificate or a sideloading tool, or
+* Build it yourself on a Mac with Xcode: run `brew install xcodegen`, then `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`, choose your team, and press Run.
 
 ---
 
 ## Under the Hood (Technical Documentation)
 
-Curious how Anchor achieves sample-accurate timing, prevents Android audio hardware from clipping Beat 1, synchronizes visuals and haptics to the hardware audio playhead, or structures its core domain for future multiplatform targets?
+Curious how Anchor achieves sample-accurate timing, prevents Android audio hardware from clipping Beat 1, synchronizes visuals and haptics to the hardware audio playhead, or shares one Kotlin Multiplatform core between Android and iPhone?
 
 Detailed engineering documentation is kept separate so this README stays focused on musicians:
 
-* 📄 **[Technical Architecture & Audio Engine Guide (`ARCHITECTURE.md`)](./ARCHITECTURE.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and multiplatform-ready clean architecture.
+* 📄 **[Technical Architecture & Audio Engine Guide (`ARCHITECTURE.md`)](./ARCHITECTURE.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android and iPhone apps.
 * 🌐 **[Web Technical Deep-Dive (`architecture.html`)](https://damiongans.github.io/Anchor/architecture.html)** — Visual waveform diagrams and system breakdown on the project website.
 * 🤖 **[Developer & AI Agent Guidelines (`AGENTS.md`)](./AGENTS.md)** — Authoritative contributor rules, testing invariants, and release checklists for human developers and AI coding agents.
 * 📋 **[Changelog (`CHANGELOG.md`)](./CHANGELOG.md)** — Full version history.

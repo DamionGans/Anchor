@@ -31,12 +31,10 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Rebranded to Anchor Metronome", "Renamed the app to Anchor Metronome (short name Anchor) under the com.damiongans.anchor namespace with the tagline \"Rock-solid time for serious play\" and multiplatform-ready core domain separation."),
-    ChangelogEntry("Notification Drawer Media Controls", "Control Play/Pause and adjust tempo (-1 / +1 BPM) directly from the notification drawer and lock screen with a live BPM readout."),
-    ChangelogEntry("Per-Count Accent Memory", "Preserved beat accents by count across time signature changes so switching meters restores your remembered accents unless modified."),
-    ChangelogEntry("Always-Visible Output Selection", "Audio output selection in the top bar and Settings always shows all available outputs, even when only one output (e.g. Speaker) is connected."),
-    ChangelogEntry("Button Tap vs. Release Trigger", "Added a setting under Timing to make Play/Pause and Tap Tempo register either on finger touch-down (tap) or on button release."),
-    ChangelogEntry("Play Store & Plain AOSP Ready", "Zero reliance on Google Play Services so Anchor runs natively on both Google Play devices and plain AOSP phones.")
+    ChangelogEntry("Anchor for iPhone", "Added a native iPhone app with the same single-screen metronome, sounds, accents, time signatures, tap tempo, screen flash, haptics, calibration offsets, and Lock Screen controls."),
+    ChangelogEntry("Shared Multiplatform Core", "Timing, delay compensation, click synthesis, settings, update checks, and app state now live in one shared Kotlin Multiplatform module used by both Android and iPhone."),
+    ChangelogEntry("Android Platform Layer", "The Android app now contains only Android-specific audio output, haptics, storage, notification, and update code on top of the shared core."),
+    ChangelogEntry("iPhone Build Workflow", "A new GitHub Actions workflow tests the shared logic on the iOS simulator and builds an unsigned iPhone app package.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,5 +1,21 @@
 # Changelog
 
+## [v1.4.0] — iPhone App & Shared Kotlin Multiplatform Core
+
+### iPhone App
+- Added a native iPhone app (SwiftUI, iOS 16+) with the same single-screen metronome: BPM controls and slider, tempo marking, pendulum, beat bar with per-count accent cycling, time signature presets and custom meters, subdivisions, sound sets, tap tempo, half/double time, screen flash, and haptic feedback.
+- Added iOS audio output built on `AVAudioEngine` with background playback, Lock Screen / Control Center "Now Playing" info, and remote transport commands (play, pause, next/previous track for +1/-1 BPM).
+- Added the iOS settings sheet with sound set, pitch, feedback toggles, visual/vibration/Bluetooth calibration offsets (slider plus -10/-1/0/+1/+10 ms steps), theme and accent color, Play/Tap trigger mode, audio route information, and a GitHub release update check.
+
+### Shared Kotlin Multiplatform Core
+- Moved all platform-independent logic into a new `shared` Kotlin Multiplatform module used by both apps: domain models, `DelayCompensationEngine`, `TapTempoCalculator`, click synthesis (`ClickSynthesizer`), the warmup/sequencing/dispatch core (`MetronomeSequencer`), audio route normalization, the settings repository (`KeyValueSettingsRepository`), release version comparison, and the `MetronomeController` state holder.
+- Reduced the Android app to platform implementations only (`AudioTrack` I/O, `Vibrator` haptics, `SharedPreferences` storage, `HttpURLConnection` update transport, foreground media service); `MetronomeViewModel` now hosts the shared controller.
+- Moved domain unit tests into the shared module and added tests for the controller, sequencer, settings repository, route selection, and release versioning.
+
+### Build & CI
+- Added the `Build iOS App` GitHub Actions workflow (`ios.yml`): runs the shared tests on the iOS simulator, builds the app for the simulator, and produces an unsigned `Anchor-vX.Y.Z-unsigned.ipa` artifact with a SHA-256 checksum.
+- The Android workflow now also runs the shared module tests (`:shared:testAndroidHostTest`).
+
 ## [v1.3.0] — Anchor Metronome Rebrand, Multimedia Notification Controls, Multiplatform-Ready Core & AOSP / Play Store Readiness
 
 ### Anchor Metronome Rebrand & Multiplatform-Ready Core Architecture

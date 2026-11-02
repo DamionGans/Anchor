@@ -1,10 +1,10 @@
 package com.damiongans.anchor.domain
 
 import com.damiongans.anchor.model.BeatAccent
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.Test
 import kotlin.math.abs
 
 class DelayCompensationEngineTest {

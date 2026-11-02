@@ -1,17 +1,17 @@
 package com.damiongans.anchor.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 
 class TapTempoCalculatorTest {
 
     private lateinit var calculator: TapTempoCalculator
 
-    @Before
+    @BeforeTest
     fun setUp() {
         calculator = TapTempoCalculator()
     }

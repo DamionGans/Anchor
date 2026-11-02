@@ -10,7 +10,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Production implementation of [IUpdateRepository] delegating to [AppUpdateManager].
+ * Production Android implementation of [IUpdateRepository] delegating to [AppUpdateManager].
  */
 class GitHubUpdateRepository(
     private val appContext: Context? = null
@@ -28,7 +28,7 @@ class GitHubUpdateRepository(
         currentVersion: String,
         currentReleaseTag: String
     ): Boolean {
-        return AppUpdateManager.isVersionNewer(remoteTag, currentVersion, currentReleaseTag)
+        return ReleaseVersioning.isVersionNewer(remoteTag, currentVersion, currentReleaseTag)
     }
 
     override fun openUpdateUrl(downloadUrl: String) {
@@ -38,24 +38,24 @@ class GitHubUpdateRepository(
 }
 
 /**
- * Checks for updates directly from GitHub Releases (`DamionGans/Anchor` with automatic fallback
- * to `DamionGans/PulseMetronome` during repository rename transition) using Android's standard
- * HttpURLConnection (zero third-party networking library footprint).
+ * Android transport for the GitHub Releases update check (`DamionGans/Anchor` with automatic
+ * fallback to `DamionGans/PulseMetronome`) using `HttpURLConnection` and `org.json` (zero
+ * third-party networking footprint). Release selection and version comparison are shared via
+ * [ReleaseVersioning] / [GitHubReleaseConfig].
  */
 object AppUpdateManager {
 
-    const val GITHUB_REPO = "DamionGans/Anchor"
-    private const val LEGACY_GITHUB_REPO = "DamionGans/PulseMetronome"
-    private const val LATEST_RELEASE_API = "https://api.github.com/repos/$GITHUB_REPO/releases/latest"
-    private const val LEGACY_LATEST_RELEASE_API = "https://api.github.com/repos/$LEGACY_GITHUB_REPO/releases/latest"
-    const val RELEASES_PAGE_URL = "https://github.com/$GITHUB_REPO/releases"
+    const val GITHUB_REPO = GitHubReleaseConfig.GITHUB_REPO
+    const val RELEASES_PAGE_URL = GitHubReleaseConfig.RELEASES_PAGE_URL
+    private const val ASSET_EXTENSION = ".apk"
 
     suspend fun checkForUpdate(
         currentVersionName: String,
         currentReleaseTag: String = ""
     ): AppReleaseInfo? = withContext(Dispatchers.IO) {
-        fetchLatestReleaseFromApi(LATEST_RELEASE_API, currentVersionName, currentReleaseTag)
-            ?: fetchLatestReleaseFromApi(LEGACY_LATEST_RELEASE_API, currentVersionName, currentReleaseTag)
+        GitHubReleaseConfig.LATEST_RELEASE_APIS.firstNotNullOfOrNull { api ->
+            fetchLatestReleaseFromApi(api, currentVersionName, currentReleaseTag)
+        }
     }
 
     private fun fetchLatestReleaseFromApi(
@@ -65,8 +65,7 @@ object AppUpdateManager {
     ): AppReleaseInfo? {
         var connection: HttpURLConnection? = null
         return try {
-            val url = URL(apiUrl)
-            connection = (url.openConnection() as HttpURLConnection).apply {
+            connection = (URL(apiUrl).openConnection() as HttpURLConnection).apply {
                 instanceFollowRedirects = true
                 requestMethod = "GET"
                 connectTimeout = 8000
@@ -80,41 +79,28 @@ object AppUpdateManager {
             if (bodyString.isBlank()) return null
 
             val json = JSONObject(bodyString)
-            val tagName = json.optString("tag_name", "").trim()
-            if (tagName.isEmpty()) return null
-
-            val releaseName = json.optString("name", tagName)
-            val releaseNotes = json.optString("body", "Bug fixes and performance improvements.")
-            val htmlUrl = json.optString("html_url", RELEASES_PAGE_URL)
-
-            // Find the first .apk asset in the release
-            var apkUrl = htmlUrl
-            val assets = json.optJSONArray("assets")
-            if (assets != null) {
-                for (i in 0 until assets.length()) {
-                    val asset = assets.optJSONObject(i) ?: continue
-                    val assetName = asset.optString("name", "")
-                    val downloadUrl = asset.optString("browser_download_url", "")
-                    if (assetName.endsWith(".apk", ignoreCase = true) && downloadUrl.isNotEmpty()) {
-                        apkUrl = downloadUrl
-                        break
-                    }
+            val assets = mutableListOf<ReleaseAsset>()
+            json.optJSONArray("assets")?.let { array ->
+                for (i in 0 until array.length()) {
+                    val asset = array.optJSONObject(i) ?: continue
+                    assets.add(
+                        ReleaseAsset(
+                            name = asset.optString("name", ""),
+                            downloadUrl = asset.optString("browser_download_url", "")
+                        )
+                    )
                 }
             }
 
-            val isNewer = isVersionNewer(
-                remoteTag = tagName,
-                currentVersion = currentVersionName,
+            ReleaseVersioning.buildReleaseInfo(
+                tagName = json.optString("tag_name", ""),
+                releaseName = json.optString("name", ""),
+                releaseNotes = if (json.has("body") && !json.isNull("body")) json.optString("body") else null,
+                htmlUrl = json.optString("html_url", ""),
+                assets = assets,
+                assetExtension = ASSET_EXTENSION,
+                currentVersionName = currentVersionName,
                 currentReleaseTag = currentReleaseTag
-            )
-
-            AppReleaseInfo(
-                tagName = tagName,
-                releaseName = releaseName,
-                releaseNotes = releaseNotes,
-                releasePageUrl = htmlUrl,
-                apkDownloadUrl = apkUrl,
-                isNewerVersion = isNewer
             )
         } catch (_: Exception) {
             null
@@ -124,55 +110,13 @@ object AppUpdateManager {
     }
 
     /**
-     * Compares remote GitHub tag (e.g. "v1.3.0") with current installed versionName (e.g. "1.3.0").
+     * Compares a remote GitHub tag (e.g. "v1.4.0") with the installed versionName (e.g. "1.4.0").
      */
     fun isVersionNewer(
         remoteTag: String,
         currentVersion: String,
         currentReleaseTag: String = ""
-    ): Boolean {
-        val trimmedRemote = remoteTag.trim()
-        if (trimmedRemote.isEmpty()) return false
-
-        // 1. Exact release tag match -> already installed
-        if (currentReleaseTag.isNotBlank() && trimmedRemote.equals(currentReleaseTag.trim(), ignoreCase = true)) {
-            return false
-        }
-
-        val cleanRemote = trimmedRemote.removePrefix("v").removePrefix("V").trim()
-        val cleanCurrent = currentVersion.trim().removePrefix("v").removePrefix("V").trim()
-
-        // 2. Exact version name match -> already installed
-        if (cleanRemote.equals(cleanCurrent, ignoreCase = true)) return false
-
-        // 3. Extract leading semantic version before any hyphen metadata
-        val remoteSemver = cleanRemote.substringBefore("-")
-        val currentSemver = cleanCurrent.substringBefore("-")
-
-        val remoteParts = remoteSemver.split(".").mapNotNull { it.toIntOrNull() }
-        val currentParts = currentSemver.split(".").mapNotNull { it.toIntOrNull() }
-
-        if (remoteParts.isEmpty() || currentParts.isEmpty()) {
-            return false
-        }
-
-        // Ignore legacy date-stamped 3rd component (e.g. 1.0.20261101) when comparing against 1.2.x+
-        val normalizedRemote = remoteParts.mapIndexed { idx, value ->
-            if (idx >= 2 && value > 20000000) 0 else value
-        }
-        val normalizedCurrent = currentParts.mapIndexed { idx, value ->
-            if (idx >= 2 && value > 20000000) 0 else value
-        }
-
-        val maxLen = maxOf(normalizedRemote.size, normalizedCurrent.size)
-        for (i in 0 until maxLen) {
-            val r = normalizedRemote.getOrElse(i) { 0 }
-            val c = normalizedCurrent.getOrElse(i) { 0 }
-            if (r > c) return true
-            if (r < c) return false
-        }
-        return false
-    }
+    ): Boolean = ReleaseVersioning.isVersionNewer(remoteTag, currentVersion, currentReleaseTag)
 
     /**
      * Opens the update URL using a zero-permission ACTION_VIEW Intent.

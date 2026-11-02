@@ -1,9 +1,10 @@
 name: Build, Test & Release APK
 
 on:
+  # Build & test on every branch; releases and Pages deploys happen only from main and v* tags.
   push:
     branches:
-      - main
+      - '**'
     tags:
       - 'v*'
   pull_request:
@@ -149,8 +150,8 @@ jobs:
       # -----------------------------------------------------------------------
       # Unit Tests & Audio Engine Verification
       # -----------------------------------------------------------------------
-      - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --continue
+      - name: Run Unit Tests (Android app + shared KMP logic)
+        run: ./gradlew testDebugUnitTest :shared:testAndroidHostTest --continue
 
       # -----------------------------------------------------------------------
       # Deterministic Versioning & Packaging (Reproducible Builds)
@@ -195,7 +196,8 @@ jobs:
           echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
           IS_RELEASE="false"
-          if [[ "${{ github.event_name }}" == "push" ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.create_release }}" == "true" ]]; then
+          # Publish only for pushes to main or v* tags (other branches just build & test)
+          if [[ "${{ github.event_name }}" == "push" && ( "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == refs/tags/v* ) ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.create_release }}" == "true" ]]; then
             IS_RELEASE="true"
           fi
           echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT

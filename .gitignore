@@ -19,3 +19,9 @@ debug.keystore
 !debug.keystore.base64
 !signing/
 !signing/*
+
+# iOS (XcodeGen-generated project, Info.plist, and build outputs)
+/iosApp/Anchor.xcodeproj/
+/iosApp/Anchor/Info.plist
+/iosApp/build/
+xcuserdata/
