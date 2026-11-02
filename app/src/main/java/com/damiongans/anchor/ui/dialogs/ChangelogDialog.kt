@@ -31,7 +31,7 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Rebranded to Anchor", "Renamed the app to Anchor under the com.damiongans.anchor namespace with the tagline \"Rock-solid time for serious play\" and multiplatform-ready core domain separation."),
+    ChangelogEntry("Rebranded to Anchor Metronome", "Renamed the app to Anchor Metronome (short name Anchor) under the com.damiongans.anchor namespace with the tagline \"Rock-solid time for serious play\" and multiplatform-ready core domain separation."),
     ChangelogEntry("Notification Drawer Media Controls", "Control Play/Pause and adjust tempo (-1 / +1 BPM) directly from the notification drawer and lock screen with a live BPM readout."),
     ChangelogEntry("Per-Count Accent Memory", "Preserved beat accents by count across time signature changes so switching meters restores your remembered accents unless modified."),
     ChangelogEntry("Always-Visible Output Selection", "Audio output selection in the top bar and Settings always shows all available outputs, even when only one output (e.g. Speaker) is connected."),

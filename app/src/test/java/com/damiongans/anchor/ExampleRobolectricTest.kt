@@ -18,7 +18,9 @@ class ExampleRobolectricTest {
   fun read_string_from_context() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val appName = context.getString(R.string.app_name)
+    val appFullName = context.getString(R.string.app_full_name)
     assertEquals("Anchor", appName)
+    assertEquals("Anchor Metronome", appFullName)
   }
 
   @Test

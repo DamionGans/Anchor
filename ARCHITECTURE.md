@@ -1,8 +1,8 @@
-# Anchor — Technical Architecture & Implementation Guide
+# Anchor Metronome — Technical Architecture & Implementation Guide
 
-Wait-free, sample-accurate timing on Android requires bypassing high-level media players and timer loops. This document explains how **Anchor** achieves rock-solid audio synthesis, zero-clipping first beats, frame-accurate visual and haptic synchronization, and a platform-agnostic Kotlin core ready for future iOS and desktop targets.
+Wait-free, sample-accurate timing on Android requires bypassing high-level media players and timer loops. This document explains how **Anchor Metronome** (**Anchor**) achieves rock-solid audio synthesis, zero-clipping first beats, frame-accurate visual and haptic synchronization, and a platform-agnostic Kotlin core ready for future iOS and desktop targets.
 
-> Looking for the musician overview and download links? See the main [README.md](./README.md) or visit the [Anchor Website](https://damiongans.github.io/Anchor/).
+> Looking for the musician overview and download links? See the main [README.md](./README.md) or visit the [Anchor Metronome Website](https://damiongans.github.io/Anchor/).
 
 ---
 

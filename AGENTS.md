@@ -1,6 +1,6 @@
-# Anchor — AI Agent & Developer Guidelines (`AGENTS.md`)
+# Anchor Metronome — AI Agent & Developer Guidelines (`AGENTS.md`)
 
-This document is the authoritative source of truth for all AI coding agents (AI Studio, Gemini, Claude Code, GitHub Copilot, Cursor, Windsurf, Codex) and human contributors working on **Anchor** (formerly Pulse Metronome).
+This document is the authoritative source of truth for all AI coding agents (AI Studio, Gemini, Claude Code, GitHub Copilot, Cursor, Windsurf, Codex) and human contributors working on **Anchor Metronome** (short name **Anchor**, formerly Pulse Metronome).
 
 ---
 
@@ -19,11 +19,12 @@ This document is the authoritative source of truth for all AI coding agents (AI 
 
 ## 2. Core Product Philosophy & Scope
 
-- **Focused, High-Precision Instrument**: **Anchor** is a clean, distraction-free, sample-accurate metronome.
-- **Brand Name & Canonical Tagline**:
-  - App Name: **Anchor** (`namespace = "com.damiongans.anchor"`, `applicationId = "com.damiongans.anchor"`).
-  - Canonical Tagline: **"Rock-solid time for serious play"** across `README.md`, `docs/index.html`, `metadata.json`, `MetronomeScreen.kt`, and the in-app About sheet (`SettingsBottomSheet.kt`). Never describe Anchor as a general "timekeeping" app—it is a musical metronome.
-  - Repository URL: **`DamionGans/Anchor`** (`https://github.com/DamionGans/Anchor`, Pages `https://damiongans.github.io/Anchor/`). Both `AppUpdateManager.kt` and `docs/app.js` check `DamionGans/Anchor` first and automatically fall back to `DamionGans/PulseMetronome` so releases resolve seamlessly before and after renaming the GitHub repository.
+- **Focused, High-Precision Instrument**: **Anchor Metronome** (**Anchor**) is a clean, distraction-free, sample-accurate metronome.
+- **Brand Name (Full vs. Short) & Canonical Tagline**:
+  - **Full App Name**: **Anchor Metronome** (used to prevent trademark infringement in `metadata.json`, `<application android:label="@string/app_full_name">`, the in-app About sheet in `SettingsBottomSheet.kt`, `MediaMetadata.METADATA_KEY_ALBUM`, `README.md` / `ARCHITECTURE.md` headings, website `<title>` / Open Graph tags, and GitHub Release titles).
+  - **Short Name / References**: **Anchor** (kept for the home screen launcher icon label `<activity android:label="@string/app_name">`, the top-bar header `"ANCHOR"` in `MetronomeScreen.kt`, package namespace and applicationId `com.damiongans.anchor`, APK filename `Anchor-vX.Y.Z.apk`, and concise body copy).
+  - **Canonical Tagline**: **"Rock-solid time for serious play"** across `README.md`, `docs/index.html`, `metadata.json`, `MetronomeScreen.kt`, and the in-app About sheet (`SettingsBottomSheet.kt`). Never describe Anchor as a general "timekeeping" app—it is a musical metronome.
+  - **Repository URL**: **`DamionGans/Anchor`** (`https://github.com/DamionGans/Anchor`, Pages `https://damiongans.github.io/Anchor/`). Both `AppUpdateManager.kt` and `docs/app.js` check `DamionGans/Anchor` first and automatically fall back to `DamionGans/PulseMetronome` so releases resolve seamlessly before and after renaming the GitHub repository.
 - **No Feature Bloat**: Do **not** re-introduce the removed *Practice Timer* or *Speed Trainer* features, and do not add multi-screen navigation, accounts, analytics, or bloatware unless explicitly requested.
 - **Single-Screen Ergonomics**: The main metronome view (`MetronomeScreen.kt`) must remain a non-scrolling, single-screen layout where BPM, beat indicators, pendulum, time signature, subdivisions, sound profile, and transport controls are immediately accessible.
 - **Musician-First Public Copy vs. Dedicated Technical Docs**:
@@ -131,7 +132,7 @@ app/src/main/java/com/damiongans/anchor/
   - It must always build and run with full functionality on plain AOSP, LineageOS, GrapheneOS, and de-Googled Android phones as well as standard Google Play devices.
 - **Google Play Store Compliance**:
   - Keep `AndroidManifest.xml` strictly least-privilege (`INTERNET`, `VIBRATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS`) with `android:usesCleartextTraffic="false"` and no prohibited permissions (`REQUEST_INSTALL_PACKAGES`, `READ_EXTERNAL_STORAGE`, etc.).
-  - Keep app title (`strings.xml` and `metadata.json`) concise (`<= 30` chars, `"Anchor"`) without emojis or promotional buzzwords.
+  - Keep app titles (`app_name` = `"Anchor"` for launcher icon, `app_full_name` and `metadata.json` = `"Anchor Metronome"` for full app name) concise (`<= 30` chars) without emojis or promotional buzzwords.
 - **Minimal Footprint**: Keep the release APK lightweight (~2 MB):
   - Do **not** add `androidx.compose.material:material-icons-extended` (adds several MBs); add custom vector icons in `AnchorIcons.kt`.
   - Do **not** add heavy networking/serialization/database libraries (Retrofit, OkHttp, Moshi, Room, Firebase) when Android platform APIs (`HttpURLConnection`, `org.json`, `SharedPreferences`) suffice.

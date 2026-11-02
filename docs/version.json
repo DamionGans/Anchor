@@ -10,7 +10,7 @@
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Rebranded to Anchor ('Rock-solid time for serious play') with a platform-agnostic core architecture ready for future iOS and desktop targets",
+    "Rebranded to Anchor Metronome (short name Anchor, 'Rock-solid time for serious play') with a platform-agnostic core architecture ready for future iOS and desktop targets",
     "Multimedia notification drawer controls with Play/Pause, Tempo -/+ buttons, and live BPM display",
     "Per-count accent memory preserved across time signature changes",
     "Always-visible audio output selection showing all available outputs (including single Speaker)",

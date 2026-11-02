@@ -310,7 +310,7 @@ jobs:
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
             echo "Updating existing GitHub release ${RELEASE_TAG}..."
             gh release edit "${RELEASE_TAG}" \
-              --title "Anchor ${RELEASE_TAG}" \
+              --title "Anchor Metronome ${RELEASE_TAG}" \
               --notes-file release-artifacts/RELEASE_NOTES.md \
               --target "${{ github.sha }}"
             gh release upload "${RELEASE_TAG}" \
@@ -322,7 +322,7 @@ jobs:
             gh release create "${RELEASE_TAG}" \
               release-artifacts/*.apk \
               release-artifacts/*.sha256 \
-              --title "Anchor ${RELEASE_TAG}" \
+              --title "Anchor Metronome ${RELEASE_TAG}" \
               --notes-file release-artifacts/RELEASE_NOTES.md \
               --target "${{ github.sha }}"
           fi

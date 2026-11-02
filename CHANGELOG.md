@@ -1,9 +1,9 @@
 # Changelog
 
-## [v1.3.0] — Anchor Rebrand, Multimedia Notification Controls, Multiplatform-Ready Core & AOSP / Play Store Readiness
+## [v1.3.0] — Anchor Metronome Rebrand, Multimedia Notification Controls, Multiplatform-Ready Core & AOSP / Play Store Readiness
 
-### Anchor Rebrand & Multiplatform-Ready Core Architecture
-- Rebranded the application from Pulse Metronome to **Anchor** with the tagline *"Rock-solid time for serious play"* across the Android app, package namespace (`com.damiongans.anchor`), GitHub workflows (`Anchor-vX.Y.Z.apk`), documentation, and GitHub Pages website.
+### Anchor Metronome Rebrand & Multiplatform-Ready Core Architecture
+- Rebranded the application from Pulse Metronome to **Anchor Metronome** (short name **Anchor**) with the tagline *"Rock-solid time for serious play"* across the Android app, package namespace (`com.damiongans.anchor`), GitHub workflows (`Anchor-vX.Y.Z.apk`), documentation, and GitHub Pages website.
 - Updated GitHub repository links, release workflows, and the in-app/website update checkers to target `DamionGans/Anchor` with automatic fallback to `DamionGans/PulseMetronome` and automatic migration of existing `SharedPreferences` user settings.
 - Separated core domain models (`MetronomeModels.kt`), calculators (`DelayCompensationEngine.kt`, `TapTempoCalculator.kt`), and service contracts (`IAudioEngine.kt`, `IHapticsManager.kt`, `ISettingsRepository.kt`, `IUpdateRepository.kt`) into 100% platform-agnostic Kotlin (zero `android.*` or `androidx.*` imports) while isolating Android implementations (`AndroidHapticsManager.kt`, `SharedPreferencesSettingsRepository.kt`, `MetronomeAudioEngine.kt`) to allow future iOS and desktop implementations.
 

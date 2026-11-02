@@ -959,7 +959,7 @@ private fun AboutSettingsTab(
                     .padding(14.dp)
             ) {
                 Text(
-                    text = "Anchor",
+                    text = "Anchor Metronome",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )

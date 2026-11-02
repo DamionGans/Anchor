@@ -257,7 +257,7 @@ class MetronomePlaybackService : Service() {
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE, title)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, subtitle)
                 .putString(MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE, subtitle)
-                .putString(MediaMetadata.METADATA_KEY_ALBUM, "Anchor")
+                .putString(MediaMetadata.METADATA_KEY_ALBUM, "Anchor Metronome")
                 .build()
             session.setMetadata(metadata)
 

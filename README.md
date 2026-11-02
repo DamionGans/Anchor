@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="docs/assets/anchor-logo.svg" alt="Anchor Logo" width="108" height="108" />
+  <img src="docs/assets/anchor-logo.svg" alt="Anchor Metronome Logo" width="108" height="108" />
 
-  # Anchor
+  # Anchor Metronome
 
   <p><strong>Rock-solid time for serious play</strong></p>
 
@@ -13,7 +13,7 @@
 
 ---
 
-**Anchor** is a fast, distraction-free metronome built for musicians, drummers, teachers, and ensembles.
+**Anchor Metronome** (**Anchor**) is a fast, distraction-free metronome built for musicians, drummers, teachers, and ensembles.
 
 It puts every essential control on a single, uncluttered screen—giving you unwavering tempo, a crisp first beat that never gets cut off, and flexible visual and vibration cues without ads, pop-ups, or subscriptions. Built on pure Android platform APIs with zero reliance on Google Play Services and a platform-agnostic Kotlin core, Anchor runs seamlessly on both standard Google Play devices and plain AOSP phones.
 
