@@ -8,6 +8,8 @@ import com.damiongans.anchor.model.AccentColorOption
 import com.damiongans.anchor.model.AudioDeviceType
 import com.damiongans.anchor.model.AudioOutputInfo
 import com.damiongans.anchor.model.BeatAccent
+import com.damiongans.anchor.model.Playlist
+import com.damiongans.anchor.model.Song
 import com.damiongans.anchor.model.ButtonTriggerMode
 import com.damiongans.anchor.model.SoundSet
 import com.damiongans.anchor.model.Subdivision
@@ -20,6 +22,8 @@ import com.damiongans.anchor.playback.NoOpPlaybackSession
 import com.damiongans.anchor.playback.PlaybackCommandListener
 import com.damiongans.anchor.playback.PlaybackSessionState
 import com.damiongans.anchor.repository.ISettingsRepository
+import com.damiongans.anchor.repository.ISongLibraryRepository
+import com.damiongans.anchor.repository.InMemorySongLibraryRepository
 import com.damiongans.anchor.update.AppReleaseInfo
 import com.damiongans.anchor.update.AppVersionInfo
 import com.damiongans.anchor.update.IUpdateRepository
@@ -71,8 +75,25 @@ data class MetronomeUiState(
     /** False for store / F-Droid builds, which are updated by their store. */
     val canCheckForUpdates: Boolean = true,
     /** Store that delivers updates for this build (e.g. "Google Play"), or null for GitHub builds. */
-    val updateStoreName: String? = null
+    val updateStoreName: String? = null,
+    /** Song library, in the order the user created or arranged it. */
+    val songs: List<Song> = emptyList(),
+    val playlists: List<Playlist> = emptyList(),
+    /** Playlist the set-list bar steps through, or null when none is selected. */
+    val activePlaylistId: String? = null,
+    /** Position of the loaded song inside the active playlist, or null. */
+    val activeSongIndex: Int? = null,
+    /** Library song whose settings were last loaded or saved, or null. */
+    val activeSongId: String? = null,
+    /** True when the live bpm, meter or accents differ from [activeSongId]'s stored values. */
+    val isActiveSongModified: Boolean = false
 ) {
+    val activePlaylist: Playlist?
+        get() = playlists.firstOrNull { it.id == activePlaylistId }
+
+    val activeSong: Song?
+        get() = songs.firstOrNull { it.id == activeSongId }
+
     val effectiveVisualDelayMs: Int
         get() = flashDelayMs + (if (audioInfo.deviceType == AudioDeviceType.BLUETOOTH) bluetoothCompensationMs else 0)
 
@@ -102,6 +123,7 @@ class MetronomeController(
     private val appVersion: AppVersionInfo,
     private val scope: CoroutineScope,
     private val playbackSession: IPlaybackSession = NoOpPlaybackSession(),
+    private val songLibraryRepository: ISongLibraryRepository = InMemorySongLibraryRepository(),
     private val tapCalculator: TapTempoCalculator = TapTempoCalculator(),
     private val clockMs: () -> Long = monotonicClockMs(),
     autoCheckForUpdates: Boolean = true
@@ -548,6 +570,46 @@ class MetronomeController(
         }
         _uiState.update { it.copy(showUpdateDialog = false, isUpdateDeclined = true) }
     }
+
+    // --- Song library & playlists (contract; logic lands after design ACK) ---
+
+    /** Saves the live bpm, meter and accents as a new library song and marks it active. */
+    fun saveCurrentAsSong(name: String): Song = TODO("playlists: pending")
+
+    /** Overwrites a library song with the live bpm, meter and accents (name unchanged). */
+    fun updateSongFromCurrent(songId: String) {}
+
+    fun renameSong(songId: String, name: String) {}
+
+    /** Deletes a song from the library and from every playlist. */
+    fun deleteSong(songId: String) {}
+
+    fun createPlaylist(name: String): Playlist = TODO("playlists: pending")
+
+    fun renamePlaylist(playlistId: String, name: String) {}
+
+    fun deletePlaylist(playlistId: String) {}
+
+    fun addSongToPlaylist(playlistId: String, songId: String) {}
+
+    fun removeSongFromPlaylist(playlistId: String, index: Int) {}
+
+    fun moveSongInPlaylist(playlistId: String, fromIndex: Int, toIndex: Int) {}
+
+    /** Applies a library song's bpm, meter and accents (also while playing; never starts or stops playback). */
+    fun loadSong(songId: String) {}
+
+    /** Makes a playlist active and loads its first song; null clears the active playlist. */
+    fun selectPlaylist(playlistId: String?) {}
+
+    /** Loads the song at [index] of the active playlist. */
+    fun selectPlaylistSong(index: Int) {}
+
+    /** Loads the next song of the active playlist (no wrap; no-op at the end). */
+    fun nextSong() {}
+
+    /** Loads the previous song of the active playlist (no wrap; no-op at the start). */
+    fun previousSong() {}
 
     /** Releases audio, haptics, and system media resources. Call when the owner is destroyed. */
     fun release() {
