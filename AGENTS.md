@@ -149,6 +149,7 @@ iosApp/                                   # SwiftUI iPhone app (iOS 16+)
 
 ## 7. APK Size, Plain AOSP Independence, Google Play Store Compliance & Reproducible Builds
 
+- **Android CI** (`.github/workflows/release.yml`): builds, lints, and tests on pushes to **every branch** and on pull requests; GitHub Releases are published only for pushes to `main`, `v*` tags, or a manual `workflow_dispatch` with `create_release`, and GitHub Pages deploys only from `main`, `v*` tags, or `workflow_dispatch`.
 - **iOS builds**: `.github/workflows/ios.yml` (macOS runner, Xcode 16.4) runs `:shared:iosSimulatorArm64Test`, generates the project with XcodeGen, builds for the simulator, and uploads an unsigned `Anchor-vX.Y.Z-unsigned.ipa` (+ `.sha256`) as a workflow artifact. The shared framework is built by the Xcode pre-build phase `./gradlew :shared:embedAndSignAppleFrameworkForXcode`. The iOS app must not add third-party Swift packages, analytics, or tracking.
 
 - **Zero Google Play Services / 100% Plain AOSP Compatibility (CRITICAL)**:

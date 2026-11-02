@@ -144,7 +144,7 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 
 ## 6. Builds & CI
 
-- **Android** (`.github/workflows/release.yml`): lint, `testDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleRelease`, GitHub Release, and Pages deployment.
+- **Android** (`.github/workflows/release.yml`, every branch push and PRs; publishing only from `main` / `v*` tags): lint, `testDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleRelease`, GitHub Release, and Pages deployment.
 - **iPhone** (`.github/workflows/ios.yml`, macOS runner): `:shared:iosSimulatorArm64Test`, `xcodegen generate`, simulator build, and an unsigned device build packaged as `Anchor-vX.Y.Z-unsigned.ipa` (+ SHA-256) uploaded as a workflow artifact.
 - **Local iOS build**: `brew install xcodegen`, `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`. The "Build Kotlin shared framework" phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
 
