@@ -48,9 +48,12 @@ class NoOpPlaybackSession : IPlaybackSession {
     override var commandListener: PlaybackCommandListener? = null
     var lastState: PlaybackSessionState? = null
         private set
+    var updateCount: Int = 0
+        private set
 
     override fun update(state: PlaybackSessionState) {
         lastState = state
+        updateCount++
     }
 
     override fun release() {

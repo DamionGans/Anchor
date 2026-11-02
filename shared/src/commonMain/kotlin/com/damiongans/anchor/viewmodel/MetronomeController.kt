@@ -146,6 +146,7 @@ class MetronomeController(
 
     private var tapResetJob: Job? = null
     private var flashOffJob: Job? = null
+    private var sessionSyncJob: Job? = null
 
     init {
         val state = _uiState.value
@@ -210,6 +211,8 @@ class MetronomeController(
 
     /** Pushes the current tempo / meter / transport state to the system media controls. */
     fun syncPlaybackSession() {
+        sessionSyncJob?.cancel()
+        sessionSyncJob = null
         val state = _uiState.value
         playbackSession.update(
             PlaybackSessionState(
@@ -346,7 +349,21 @@ class MetronomeController(
                 tempoMarking = TempoMarking.forBpm(clamped)
             )
         }
-        syncPlaybackSession()
+        scheduleSessionSync()
+    }
+
+    /**
+     * Debounced media-session update for rapid changes (slider drags, quick time-signature
+     * switching): the notification / Now Playing info is rebuilt once the value settles instead of
+     * on every step, keeping the UI and audio threads free of system-service churn.
+     */
+    private fun scheduleSessionSync() {
+        sessionSyncJob?.cancel()
+        sessionSyncJob = scope.launch {
+            delay(SESSION_SYNC_DEBOUNCE_MS)
+            sessionSyncJob = null
+            syncPlaybackSession()
+        }
     }
 
     /** Adjusts the BPM by a delta (+1, -1, +5, -5, ...). */
@@ -413,12 +430,12 @@ class MetronomeController(
             it.copy(
                 totalBeats = clampedBeats,
                 currentSubdivision = subdivision,
-                accents = restoredAccents,
-                currentBeat = 0,
-                currentSubdivisionIndex = 0
+                accents = restoredAccents
+                // currentBeat / currentSubdivisionIndex are intentionally kept: the audio pulse
+                // continues seamlessly, and the next beat tick updates the visuals in time.
             )
         }
-        syncPlaybackSession()
+        scheduleSessionSync()
     }
 
     fun selectTimeSignature(preset: TimeSignaturePreset) {
@@ -429,12 +446,9 @@ class MetronomeController(
         audioEngine.currentSubdivision = subdivision
         settingsRepository.setSubdivision(subdivision)
         _uiState.update {
-            it.copy(
-                currentSubdivision = subdivision,
-                currentSubdivisionIndex = 0
-            )
+            it.copy(currentSubdivision = subdivision)
         }
-        syncPlaybackSession()
+        scheduleSessionSync()
     }
 
     /** Selects a specific audio output route (`null` / -1 for the speaker / system default). */
@@ -534,6 +548,7 @@ class MetronomeController(
         hapticsManager.cancel()
         flashOffJob?.cancel()
         tapResetJob?.cancel()
+        sessionSyncJob?.cancel()
     }
 
     companion object {
@@ -541,6 +556,7 @@ class MetronomeController(
         const val MAX_BPM = 300
         const val FLASH_DURATION_MS = 65L
         const val TAP_RESET_MS = 2500L
+        const val SESSION_SYNC_DEBOUNCE_MS = 150L
 
         fun monotonicClockMs(): () -> Long {
             val start = TimeSource.Monotonic.markNow()

@@ -332,6 +332,9 @@ body {
 }
 
 .phone-frame {
+  /* One beat of the animated preview at the displayed 120 BPM. The pendulum and the beat bar both
+     derive from this value so each swing reaches its extreme exactly when the next beat lights up. */
+  --mock-beat: 0.5s;
   width: 100%;
   max-width: 356px;
   background: #0B101B;
@@ -488,7 +491,22 @@ body {
   background: linear-gradient(to top, var(--primary-cyan), #38BDF8);
   transform-origin: bottom center;
   box-shadow: 0 0 10px var(--primary-glow);
-  animation: mockPendulumSwing 1s cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
+  /* One swing per beat; starts at the left extreme on beat 1 (alternate = back on beat 2). */
+  animation: mockPendulumSwing var(--mock-beat) cubic-bezier(0.42, 0, 0.58, 1) infinite alternate;
+}
+
+/* Keep every preview animation on the same clock (a shared start time and period). */
+.mock-pendulum-arm,
+.mock-beat-item {
+  animation-delay: 0s;
+  animation-fill-mode: both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mock-pendulum-arm,
+  .mock-beat-item {
+    animation: none !important;
+  }
 }
 
 @keyframes mockPendulumSwing {
@@ -578,19 +596,19 @@ body {
 
 .mock-beat-item.beat-1 {
   border-color: rgba(255, 179, 0, 0.45);
-  animation: mockBeat1Pulse 2s infinite;
+  animation: mockBeat1Pulse calc(var(--mock-beat) * 4) infinite;
 }
 
 .mock-beat-item.beat-2 {
-  animation: mockBeat2Pulse 2s infinite;
+  animation: mockBeat2Pulse calc(var(--mock-beat) * 4) infinite;
 }
 
 .mock-beat-item.beat-3 {
-  animation: mockBeat3Pulse 2s infinite;
+  animation: mockBeat3Pulse calc(var(--mock-beat) * 4) infinite;
 }
 
 .mock-beat-item.beat-4 {
-  animation: mockBeat4Pulse 2s infinite;
+  animation: mockBeat4Pulse calc(var(--mock-beat) * 4) infinite;
 }
 
 @keyframes mockBeat1Pulse {

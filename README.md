@@ -42,7 +42,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.5.1.apk` file and open it to install.
+2. Download the latest `Anchor-v1.5.2.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone

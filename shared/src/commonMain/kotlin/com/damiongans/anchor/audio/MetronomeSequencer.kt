@@ -83,7 +83,13 @@ class MetronomeSequencer(
     private var currentSubdivisionIdx = 0
     private var tickSeqId = 0L
     private var beatSequenceNumber = 0L
-    private var phase = 0.0
+
+    /**
+     * Progress through the current beat (0.0 until 1.0). The beat grid is driven only by this
+     * accumulator and the tempo, so subdivision and time-signature changes never move the pulse.
+     */
+    private var beatPhase = 0.0
+    private var activeSubdivisionCount = 1
     private var activeSmoothedBpm = 120.0
     private var activeWave: ShortArray? = null
     private var activeWavePos = 0
@@ -107,11 +113,12 @@ class MetronomeSequencer(
         currentSubdivisionIdx = 0
         tickSeqId = 0L
         beatSequenceNumber = 0L
-        phase = 0.0
+        beatPhase = 0.0
+        activeSubdivisionCount = subdivision.count.coerceAtLeast(1)
         activeSmoothedBpm = bpm
         activeWave = null
         activeWavePos = 0
-        currentFramesPerSubdivision = framesPerSubdivision(activeSmoothedBpm, subdivision.count, this.sampleRate)
+        currentFramesPerSubdivision = framesPerSubdivision(activeSmoothedBpm, activeSubdivisionCount, this.sampleRate)
 
         val initialAccent = accents.firstOrNull() ?: BeatAccent.ACCENT
         compensator.reset(
@@ -133,7 +140,8 @@ class MetronomeSequencer(
         val initialAccent = accents.firstOrNull() ?: BeatAccent.ACCENT
         activeWave = waveforms.forAccent(initialAccent)
         activeWavePos = 0
-        phase = 0.0
+        beatPhase = 0.0
+        currentSubdivisionIdx = 0
         compensator.recordSynthesizedTick(
             seqId = 0L,
             beatIndex = 0,
@@ -144,11 +152,26 @@ class MetronomeSequencer(
             audioFrame = totalFramesWritten,
             framesPerSubdivision = currentFramesPerSubdivision
         )
+        compensator.recordPhaseCheckpoint(
+            audioFrame = totalFramesWritten,
+            beatSequenceNumber = 0L,
+            beatPhase = 0.0,
+            beatPhasePerFrame = activeSmoothedBpm / (60.0 * sampleRate)
+        )
     }
 
     /**
      * Synthesizes the next [frames] PCM frames into [buffer] at unity gain and records every
      * tick onset into the delay compensation timeline. Advances [totalFramesWritten].
+     *
+     * Timing model: a single beat-phase accumulator advances by `bpm / (60 * sampleRate)` per
+     * frame. A main beat fires when it wraps past 1.0; subdivision ticks fire when it crosses
+     * `k / subdivisionCount`. Consequently:
+     * - BPM changes (slew-limited) only change the accumulator's speed; the pulse never jumps.
+     * - Subdivision changes take effect at the next subdivision boundary of the *current* beat
+     *   without shifting the downbeat; boundaries already passed are never fired late.
+     * - Time-signature changes take effect at the next beat; when the bar becomes shorter than
+     *   the current beat index, the next beat starts a new bar.
      */
     fun renderChunk(buffer: ShortArray, frames: Int) {
         val count = frames.coerceAtMost(buffer.size)
@@ -165,48 +188,71 @@ class MetronomeSequencer(
             activeSmoothedBpm = targetBpm
         }
 
-        val phaseIncrement = (activeSmoothedBpm * subCount) / (60.0 * sampleRate)
-        currentFramesPerSubdivision = 1.0 / phaseIncrement
+        // Subdivision changed: resynchronize the sub-tick counter to the position inside the
+        // current beat so already-passed boundaries are not fired late.
+        if (subCount != activeSubdivisionCount) {
+            activeSubdivisionCount = subCount
+            currentSubdivisionIdx = (beatPhase * subCount).toInt().coerceIn(0, subCount - 1)
+        }
+
+        val beatPhasePerFrame = activeSmoothedBpm / (60.0 * sampleRate)
+        currentFramesPerSubdivision = 1.0 / (beatPhasePerFrame * subCount)
+
+        compensator.recordPhaseCheckpoint(
+            audioFrame = totalFramesWritten,
+            beatSequenceNumber = beatSequenceNumber,
+            beatPhase = beatPhase,
+            beatPhasePerFrame = beatPhasePerFrame
+        )
 
         for (i in 0 until count) {
-            if (phase >= 1.0) {
-                phase -= 1.0
+            if (beatPhase >= 1.0) {
+                // Main beat
+                beatPhase -= 1.0
                 tickSeqId++
-
+                beatSequenceNumber++
+                currentSubdivisionIdx = 0
                 var isBarWrap = false
-                currentSubdivisionIdx++
-                if (currentSubdivisionIdx >= subCount) {
-                    currentSubdivisionIdx = 0
-                    beatSequenceNumber++
-                    currentBeat++
-                    if (currentBeat >= beats) {
-                        currentBeat = 0
-                        isBarWrap = true
-                    }
+                currentBeat++
+                if (currentBeat >= beats) {
+                    currentBeat = 0
+                    isBarWrap = true
                 }
 
-                val isTickAccent: Boolean
-                if (currentSubdivisionIdx == 0) {
-                    val accentType = liveAccents.getOrNull(currentBeat) ?: BeatAccent.REGULAR
-                    isTickAccent = accentType == BeatAccent.ACCENT
-                    activeWave = waveforms.forAccent(accentType)
-                    activeWavePos = 0
-                } else {
-                    isTickAccent = false
-                    activeWave = waveforms.sub
-                    activeWavePos = 0
-                }
+                val accentType = liveAccents.getOrNull(currentBeat) ?: BeatAccent.REGULAR
+                activeWave = waveforms.forAccent(accentType)
+                activeWavePos = 0
 
                 compensator.recordSynthesizedTick(
                     seqId = tickSeqId,
                     beatIndex = currentBeat,
-                    subdivisionIndex = currentSubdivisionIdx,
+                    subdivisionIndex = 0,
                     beatSequenceNumber = beatSequenceNumber,
-                    isAccent = isTickAccent,
+                    isAccent = accentType == BeatAccent.ACCENT,
                     isBarWrap = isBarWrap,
                     audioFrame = totalFramesWritten + i,
                     framesPerSubdivision = currentFramesPerSubdivision
                 )
+            } else if (subCount > 1) {
+                // Subdivision tick inside the current beat
+                val nextSub = currentSubdivisionIdx + 1
+                if (nextSub < subCount && beatPhase * subCount >= nextSub) {
+                    currentSubdivisionIdx = nextSub
+                    tickSeqId++
+                    activeWave = waveforms.sub
+                    activeWavePos = 0
+
+                    compensator.recordSynthesizedTick(
+                        seqId = tickSeqId,
+                        beatIndex = currentBeat,
+                        subdivisionIndex = nextSub,
+                        beatSequenceNumber = beatSequenceNumber,
+                        isAccent = false,
+                        isBarWrap = false,
+                        audioFrame = totalFramesWritten + i,
+                        framesPerSubdivision = currentFramesPerSubdivision
+                    )
+                }
             }
 
             var sampleVal = 0
@@ -221,7 +267,7 @@ class MetronomeSequencer(
             }
 
             buffer[i] = sampleVal.coerceIn(-32767, 32767).toShort()
-            phase += phaseIncrement
+            beatPhase += beatPhasePerFrame
         }
 
         totalFramesWritten += count

@@ -44,6 +44,9 @@ class DelayCompensationEngine(
         const val MIN_BLUETOOTH_OFFSET_MS = -100
         const val MAX_BLUETOOTH_OFFSET_MS = 400
         const val MAX_SWING_DEGREES = 24f
+
+        /** Phase checkpoints kept (one per audio chunk; >= 2.5 s of history at 128-frame chunks). */
+        const val CHECKPOINT_CAPACITY = 1024
     }
 
     data class ScheduledTick(
@@ -93,6 +96,16 @@ class DelayCompensationEngine(
     var isBluetoothActive: Boolean = false
 
     private val timeline = ArrayDeque<ScheduledTick>(32)
+
+    // Beat-phase checkpoints recorded by the sequencer once per rendered chunk (ring buffer of
+    // primitive arrays: allocation-free on the audio thread). The visual pendulum phase is
+    // interpolated from these, so it follows tempo and subdivision changes exactly like the audio.
+    private val checkpointFrames = LongArray(CHECKPOINT_CAPACITY)
+    private val checkpointBeatSeqs = LongArray(CHECKPOINT_CAPACITY)
+    private val checkpointPhases = DoubleArray(CHECKPOINT_CAPACITY)
+    private val checkpointPhasePerFrame = DoubleArray(CHECKPOINT_CAPACITY)
+    private var checkpointHead = 0 // index of the oldest checkpoint
+    private var checkpointCount = 0
     private var lastVisualTriggeredSeq: Long = -1L
     private var lastVibrationTriggeredSeq: Long = -1L
     private var firstBeatFrame: Long = 0L
@@ -140,6 +153,8 @@ class DelayCompensationEngine(
         framesPerSubdivision: Double
     ) {
         timeline.clear()
+        checkpointHead = 0
+        checkpointCount = 0
         firstBeatFrame = warmupFrames.coerceAtLeast(0L)
         lastVisualTriggeredSeq = -1L
         lastVibrationTriggeredSeq = -1L
@@ -200,6 +215,29 @@ class DelayCompensationEngine(
         }
 
         pruneOldEntries()
+    }
+
+    /**
+     * Records the sequencer's exact beat position at [audioFrame]: the monotonic
+     * [beatSequenceNumber], the [beatPhase] within that beat (0..1), and how far the phase advances
+     * per frame until the next checkpoint. Called once per rendered chunk.
+     */
+    fun recordPhaseCheckpoint(
+        audioFrame: Long,
+        beatSequenceNumber: Long,
+        beatPhase: Double,
+        beatPhasePerFrame: Double
+    ) {
+        if (checkpointCount == CHECKPOINT_CAPACITY) {
+            checkpointHead = (checkpointHead + 1) % CHECKPOINT_CAPACITY
+            checkpointCount--
+        }
+        val index = (checkpointHead + checkpointCount) % CHECKPOINT_CAPACITY
+        checkpointFrames[index] = audioFrame
+        checkpointBeatSeqs[index] = beatSequenceNumber
+        checkpointPhases[index] = beatPhase
+        checkpointPhasePerFrame[index] = beatPhasePerFrame.coerceAtLeast(0.0)
+        checkpointCount++
     }
 
     /**
@@ -275,23 +313,46 @@ class DelayCompensationEngine(
             )
         }
 
-        val subElapsedFrames = (visualCursorFrame - activeTick.audioFrame).coerceAtLeast(0L)
-        val subPhase = (subElapsedFrames.toDouble() / activeTick.framesPerSubdivision).coerceIn(0.0, 1.0)
-        val beatPhase = ((activeTick.subdivisionIndex + subPhase) / safeSubCount.toDouble())
-            .coerceIn(0.0, 1.0)
-            .toFloat()
+        // Continuous beat position for the pendulum. Prefer the sequencer's phase checkpoints
+        // (exact under tempo / subdivision changes); fall back to tick-based interpolation.
+        var beatSeq = activeTick.beatSequenceNumber
+        val beatPhase: Float
+        val checkpoint = latestCheckpointAtOrBefore(visualCursorFrame)
+        if (checkpoint >= 0) {
+            var phase = checkpointPhases[checkpoint] +
+                (visualCursorFrame - checkpointFrames[checkpoint]) * checkpointPhasePerFrame[checkpoint]
+            beatSeq = checkpointBeatSeqs[checkpoint]
+            if (phase >= 1.0) {
+                val wholeBeats = phase.toLong()
+                beatSeq += wholeBeats
+                phase -= wholeBeats.toDouble()
+            }
+            // Never run ahead of a beat that has not been visually dispatched yet.
+            if (beatSeq > activeTick.beatSequenceNumber) {
+                beatSeq = activeTick.beatSequenceNumber
+                phase = 1.0
+            }
+            beatPhase = phase.coerceIn(0.0, 1.0).toFloat()
+        } else {
+            val subElapsedFrames = (visualCursorFrame - activeTick.audioFrame).coerceAtLeast(0L)
+            val subPhase = (subElapsedFrames.toDouble() / activeTick.framesPerSubdivision).coerceIn(0.0, 1.0)
+            beatPhase = ((activeTick.subdivisionIndex + subPhase) / safeSubCount.toDouble())
+                .coerceIn(0.0, 1.0)
+                .toFloat()
+        }
 
         val angle = computePendulumAngle(
-            beatSequenceNumber = activeTick.beatSequenceNumber,
+            beatSequenceNumber = beatSeq,
             beatPhase = beatPhase
         )
 
         pruneOldEntries()
+        pruneCheckpoints(visualCursorFrame)
 
         return SyncSnapshot(
             visualBeatIndex = activeTick.beatIndex,
             visualSubdivisionIndex = activeTick.subdivisionIndex,
-            visualBeatSequenceNumber = activeTick.beatSequenceNumber,
+            visualBeatSequenceNumber = beatSeq,
             visualBeatPhase = beatPhase,
             pendulumAngle = angle
         )
@@ -361,6 +422,29 @@ class DelayCompensationEngine(
             )
             timeline.addLast(projected)
             last = projected
+        }
+    }
+
+    /** Ring-buffer index of the newest checkpoint at or before [frame], or -1 if none. */
+    private fun latestCheckpointAtOrBefore(frame: Long): Int {
+        var result = -1
+        for (i in 0 until checkpointCount) {
+            val index = (checkpointHead + i) % CHECKPOINT_CAPACITY
+            if (checkpointFrames[index] <= frame) result = index else break
+        }
+        return result
+    }
+
+    /** Drops checkpoints older than the newest one at or before [cursorFrame]. */
+    private fun pruneCheckpoints(cursorFrame: Long) {
+        while (checkpointCount >= 2) {
+            val next = (checkpointHead + 1) % CHECKPOINT_CAPACITY
+            if (checkpointFrames[next] <= cursorFrame) {
+                checkpointHead = next
+                checkpointCount--
+            } else {
+                break
+            }
         }
     }
 
