@@ -31,8 +31,8 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Anchor for Windows", "Anchor now runs on Windows PCs with Intel/AMD or ARM processors, with the same metronome and interface as on Android plus keyboard shortcuts (Space to play, arrow keys for tempo)."),
-    ChangelogEntry("One Shared Interface", "Android and Windows now share one interface, so both always look and work the same.")
+    ChangelogEntry("Touchscreen Support on Windows", "Lists, Settings, and dialogs now scroll with a finger on Windows touchscreens, with a wide scrollbar where needed."),
+    ChangelogEntry("Scrollable Output List", "The audio output list scrolls when many output devices are available, so the rest of the screen stays visible.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

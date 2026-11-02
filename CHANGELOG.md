@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.6.1] — Touch-Friendly Windows App
+
+### Windows
+- The audio output list (top bar menu and Settings) is limited in height and scrolls, so PCs with many output devices no longer push the rest of the screen out of view.
+- Touchscreen support: lists, Settings, and dialogs scroll by dragging with a finger (Windows delivers touch as mouse input, which Compose Desktop did not drag-scroll), with a wide scrollbar where content overflows.
+- Settings, the time signature dialog, and the update dialog scroll when the window is short.
+
+### Shared UI
+- Android uses the same scroll limits for the output list and Settings; behavior is otherwise unchanged.
+
 ## [v1.6.0] — Anchor for Windows (x64 & arm64)
 
 ### Windows

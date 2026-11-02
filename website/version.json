@@ -1,16 +1,15 @@
 {
-  "version": "1.6.0",
-  "versionCode": 10600,
-  "releaseTag": "v1.6.0",
+  "version": "1.6.1",
+  "versionCode": 10601,
+  "releaseTag": "v1.6.1",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.6.0.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.0/Anchor-v1.6.0.apk",
+  "apkName": "Anchor-v1.6.1.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.1/Anchor-v1.6.1.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "New Windows app for x64 and ARM PCs (MSI installers)",
-    "Android and Windows share one interface"
+    "Windows: touchscreen scrolling and a scrollable audio output list"
   ]
 }

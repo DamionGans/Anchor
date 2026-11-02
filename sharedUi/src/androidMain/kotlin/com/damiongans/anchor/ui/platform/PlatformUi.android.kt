@@ -2,11 +2,13 @@ package com.damiongans.anchor.ui.platform
 
 import android.app.Activity
 import android.os.Build
+import androidx.compose.foundation.ScrollState
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -18,6 +20,11 @@ actual object PlatformUi {
     actual val systemThemeLabel: String = "Android Phone Theme"
     actual val systemThemeShortLabel: String = "Phone"
     actual val supportsVibration: Boolean = true
+    actual val needsDragToScroll: Boolean = false
+}
+
+@Composable
+actual fun PlatformVerticalScrollbar(state: ScrollState, modifier: Modifier) {
 }
 
 @Composable

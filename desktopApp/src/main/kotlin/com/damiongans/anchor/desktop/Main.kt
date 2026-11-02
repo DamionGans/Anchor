@@ -78,4 +78,4 @@ private fun loadAppIcon(): BitmapPainter? = try {
     null
 }
 
-private const val DEV_VERSION = "1.6.0"
+private const val DEV_VERSION = "1.6.1"

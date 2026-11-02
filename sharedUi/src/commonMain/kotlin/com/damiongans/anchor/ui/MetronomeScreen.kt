@@ -1,5 +1,10 @@
 package com.damiongans.anchor.ui
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.heightIn
+import com.damiongans.anchor.ui.platform.touchVerticalScroll
+import com.damiongans.anchor.ui.platform.scrollbarGutter
+import com.damiongans.anchor.ui.platform.ScrollableArea
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -318,55 +323,66 @@ private fun TopBar(
                     onDismissRequest = { showOutputMenu = false },
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ) {
-                    outputs.forEach { device ->
-                        val isSelected = (audioInfo.selectedDeviceId == device.id) ||
-                            (outputs.size == 1) ||
-                            (audioInfo.selectedDeviceId == null && device.deviceType == audioInfo.deviceType)
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = {
-                                Column {
-                                    Text(
-                                        text = device.name,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                        ),
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = device.deviceType.latencyCategory,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = when (device.deviceType) {
-                                        AudioDeviceType.BLUETOOTH,
-                                        AudioDeviceType.WIRED_HEADPHONES,
-                                        AudioDeviceType.USB_AUDIO -> AnchorIcons.Headphones
-                                        else -> AnchorIcons.VolumeUp
+                    // Capped and scrollable (touch drag + scrollbar on Windows): many outputs possible
+                    val menuScroll = rememberScrollState()
+                    ScrollableArea(state = menuScroll) {
+                        Column(
+                            modifier = Modifier
+                                .heightIn(max = 320.dp)
+                                .touchVerticalScroll(menuScroll)
+                                .padding(end = scrollbarGutter())
+                        ) {
+                            outputs.forEach { device ->
+                                val isSelected = (audioInfo.selectedDeviceId == device.id) ||
+                                    (outputs.size == 1) ||
+                                    (audioInfo.selectedDeviceId == null && device.deviceType == audioInfo.deviceType)
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(
+                                                text = device.name,
+                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                                ),
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = device.deviceType.latencyCategory,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     },
-                                    contentDescription = null,
-                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp)
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = when (device.deviceType) {
+                                                AudioDeviceType.BLUETOOTH,
+                                                AudioDeviceType.WIRED_HEADPHONES,
+                                                AudioDeviceType.USB_AUDIO -> AnchorIcons.Headphones
+                                                else -> AnchorIcons.VolumeUp
+                                            },
+                                            contentDescription = null,
+                                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    },
+                                    trailingIcon = if (isSelected) {
+                                        {
+                                            Icon(
+                                                imageVector = AnchorIcons.CheckCircle,
+                                                contentDescription = "Selected",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    } else null,
+                                    onClick = {
+                                        onSelectAudioOutput(device.id)
+                                        showOutputMenu = false
+                                    }
                                 )
-                            },
-                            trailingIcon = if (isSelected) {
-                                {
-                                    Icon(
-                                        imageVector = AnchorIcons.CheckCircle,
-                                        contentDescription = "Selected",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            } else null,
-                            onClick = {
-                                onSelectAudioOutput(device.id)
-                                showOutputMenu = false
                             }
-                        )
+                        }
                     }
                 }
             }

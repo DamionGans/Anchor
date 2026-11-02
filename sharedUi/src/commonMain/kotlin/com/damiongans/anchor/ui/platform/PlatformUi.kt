@@ -1,7 +1,9 @@
 package com.damiongans.anchor.ui.platform
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -17,7 +19,17 @@ expect object PlatformUi {
 
     /** Whether the device has a vibration motor (hides vibration settings when false). */
     val supportsVibration: Boolean
+
+    /**
+     * Whether scroll containers must follow pointer drags themselves (Windows delivers touch as
+     * mouse input, which Compose Desktop does not drag-scroll). See [touchVerticalScroll].
+     */
+    val needsDragToScroll: Boolean
 }
+
+/** A visible, touch-sized scrollbar on desktop; nothing on Android. */
+@Composable
+expect fun PlatformVerticalScrollbar(state: ScrollState, modifier: Modifier = Modifier)
 
 /** The OS-provided dynamic color scheme (Android 12+ Material You), or null when unavailable. */
 @Composable

@@ -1,5 +1,7 @@
 package com.damiongans.anchor.ui.dialogs
 
+import androidx.compose.foundation.rememberScrollState
+import com.damiongans.anchor.ui.platform.touchVerticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -65,6 +67,7 @@ fun TimeSignatureDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .touchVerticalScroll(rememberScrollState())
                     .padding(20.dp)
             ) {
                 // Header
