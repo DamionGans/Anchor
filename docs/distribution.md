@@ -10,9 +10,9 @@ Anchor is **free and open source on GitHub and F-Droid** and sold as an **upfron
 | F-Droid | flavor `fdroid`, built by F-Droid | F-Droid client | none |
 | Google Play | flavor `play` (AAB) | Google Play | none |
 | App Store | `ANCHOR_DISTRIBUTION=APP_STORE` archive | App Store | none |
-| Windows (planned) | per-architecture MSI `Anchor-vX.Y.Z-windows-{x64,arm64}.msi` on GitHub Releases | Built-in GitHub Releases check (`DesktopUpdateRepository`) | update check only |
+| GitHub (Windows) | per-architecture MSI `Anchor-vX.Y.Z-windows-{x64,arm64}.msi` (unsigned) | Built-in GitHub Releases check (`DesktopUpdateRepository`) | update check only |
 
-The Windows app is in preparation and not released yet; see [`windows.md`](./windows.md).
+Windows installers are built by `desktop.yml` and attached to the same GitHub Release as the APK; see [`windows.md`](./windows.md). A Microsoft Store channel is not planned yet.
 
 The channel is the shared `DistributionChannel` (`shared/src/commonMain/.../update/ReleaseVersioning.kt`). Only `GITHUB` builds self-update.
 

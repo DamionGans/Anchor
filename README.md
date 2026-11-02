@@ -9,9 +9,9 @@
   [![Latest Release](https://github.com/DamionGans/Anchor/actions/workflows/android.yml/badge.svg)](https://github.com/DamionGans/Anchor/releases/latest)
   [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84.svg?logo=android&logoColor=white)](https://www.android.com/)
   [![Platform](https://img.shields.io/badge/Platform-iPhone%20iOS%2016%2B-000000.svg?logo=apple&logoColor=white)](#iphone)
-  [![Platform](https://img.shields.io/badge/Platform-Windows%20x64%20%7C%20arm64%20(in%20preparation)-0078D4.svg)](#windows)
+  [![Platform](https://img.shields.io/badge/Platform-Windows%20x64%20%7C%20arm64-0078D4.svg)](#windows)
   [![iOS Build](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml/badge.svg)](https://github.com/DamionGans/Anchor/actions/workflows/ios.yml)
-  [![Windows Tests](https://github.com/DamionGans/Anchor/actions/workflows/desktop.yml/badge.svg)](https://github.com/DamionGans/Anchor/actions/workflows/desktop.yml)
+  [![Windows Build](https://github.com/DamionGans/Anchor/actions/workflows/desktop.yml/badge.svg)](https://github.com/DamionGans/Anchor/actions/workflows/desktop.yml)
   [![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](LICENSE)
 </div>
 
@@ -25,7 +25,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 |---|---|---|
 | **Android** 7.0+ | Available | APK from the [website](https://damiongans.github.io/Anchor/) / [GitHub Releases](https://github.com/DamionGans/Anchor/releases/latest); F-Droid and Google Play coming soon |
 | **iPhone** (iOS 16+) | Available (sideload / build from source) | [Unsigned IPA from CI](#iphone); App Store coming soon |
-| **Windows** (x64 + arm64) | In preparation | Shared core and Windows audio/settings/update code are tested on Windows x64 and arm64 in CI; [roadmap](./docs/windows.md) |
+| **Windows** 10/11 (x64 + arm64) | Available | MSI installer from [GitHub Releases](https://github.com/DamionGans/Anchor/releases/latest) ([guide](./docs/windows.md)) |
 
 On Android, Anchor uses pure platform APIs with zero reliance on Google Play Services, so it runs on standard Google Play devices and plain AOSP phones alike.
 
@@ -52,7 +52,7 @@ On Android, Anchor uses pure platform APIs with zero reliance on Google Play Ser
 ### Android
 
 1. Visit the **[Anchor Website](https://damiongans.github.io/Anchor/)** or the **[GitHub Releases page](https://github.com/DamionGans/Anchor/releases/latest)** on your Android device (Android 7.0+).
-2. Download the latest `Anchor-v1.5.5.apk` file and open it to install.
+2. Download the latest `Anchor-v1.6.0.apk` file and open it to install.
 3. Future updates can be checked and installed directly from **Settings → About**.
 
 ### iPhone
@@ -64,20 +64,24 @@ Anchor for iPhone (iOS 16+) is built automatically by the **[Build iOS App](http
 
 ### Windows
 
-A Windows app (x64 and arm64) is **in preparation** and not downloadable yet. The shared timing core and the Windows platform code (audio output, settings, update checks) already run and are tested on real Windows x64 and Windows on Arm machines in CI. See the **[Windows roadmap](./docs/windows.md)** for what remains (Compose Multiplatform Desktop UI and MSI installers).
+1. Open the **[latest GitHub Release](https://github.com/DamionGans/Anchor/releases/latest)** and download `Anchor-v1.6.0-windows-x64.msi` (Intel/AMD PCs) or `Anchor-v1.6.0-windows-arm64.msi` (ARM PCs).
+2. Run the installer. It installs for your user account (no admin rights) and adds Anchor to the Start menu.
+3. The installer isn't code-signed yet: if SmartScreen shows "Windows protected your PC", choose **More info → Run anyway**.
+
+Same metronome and interface as on Android, plus keyboard shortcuts (Space: play/pause, Up/Down: tempo, T: tap tempo). Updates are offered inside the app. See the **[Windows guide](./docs/windows.md)**.
 
 ---
 
 ## Under the Hood (Technical Documentation)
 
-Curious how Anchor achieves sample-accurate timing, prevents Android audio hardware from clipping Beat 1, synchronizes visuals and haptics to the hardware audio playhead, or shares one Kotlin Multiplatform core between Android, iPhone, and (soon) Windows?
+Curious how Anchor achieves sample-accurate timing, prevents Android audio hardware from clipping Beat 1, synchronizes visuals and haptics to the hardware audio playhead, or shares one Kotlin Multiplatform core between Android, iPhone, and Windows?
 
 Detailed engineering documentation is kept separate so this README stays focused on musicians:
 
-* 📄 **[Technical Architecture & Audio Engine Guide (`docs/architecture.md`)](./docs/architecture.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android, iPhone, and upcoming Windows apps.
+* 📄 **[Technical Architecture & Audio Engine Guide (`docs/architecture.md`)](./docs/architecture.md)** — In-depth explanation of the 44.1 kHz real-time PCM synthesis engine, 55ms sub-LSB hardware warmup, playhead-anchored `DelayCompensationEngine`, and the shared Kotlin Multiplatform architecture behind the Android, iPhone, and Windows apps.
 * 🌐 **[Web Technical Deep-Dive (`architecture.html`)](https://damiongans.github.io/Anchor/architecture.html)** — Visual waveform diagrams and system breakdown on the project website.
 * 🧭 **[Distribution & Store Release Guide (`docs/distribution.md`)](./docs/distribution.md)** — GitHub, F-Droid, Google Play, and App Store channels and the release process.
-* 🪟 **[Windows Support Roadmap (`docs/windows.md`)](./docs/windows.md)** — How the shared core is prepared for a future Windows app on x64 and arm64.
+* 🪟 **[Windows Guide (`docs/windows.md`)](./docs/windows.md)** — Installing, keyboard shortcuts, architecture, and MSI packaging for Windows x64 and arm64.
 * 🤖 **[Developer & AI Agent Guidelines (`AGENTS.md`)](./AGENTS.md)** — Authoritative contributor rules, testing invariants, and release checklists for human developers and AI coding agents.
 * 📋 **[Changelog (`CHANGELOG.md`)](./CHANGELOG.md)** — Full version history.
 
@@ -88,9 +92,11 @@ Detailed engineering documentation is kept separate so this README stays focused
 Anchor is a Kotlin Multiplatform project:
 
 ```text
-androidApp/   Android app (Jetpack Compose)
+androidApp/   Android app
+desktopApp/   Windows app (Compose Multiplatform Desktop, MSI packaging)
 iosApp/       iPhone app (SwiftUI)
 shared/       Shared Kotlin logic used by every platform (incl. desktopMain for Windows)
+sharedUi/     Compose Multiplatform UI shared by Android and Windows
 docs/         Developer documentation
 website/      Project website (GitHub Pages)
 ```

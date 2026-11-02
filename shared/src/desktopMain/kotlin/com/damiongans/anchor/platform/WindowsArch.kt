@@ -1,7 +1,7 @@
 package com.damiongans.anchor.platform
 
 /**
- * Windows CPU architectures supported by the future desktop app. Both run the same JVM build;
+ * Windows CPU architectures supported by the Windows desktop app. Both run the same JVM build;
  * installers are produced per architecture (see docs/windows.md).
  */
 enum class WindowsArch(

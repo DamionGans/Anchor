@@ -1,7 +1,7 @@
 /**
  * Anchor - GitHub Pages Script
  * Features:
- * - Dynamic GitHub API release synchronizer (live version, APK asset link, size, date)
+ * - Dynamic GitHub API release synchronizer (live version, APK + Windows MSI links, size, date)
  *   with automatic fallback from DamionGans/Anchor to DamionGans/PulseMetronome
  * - Dynamic QR Code generator for direct phone downloads
  */
@@ -11,10 +11,10 @@
 
   // Fallback metadata from version.json
   const DEFAULT_METADATA = {
-    version: '1.5.5',
-    releaseTag: 'v1.5.5',
-    downloadUrl: 'https://github.com/DamionGans/Anchor/releases/download/v1.5.5/Anchor-v1.5.5.apk',
-    apkName: 'Anchor-v1.5.5.apk',
+    version: '1.6.0',
+    releaseTag: 'v1.6.0',
+    downloadUrl: 'https://github.com/DamionGans/Anchor/releases/download/v1.6.0/Anchor-v1.6.0.apk',
+    apkName: 'Anchor-v1.6.0.apk',
     fileSizeApprox: '~2.1 MB',
     releaseDate: 'November 2026',
     repoUrl: 'https://github.com/DamionGans/Anchor'
@@ -30,6 +30,8 @@
   const btnShowQr = document.getElementById('btn-show-qr');
   const btnCloseQr = document.getElementById('btn-close-qr');
   const qrContainer = document.getElementById('qr-container');
+  const winX64Link = document.getElementById('win-x64-download');
+  const winArm64Link = document.getElementById('win-arm64-download');
 
   /* ==========================================================================
      1. GitHub Releases Live Synchronization
@@ -87,6 +89,7 @@
       }) : DEFAULT_METADATA.releaseDate;
 
       updateDownloadLinks(cleanVer, tag, downloadUrl, sizeMb, pubDate);
+      updateWindowsLinks(releaseData.assets || []);
     } else {
       try {
         const localRes = await fetch('version.json');
@@ -112,6 +115,14 @@
         DEFAULT_METADATA.releaseDate
       );
     }
+  }
+
+  // Windows installers (one MSI per architecture); the links default to the releases page.
+  function updateWindowsLinks(assets) {
+    const x64 = assets.find(a => a.name.endsWith('windows-x64.msi'));
+    const arm64 = assets.find(a => a.name.endsWith('windows-arm64.msi'));
+    if (winX64Link && x64) winX64Link.href = x64.browser_download_url;
+    if (winArm64Link && arm64) winArm64Link.href = arm64.browser_download_url;
   }
 
   function updateDownloadLinks(versionName, releaseTag, url, size, date) {

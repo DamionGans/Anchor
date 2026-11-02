@@ -12,7 +12,7 @@ import com.damiongans.anchor.viewmodel.MetronomeController
 import kotlinx.coroutines.CoroutineScope
 
 /**
- * Composition root for the future Windows (x64 / arm64) desktop app, analogous to `AnchorIosApp`.
+ * Composition root for the Windows (x64 / arm64) desktop app (`desktopApp`), analogous to `AnchorIosApp`.
  *
  * Wires the desktop platform implementations into the shared [MetronomeController]. The app
  * (Compose Multiplatform Desktop, see docs/windows.md) supplies a main-thread [scope], e.g. one

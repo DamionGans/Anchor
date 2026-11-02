@@ -10,7 +10,7 @@ import javax.sound.sampled.SourceDataLine
 import kotlin.concurrent.Volatile
 
 /**
- * Desktop (JVM) audio engine for the future Windows app (x64 and arm64), built on
+ * Desktop (JVM) audio engine for the Windows app (x64 and arm64), built on
  * `javax.sound.sampled.SourceDataLine`.
  *
  * Mirrors the Android engine: all synthesis, warmup, sequencing, and playhead-anchored delay
