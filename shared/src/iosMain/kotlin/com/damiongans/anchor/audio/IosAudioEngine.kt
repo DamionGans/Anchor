@@ -9,6 +9,7 @@ import platform.AVFAudio.*
 import platform.Foundation.*
 import platform.darwin.NSObjectProtocol
 import kotlin.concurrent.Volatile
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
 /**
@@ -25,12 +26,20 @@ class IosAudioEngine : BaseMetronomeAudioEngine(currentSessionSampleRate()) {
 
     private val session = AVAudioSession.sharedInstance()
     private val clockOrigin = TimeSource.Monotonic.markNow()
-
     private var engine: AVAudioEngine? = null
     private var player: AVAudioPlayerNode? = null
 
-    @Volatile private var running = false
+    /** True while the AVAudioEngine + loop thread exist (playing or in standby). */
+    @Volatile private var outputActive = false
     @Volatile private var loopActive = false
+    /** Metronome playback requested (start() .. stop()). Read by the loop thread. */
+    @Volatile private var playRequested = false
+    /** Keep the engine running between plays (app in the foreground) for an instant first beat. */
+    @Volatile private var standbyRequested = false
+    /** Incremented by every start(), so a fast stop()+start() still restarts at Beat 1. */
+    @Volatile private var playGeneration = 0
+    private var outputOpenedAt = TimeSource.Monotonic.markNow()
+    private var sessionMixable: Boolean? = null
 
     private var routeObserver: NSObjectProtocol? = null
     private var configurationObserver: NSObjectProtocol? = null
@@ -53,16 +62,27 @@ class IosAudioEngine : BaseMetronomeAudioEngine(currentSessionSampleRate()) {
             `object` = null,
             queue = NSOperationQueue.mainQueue
         ) { _ ->
-            if (running) {
-                stop()
-                start()
+            if (outputActive) {
+                closeOutput()
+                if (playRequested || standbyRequested) openOutput()
             }
         }
     }
 
     private fun configureSession() {
-        session.setCategory(AVAudioSessionCategoryPlayback, null)
+        setSessionMixable(false)
         session.setPreferredIOBufferDuration(PREFERRED_IO_BUFFER_SECONDS, null)
+    }
+
+    /**
+     * Standby (idle, app in the foreground) mixes with other apps so merely opening Anchor never
+     * interrupts their audio; playback uses the regular non-mixing category (Now Playing owner).
+     */
+    private fun setSessionMixable(mixable: Boolean) {
+        if (sessionMixable == mixable) return
+        val options: AVAudioSessionCategoryOptions = if (mixable) AVAudioSessionCategoryOptionMixWithOthers else 0uL
+        session.setCategory(AVAudioSessionCategoryPlayback, options, null)
+        sessionMixable = mixable
     }
 
     /**
@@ -90,7 +110,7 @@ class IosAudioEngine : BaseMetronomeAudioEngine(currentSessionSampleRate()) {
 
         val sorted = AudioRouteSelector.normalize(discovered)
         val active = AudioRouteSelector.selectActive(sorted, preferredDeviceId = null, routedDevice = routed)
-        if (!running) {
+        if (!outputActive) {
             sampleRate = session.sampleRate.toInt()
         }
         val bufferFrames = (session.IOBufferDuration * session.sampleRate).toInt().coerceAtLeast(1)
@@ -105,8 +125,54 @@ class IosAudioEngine : BaseMetronomeAudioEngine(currentSessionSampleRate()) {
         else -> AudioDeviceType.OTHER
     }
 
+    /**
+     * Output standby: while enabled (app in the foreground) the `AVAudioEngine` keeps running with
+     * the player node stopped, so the audio hardware stays awake and [start] only has to queue
+     * Beat 1 and start the player node, instead of building and starting a new engine and running
+     * the cold-start warmup. Disabling it closes the engine unless the metronome is playing.
+     */
+    override fun setOutputStandby(enabled: Boolean) {
+        standbyRequested = enabled
+        if (enabled) {
+            if (!outputActive) {
+                setSessionMixable(true)
+                openOutput()
+            }
+        } else if (!playRequested) {
+            closeOutput()
+        }
+    }
+
     override fun start() {
-        if (running) return
+        if (playRequested) return
+        setSessionMixable(false)
+        playGeneration++
+        playRequested = true
+        if (!outputActive) openOutput()
+        if (!outputActive) playRequested = false // no usable output
+    }
+
+    override fun stop() {
+        if (!playRequested) return
+        playRequested = false
+        if (!standbyRequested) closeOutput()
+        // In standby the loop stops the player node (flushing queued clicks) within one iteration.
+    }
+
+    override fun release() {
+        standbyRequested = false
+        playRequested = false
+        closeOutput()
+        val center = NSNotificationCenter.defaultCenter
+        routeObserver?.let { center.removeObserver(it) }
+        configurationObserver?.let { center.removeObserver(it) }
+        routeObserver = null
+        configurationObserver = null
+        session.setActive(false, null)
+    }
+
+    private fun openOutput() {
+        if (outputActive) return
 
         session.setActive(true, null)
         detectCurrentAudioDevice()
@@ -123,22 +189,19 @@ class IosAudioEngine : BaseMetronomeAudioEngine(currentSessionSampleRate()) {
         }
         engine = audioEngine
         player = node
+        outputOpenedAt = TimeSource.Monotonic.markNow()
 
-        syncCompensatorSettings()
-        val warmupChunks = MetronomeSequencer.warmupChunkCount(sr, CHUNK_FRAMES)
-        sequencer.prepare(sr, warmupChunks.toLong() * CHUNK_FRAMES)
-
-        running = true
+        outputActive = true
         loopActive = true
-        val thread = NSThread(block = { runLoop(node, format, warmupChunks) })
+        val thread = NSThread(block = { runLoop(node, format, sr) })
         thread.name = "AnchorAudioLoop"
         thread.threadPriority = 1.0
         thread.start()
     }
 
-    override fun stop() {
-        if (!running) return
-        running = false
+    private fun closeOutput() {
+        if (!outputActive) return
+        outputActive = false
 
         var waits = 0
         while (loopActive && waits < 250) {
@@ -152,54 +215,69 @@ class IosAudioEngine : BaseMetronomeAudioEngine(currentSessionSampleRate()) {
         engine = null
     }
 
-    override fun release() {
-        stop()
-        val center = NSNotificationCenter.defaultCenter
-        routeObserver?.let { center.removeObserver(it) }
-        configurationObserver?.let { center.removeObserver(it) }
-        routeObserver = null
-        configurationObserver = null
-        session.setActive(false, null)
-    }
-
     private fun nowNanos(): Long = clockOrigin.elapsedNow().inWholeNanoseconds
 
     /**
-     * iOS I/O loop: queues warmup + click chunks on the player node, keeps [LOOKAHEAD_CHUNKS]
-     * chunks scheduled ahead of the playhead, and feeds the hardware playhead back to the shared
-     * sequencer for playhead-anchored visual / haptic dispatch.
+     * iOS I/O loop for the lifetime of one `AVAudioEngine`. Idle (standby): the engine runs with
+     * the player node stopped. Playing: queues warmup (cold start only) + click chunks on the
+     * player node, keeps [LOOKAHEAD_CHUNKS] chunks scheduled ahead of the playhead, and feeds the
+     * hardware playhead back to the shared sequencer for playhead-anchored visual / haptic dispatch.
+     * Every playback run restarts the player node, so its sample time starts at 0 together with
+     * the sequencer timeline.
      */
-    private fun runLoop(node: AVAudioPlayerNode, format: AVAudioFormat, warmupChunks: Int) {
+    private fun runLoop(node: AVAudioPlayerNode, format: AVAudioFormat, sr: Int) {
         try {
             val chunk = ShortArray(CHUNK_FRAMES)
-            val estimator = PlayheadEstimator(sequencer.sampleRate, maxInterpolationFrames = CHUNK_FRAMES * 4L)
-
-            // 1. Hardware warmup: >= 55 ms of +/-1 LSB dither before Beat 1
-            MetronomeSequencer.fillWarmupDither(chunk, CHUNK_FRAMES)
-            repeat(warmupChunks) {
-                scheduleChunk(node, format, chunk)
-                sequencer.advanceWarmup(CHUNK_FRAMES)
-            }
-
-            // 2. Anchor Beat 1 right after the warmup, then start the player clock
-            sequencer.startFirstBeat()
-            node.play()
-            estimator.reset(nowNanos())
-
+            val dither = ShortArray(CHUNK_FRAMES).also { MetronomeSequencer.fillWarmupDither(it, CHUNK_FRAMES) }
+            val warmupChunks = MetronomeSequencer.warmupChunkCount(sr, CHUNK_FRAMES)
+            val warmupDuration = (warmupChunks.toLong() * CHUNK_FRAMES * 1000L / sr).milliseconds
+            val estimator = PlayheadEstimator(sr, maxInterpolationFrames = CHUNK_FRAMES * 4L)
             val lookaheadFrames = CHUNK_FRAMES.toLong() * LOOKAHEAD_CHUNKS
+            var playing = false
+            var playingGeneration = -1
             var emitPhase = false
 
-            // 3. Render ahead + playhead-synchronized dispatch
-            while (running) {
-                var playhead = estimator.estimate(readPlayerFrames(node), nowNanos(), sequencer.totalFramesWritten)
-                while (running && sequencer.totalFramesWritten - playhead < lookaheadFrames) {
+            while (outputActive) {
+                val generation = playGeneration
+                if (playRequested && (!playing || generation != playingGeneration)) {
+                    if (playing) node.stop() // fast restart: flush the previous run
+
+                    // 1. Cold start only: >= 55 ms of +/-1 LSB dither while the hardware wakes up.
+                    //    In standby the engine has been running longer than that already.
+                    val coldChunks = if (outputOpenedAt.elapsedNow() < warmupDuration) warmupChunks else 0
+                    syncCompensatorSettings()
+                    sequencer.prepare(sr, coldChunks.toLong() * CHUNK_FRAMES)
+                    repeat(coldChunks) {
+                        scheduleChunk(node, format, dither)
+                        sequencer.advanceWarmup(CHUNK_FRAMES)
+                    }
+
+                    // 2. Anchor Beat 1, queue it, then start the player clock (never starts empty)
+                    sequencer.startFirstBeat()
                     sequencer.renderChunk(chunk, CHUNK_FRAMES)
                     scheduleChunk(node, format, chunk)
-                    playhead = estimator.estimate(readPlayerFrames(node), nowNanos(), sequencer.totalFramesWritten)
+                    node.play()
+                    estimator.reset(nowNanos())
+                    playing = true
+                    playingGeneration = generation
+                } else if (!playRequested && playing) {
+                    // Pause in standby: drop queued clicks at once; the engine keeps running.
+                    node.stop()
+                    playing = false
                 }
-                // Beat events every iteration; pendulum phase at half rate (UI refresh budget).
-                emitPhase = !emitPhase
-                sequencer.processPlayhead(playhead, emitPhase = emitPhase)
+
+                if (playing) {
+                    // 3. Render ahead + playhead-synchronized dispatch
+                    var playhead = estimator.estimate(readPlayerFrames(node), nowNanos(), sequencer.totalFramesWritten)
+                    while (outputActive && playRequested && sequencer.totalFramesWritten - playhead < lookaheadFrames) {
+                        sequencer.renderChunk(chunk, CHUNK_FRAMES)
+                        scheduleChunk(node, format, chunk)
+                        playhead = estimator.estimate(readPlayerFrames(node), nowNanos(), sequencer.totalFramesWritten)
+                    }
+                    // Beat events every iteration; pendulum phase at half rate (UI refresh budget).
+                    emitPhase = !emitPhase
+                    sequencer.processPlayhead(playhead, emitPhase = emitPhase)
+                }
                 NSThread.sleepForTimeInterval(LOOP_INTERVAL_SECONDS)
             }
         } finally {

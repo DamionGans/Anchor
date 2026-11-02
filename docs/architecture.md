@@ -24,12 +24,14 @@ To guarantee Beat 1 plays in full without adding noticeable startup lag:
 2. Why `±1` instead of `0`? Many OEM audio HALs employ zero-sample silence detection that keeps the amplifier gated until non-zero samples arrive. A `±1` LSB toggle forces the entire signal path awake while remaining completely inaudible to the human ear.
 3. Sample `0` of Beat 1 is written immediately after frame `2,425`, hitting an already-active DAC so the very first transient is crisp and intact.
 
-### Instant Start: Output Standby (Android)
+### Instant Start: Output Standby (Android & iPhone)
 Creating an `AudioTrack`, starting it, and running the warmup on every press of Play adds a noticeable delay before Beat 1. While the app is visible (`MainActivity.onStart` → `setOutputStandby(true)`, `onStop` → `false`), `MetronomeAudioEngine` keeps **one `AudioTrack` and its output thread open in standby**, continuously writing the same inaudible `±1` dither:
 - On Play, the output thread aligns the sequencer with the running output timeline (`prepare(firstBeatFrame)` + `alignToOutputFrame(outputFrames)`) and places Beat 1 at the start of the very next chunk. The hardware is already awake, so no extra warmup is needed (the warmup only covers the part of the 55 ms not yet written).
 - On Pause, the output returns to standby dither; when the app leaves the foreground while paused, the track is closed (no background audio or battery cost). Playback started from the notification while the app is in the background takes the cold-start path with the full warmup.
 - `MetronomeController.play()` starts the audio engine **before** syncing the media session / foreground service, so service start-up never delays Beat 1.
 - A play-generation counter guarantees that a fast Pause → Play restarts cleanly at Beat 1.
+
+**iPhone** (`IosAudioEngine`): while the scene is not in the background (`AnchorApp` `scenePhase`), the `AVAudioEngine` keeps running with the player node stopped, which keeps the hardware awake. Play restarts the player node (sample time 0 = sequencer frame 0), queues Beat 1, and calls `node.play()`; the warmup only runs if the engine started less than ~55 ms ago. Pause calls `node.stop()`, dropping already-queued clicks immediately. While idle, the session uses `.playback` + `.mixWithOthers` so opening Anchor never interrupts other apps; Play switches to the non-mixing category (Now Playing owner) as before.
 
 ---
 

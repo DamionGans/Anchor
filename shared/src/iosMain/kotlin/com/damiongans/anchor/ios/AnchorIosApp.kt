@@ -91,6 +91,8 @@ class AnchorIosApp {
 
     // ---- Actions -------------------------------------------------------------------------------
     fun togglePlayPause() = controller.togglePlayPause()
+    /** Keep the audio output warm while the app is in the foreground (instant first beat). */
+    fun setOutputStandby(enabled: Boolean) = controller.setOutputStandby(enabled)
     fun play() = controller.play()
     fun pause() = controller.pause()
     fun changeBpm(bpm: Int) = controller.setBpm(bpm)

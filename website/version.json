@@ -10,7 +10,7 @@
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Play starts the first beat immediately on Android",
+    "Play starts the first beat immediately on Android and iPhone",
     "Website and documentation cover Android, iPhone, and the upcoming Windows app"
   ]
 }
