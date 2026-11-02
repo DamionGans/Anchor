@@ -1,20 +1,19 @@
 {
-  "version": "1.3.0",
-  "versionCode": 10300,
-  "releaseTag": "v1.3.0",
-  "releaseDate": "2026-11-01",
-  "apkName": "Anchor-v1.3.0.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.3.0/Anchor-v1.3.0.apk",
+  "version": "1.4.0",
+  "versionCode": 10400,
+  "releaseTag": "v1.4.0",
+  "releaseDate": "2026-11-02",
+  "apkName": "Anchor-v1.4.0.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.4.0/Anchor-v1.4.0.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Rebranded to Anchor Metronome (short name Anchor, 'Rock-solid time for serious play') with a platform-agnostic core architecture ready for future iOS and desktop targets",
-    "Multimedia notification drawer controls with Play/Pause, Tempo -/+ buttons, and live BPM display",
-    "Per-count accent memory preserved across time signature changes",
-    "Always-visible audio output selection showing all available outputs (including single Speaker)",
-    "Configurable Play & Tap Tempo button trigger mode (On Tap/Press vs. On Release)",
-    "Full Google Play Store and plain AOSP compatibility with zero Google Play Services dependencies"
+    "New native iPhone app with the same single-screen metronome, sounds, accents, time signatures, tap tempo, screen flash, and haptics",
+    "Shared Kotlin Multiplatform core: timing, delay compensation, click synthesis, settings, and app state are identical on Android and iPhone",
+    "iPhone background playback with Lock Screen / Control Center Now Playing controls",
+    "Calibration offsets (visual, vibration, Bluetooth) available on both platforms",
+    "New GitHub Actions workflow that tests the shared logic on the iOS simulator and builds an unsigned iPhone app package"
   ]
 }

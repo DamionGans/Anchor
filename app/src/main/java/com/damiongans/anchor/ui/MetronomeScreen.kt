@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -164,13 +163,11 @@ fun MetronomeScreen(
         )
     }
 
-    val context = LocalContext.current
-
     val updateInfo = state.availableUpdate
     if (state.showUpdateDialog && updateInfo != null && updateInfo.isNewerVersion) {
         UpdateAvailableDialog(
             releaseInfo = updateInfo,
-            onYes = { viewModel.onAcceptUpdate(context) },
+            onYes = { viewModel.onAcceptUpdate() },
             onAskLater = { viewModel.onAskLater() },
             onNo = { viewModel.onDeclineUpdate() }
         )
@@ -206,7 +203,7 @@ fun MetronomeScreen(
             onBluetoothCompensationChange = { offset -> viewModel.setBluetoothCompensation(offset) },
             onResetTimingOffsets = { viewModel.resetTimingOffsets() },
             onCheckForUpdates = { viewModel.checkForUpdates(manual = true) },
-            onUpdateNow = { viewModel.onAcceptUpdate(context) },
+            onUpdateNow = { viewModel.onAcceptUpdate() },
             onDismiss = { showSettingsSheet = false }
         )
     }

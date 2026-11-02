@@ -239,7 +239,7 @@ class MetronomeViewModelTest {
             releaseName = "Anchor 2.0",
             releaseNotes = "Major update",
             releasePageUrl = "https://github.com/DamionGans/Anchor/releases",
-            apkDownloadUrl = "https://github.com/DamionGans/Anchor/releases/download/v2.0.0/app.apk",
+            downloadUrl = "https://github.com/DamionGans/Anchor/releases/download/v2.0.0/app.apk",
             isNewerVersion = true
         )
 

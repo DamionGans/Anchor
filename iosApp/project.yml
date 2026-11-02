@@ -1,0 +1,61 @@
+# XcodeGen spec for the Anchor iOS app. Generate the Xcode project with:
+#   cd iosApp && xcodegen generate
+# The SwiftUI app links the shared Kotlin Multiplatform framework (AnchorShared), which is built
+# by the "Build Kotlin shared framework" pre-build phase via Gradle.
+name: Anchor
+options:
+  bundleIdPrefix: com.damiongans
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "1.4.0"
+    CURRENT_PROJECT_VERSION: "10400"
+targets:
+  Anchor:
+    type: application
+    platform: iOS
+    scheme: {}
+    sources:
+      - path: Anchor
+    info:
+      path: Anchor/Info.plist
+      properties:
+        CFBundleDisplayName: Anchor
+        CFBundleName: Anchor
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIBackgroundModes: [audio]
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_NAME: Anchor
+        PRODUCT_BUNDLE_IDENTIFIER: com.damiongans.anchor
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        ENABLE_BITCODE: NO
+        FRAMEWORK_SEARCH_PATHS:
+          - $(inherited)
+          - $(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+        OTHER_LDFLAGS:
+          - $(inherited)
+          - -framework
+          - AnchorShared
+    preBuildScripts:
+      - name: Build Kotlin shared framework
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ "YES" = "$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED" ]; then
+            echo "Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED"
+            exit 0
+          fi
+          cd "$SRCROOT/.."
+          ./gradlew :shared:embedAndSignAppleFrameworkForXcode

@@ -149,8 +149,8 @@ jobs:
       # -----------------------------------------------------------------------
       # Unit Tests & Audio Engine Verification
       # -----------------------------------------------------------------------
-      - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest --continue
+      - name: Run Unit Tests (Android app + shared KMP logic)
+        run: ./gradlew testDebugUnitTest :shared:testAndroidHostTest --continue
 
       # -----------------------------------------------------------------------
       # Deterministic Versioning & Packaging (Reproducible Builds)

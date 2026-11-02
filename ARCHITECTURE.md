@@ -1,6 +1,6 @@
 # Anchor Metronome — Technical Architecture & Implementation Guide
 
-Wait-free, sample-accurate timing on Android requires bypassing high-level media players and timer loops. This document explains how **Anchor Metronome** (**Anchor**) achieves rock-solid audio synthesis, zero-clipping first beats, frame-accurate visual and haptic synchronization, and a platform-agnostic Kotlin core ready for future iOS and desktop targets.
+Wait-free, sample-accurate timing on Android requires bypassing high-level media players and timer loops. This document explains how **Anchor Metronome** (**Anchor**) achieves rock-solid audio synthesis, zero-clipping first beats, frame-accurate visual and haptic synchronization, and a Kotlin Multiplatform core shared by the Android and iPhone apps.
 
 > Looking for the musician overview and download links? See the main [README.md](./README.md) or visit the [Anchor Metronome Website](https://damiongans.github.io/Anchor/).
 
@@ -54,50 +54,81 @@ vibrationTargetFrame = beatAudioFrame + round((effectiveVibrationDelayMs / 1000.
 
 ---
 
-## 3. Background Playback & Multimedia Notification (`MetronomePlaybackService`)
+## 3. Background Playback & System Media Controls
 
-When a musician switches to a PDF sheet music reader or locks their phone screen, Android's background execution limits can throttle CPU threads.
-- When playback runs, `MetronomePlaybackService` operates as an explicit `foregroundServiceType="mediaPlayback"` service.
-- It acquires a partial `PowerManager.WakeLock` (`PARTIAL_WAKE_LOCK`) while playing (releasing it when paused) so the CPU keeps servicing the high-priority PCM synthesis loop without interruption when the screen is off.
-- An active `MediaSession` and `Notification.MediaStyle` controller in the notification drawer and lock screen displays the current tempo (`"<BPM> BPM • <TempoMarking>"`) and provides `-1 BPM`, `Play/Pause`, and `+1 BPM` transport controls.
+When a musician switches to a PDF sheet music reader or locks their phone screen, background execution limits can throttle CPU threads. Both platforms implement the shared `IPlaybackSession` contract; the shared `MetronomeController` publishes one `PlaybackSessionState` (`"<BPM> BPM • <TempoMarking>"`, `"Playing • 4/4 Time"`) and receives transport commands through `PlaybackCommandListener`.
+
+**Android (`AndroidPlaybackSession` → `MetronomePlaybackService`)**
+- Runs as an explicit `foregroundServiceType="mediaPlayback"` service.
+- Acquires a partial `PowerManager.WakeLock` while playing (released when paused) so the CPU keeps servicing the high-priority PCM loop with the screen off.
+- An active `MediaSession` and `Notification.MediaStyle` controller provides `-1 BPM`, `Play/Pause`, and `+1 BPM` controls.
+
+**iOS (`IosPlaybackSession`)**
+- `AVAudioSession` playback category with the `audio` background mode keeps the engine running when the app is in the background or the screen is locked.
+- `MPNowPlayingInfoCenter` shows tempo and meter on the Lock Screen / Control Center; `MPRemoteCommandCenter` maps play, pause, toggle, stop, and next/previous track (`+1` / `-1 BPM`).
 
 ---
 
-## 4. Clean Architecture & Multiplatform-Ready Core
+## 4. Kotlin Multiplatform Architecture (Android + iPhone)
 
-The project is structured in clean, unit-tested layers under `com.damiongans.anchor`. All core domain models, timing/tap calculators, and service interfaces are written in 100% pure Kotlin (zero `android.*` or `androidx.*` imports) so future iOS and desktop targets can share the core engine while Android-specific implementations live in dedicated platform files:
+All application logic lives once in the `shared` Kotlin Multiplatform module. Platform code is limited to I/O and UI: the Android app (`app/`, Jetpack Compose) and the iPhone app (`iosApp/`, SwiftUI) plus the iOS implementations in `shared/src/iosMain`.
 
 ```text
-app/src/main/java/com/damiongans/anchor/
-├── MainActivity.kt                  # Edge-to-edge Compose host & lifecycle coordinator
-├── audio/
-│   ├── IAudioEngine.kt              # Pure Kotlin audio engine interface (multiplatform-ready)
-│   └── MetronomeAudioEngine.kt      # Android 44.1 kHz PCM synthesizer & playhead loop
+shared/src/commonMain/kotlin/com/damiongans/anchor/     # Shared logic (no platform imports)
+├── model/MetronomeModels.kt            # Immutable domain models
 ├── domain/
-│   ├── DelayCompensationEngine.kt   # Pure Kotlin frame-accurate visual/haptic/BT scheduler
-│   └── TapTempoCalculator.kt        # Pure Kotlin BPM clamping & tap-tempo outlier filtering
-├── haptics/
-│   ├── IHapticsManager.kt           # Pure Kotlin haptics interface (multiplatform-ready)
-│   └── AndroidHapticsManager.kt     # Android precomputed VibrationEffect waveforms (Accent/Beat/Sub)
-├── model/
-│   └── MetronomeModels.kt           # Pure Kotlin immutable domain models (zero Android/Compose imports)
+│   ├── DelayCompensationEngine.kt      # Frame-accurate visual/haptic/Bluetooth scheduler
+│   └── TapTempoCalculator.kt           # Tap tempo outlier filtering & pulse detection
+├── audio/
+│   ├── IAudioEngine.kt                 # Audio engine contract
+│   ├── BaseMetronomeAudioEngine.kt     # Shared engine state, clamping, route publishing
+│   ├── ClickSynthesizer.kt             # Click waveform synthesis (all sound sets)
+│   ├── MetronomeSequencer.kt           # Warmup, sample-accurate sequencing, playhead dispatch,
+│   │                                   #   PlayheadEstimator, WrappingFrameCounter
+│   └── AudioRouteSelector.kt           # Output list normalization & default route priority
+├── haptics/IHapticsManager.kt          # Haptics contract
+├── playback/IPlaybackSession.kt        # System media controls contract
 ├── repository/
-│   ├── ISettingsRepository.kt       # Pure Kotlin settings persistence contract & default accent rules
-│   └── SharedPreferencesSettingsRepository.kt # Android SharedPreferences persistence implementation
-├── service/
-│   └── MetronomePlaybackService.kt  # Android foreground mediaPlayback service, MediaSession & WakeLock
-├── ui/
-│   ├── MetronomeScreen.kt           # Non-scrolling single-screen musician UI
-│   ├── components/                  # BeatBar, PendulumVisualizer, QuickControlsBar, TempoControls
-│   ├── dialogs/                     # SettingsBottomSheet, TimeSignatureDialog, ChangelogDialog, UpdateAvailableDialog
-│   ├── icons/                       # AnchorIcons.kt custom Compose vector icons
-│   └── theme/                       # Material 3 Dynamic Color & custom accent palettes
+│   ├── ISettingsRepository.kt          # Settings contract & default accent rules
+│   └── KeyValueSettingsRepository.kt   # Shared keys/defaults/clamping over IKeyValueStore
 ├── update/
-│   ├── IUpdateRepository.kt         # Pure Kotlin release metadata model & update check contract
-│   └── AppUpdateManager.kt          # Semantic version comparison & GitHub Release checker (DamionGans/Anchor)
-└── viewmodel/
-    └── MetronomeViewModel.kt        # StateFlow state holder with constructor injection
+│   ├── IUpdateRepository.kt            # Update check contract & AppReleaseInfo
+│   └── ReleaseVersioning.kt            # GitHub repo config, asset selection, SemVer comparison
+└── viewmodel/MetronomeController.kt    # MetronomeUiState + all user actions (shared state holder)
+
+shared/src/iosMain/kotlin/com/damiongans/anchor/        # iOS platform implementations
+├── audio/IosAudioEngine.kt             # AVAudioEngine + AVAudioPlayerNode I/O loop
+├── haptics/IosHapticsManager.kt        # UIImpactFeedbackGenerator
+├── repository/NSUserDefaultsKeyValueStore.kt
+├── update/IosUpdateRepository.kt       # NSURLSession + NSJSONSerialization transport
+├── playback/IosPlaybackSession.kt      # Now Playing + remote commands
+└── ios/AnchorIosApp.kt                 # Swift entry point (wires iOS implementations)
+
+app/src/main/java/com/damiongans/anchor/                # Android platform layer
+├── audio/MetronomeAudioEngine.kt       # AudioTrack Fast Path I/O loop & device routing
+├── haptics/AndroidHapticsManager.kt    # VibrationEffect haptics
+├── repository/SharedPreferencesSettingsRepository.kt  # SharedPreferences store + legacy migration
+├── service/                            # MetronomePlaybackService + AndroidPlaybackSession
+├── update/AppUpdateManager.kt          # HttpURLConnection + org.json transport, ACTION_VIEW
+├── viewmodel/MetronomeViewModel.kt     # AndroidViewModel hosting MetronomeController
+└── ui/                                 # Jetpack Compose UI
+
+iosApp/                                  # SwiftUI app (XcodeGen project.yml)
+├── Anchor/MetronomeStore.swift         # ObservableObject bridge (display-link throttled)
+└── Anchor/Views/                       # ContentView, SettingsView, TimeSignatureView
 ```
+
+### Shared audio pipeline
+Both platform engines extend `BaseMetronomeAudioEngine` and drive the same `MetronomeSequencer`:
+1. `prepare()` resets the timeline; the platform writes `MetronomeSequencer.warmupChunkCount(...)` chunks of `±1` LSB dither (`advanceWarmup`).
+2. `startFirstBeat()` anchors Beat 1 at the exact post-warmup frame.
+3. `renderChunk()` synthesizes clicks sample-accurately (slew-limited BPM changes) and records every tick in `DelayCompensationEngine`.
+4. The platform reports its hardware playhead (Android `AudioTrack.getPlaybackHeadPosition()`, iOS player-node sample time), smoothed by `PlayheadEstimator`, and `processPlayhead()` dispatches visual, vibration, bar, and pendulum-phase events.
+
+The iOS loop keeps four 256-frame buffers scheduled ahead of the player-node playhead on a high-priority thread; Android writes blocking chunks to `AudioTrack`.
+
+### Swift interop
+`AnchorIosApp` exposes Swift-friendly methods (no default arguments), catalog lists for pickers, and `observe(onChange:)`, which delivers `MetronomeUiState` on the main thread. `MetronomeStore` publishes the latest state at most once per display frame.
 
 ---
 
@@ -111,6 +142,14 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 
 ---
 
-## 6. Contributing & AI Agent Guidelines
+## 6. Builds & CI
+
+- **Android** (`.github/workflows/release.yml`): lint, `testDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleRelease`, GitHub Release, and Pages deployment.
+- **iPhone** (`.github/workflows/ios.yml`, macOS runner): `:shared:iosSimulatorArm64Test`, `xcodegen generate`, simulator build, and an unsigned device build packaged as `Anchor-vX.Y.Z-unsigned.ipa` (+ SHA-256) uploaded as a workflow artifact.
+- **Local iOS build**: `brew install xcodegen`, `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`. The "Build Kotlin shared framework" phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
+
+---
+
+## 7. Contributing & AI Agent Guidelines
 
 For developer workflow rules, testing requirements, and release checklists, see [**`AGENTS.md`**](./AGENTS.md).

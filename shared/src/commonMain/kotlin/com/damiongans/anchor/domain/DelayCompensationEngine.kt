@@ -1,6 +1,7 @@
 package com.damiongans.anchor.domain
 
 import com.damiongans.anchor.model.BeatAccent
+import kotlin.concurrent.Volatile
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToLong
@@ -28,6 +29,9 @@ import kotlin.math.roundToLong
  *    reaches the speaker by projecting upcoming beat frame boundaries from the
  *    active tempo and tracking monotonic tick sequence IDs so no beat is ever
  *    duplicated or skipped.
+ *
+ * Threading: [reset], [recordSynthesizedTick] and [processPlayhead] must be called from a single
+ * thread (the platform audio loop). Offsets may be updated from any thread (volatile fields).
  */
 class DelayCompensationEngine(
     sampleRate: Int = 48000
@@ -130,7 +134,6 @@ class DelayCompensationEngine(
      * @param initialIsAccent Whether Beat 1 (index 0) is accented.
      * @param framesPerSubdivision Initial duration of one subdivision in PCM frames.
      */
-    @Synchronized
     fun reset(
         warmupFrames: Long,
         initialIsAccent: Boolean,
@@ -161,7 +164,6 @@ class DelayCompensationEngine(
      * If a lookahead projection already created an entry for [seqId], its frame position
      * and metadata are updated in place without re-triggering already-fired callbacks.
      */
-    @Synchronized
     fun recordSynthesizedTick(
         seqId: Long,
         beatIndex: Int,
@@ -205,7 +207,6 @@ class DelayCompensationEngine(
      * negative offset requires firing before synthesis, dispatches due visual and
      * vibration events, and computes the synchronized visual pendulum state.
      */
-    @Synchronized
     fun processPlayhead(
         playheadFrame: Long,
         liveAccents: List<BeatAccent>,

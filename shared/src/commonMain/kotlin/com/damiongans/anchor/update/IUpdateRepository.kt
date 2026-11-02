@@ -8,7 +8,7 @@ data class AppReleaseInfo(
     val releaseName: String,
     val releaseNotes: String,
     val releasePageUrl: String,
-    val apkDownloadUrl: String,
+    val downloadUrl: String,
     val isNewerVersion: Boolean
 )
 
