@@ -1,5 +1,10 @@
 package com.damiongans.anchor.ui.dialogs
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.heightIn
+import com.damiongans.anchor.ui.platform.touchVerticalScroll
+import com.damiongans.anchor.ui.platform.scrollbarGutter
+import com.damiongans.anchor.ui.platform.ScrollableArea
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -183,55 +188,60 @@ fun SettingsBottomSheet(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Tab Content (No Scrolling, each tab fits compactly)
-            when (SettingsTab.values()[selectedTab]) {
-                SettingsTab.AUDIO -> {
-                    AudioSettingsTab(
-                        audioInfo = audioInfo,
-                        currentSoundSet = currentSoundSet,
-                        pitchMultiplier = pitchMultiplier,
-                        onSelectAudioOutput = onSelectAudioOutput,
-                        onSoundSetSelect = onSoundSetSelect,
-                        onPitchChange = onPitchChange
-                    )
-                }
-                SettingsTab.TIMING -> {
-                    TimingSettingsTab(
-                        audioInfo = audioInfo,
-                        bluetoothCompensationMs = bluetoothCompensationMs,
-                        flashDelayMs = flashDelayMs,
-                        vibrationDelayMs = vibrationDelayMs,
-                        buttonTriggerMode = buttonTriggerMode,
-                        isVibrationEnabled = isVibrationEnabled,
-                        isFlashEnabled = isFlashEnabled,
-                        onBluetoothCompensationChange = onBluetoothCompensationChange,
-                        onFlashDelayChange = onFlashDelayChange,
-                        onVibrationDelayChange = onVibrationDelayChange,
-                        onButtonTriggerModeSelect = onButtonTriggerModeSelect,
-                        onResetTimingOffsets = onResetTimingOffsets,
-                        onToggleVibration = onToggleVibration,
-                        onToggleFlash = onToggleFlash
-                    )
-                }
-                SettingsTab.THEME -> {
-                    ThemeSettingsTab(
-                        themeMode = themeMode,
-                        accentColor = accentColor,
-                        onThemeModeSelect = onThemeModeSelect,
-                        onAccentColorSelect = onAccentColorSelect
-                    )
-                }
-                SettingsTab.ABOUT -> {
-                    AboutSettingsTab(
-                        availableUpdate = availableUpdate,
-                        isCheckingForUpdates = isCheckingForUpdates,
-                        updateCheckMessage = updateCheckMessage,
-                        canCheckForUpdates = canCheckForUpdates,
-                        updateStoreName = updateStoreName,
-                        onCheckForUpdates = onCheckForUpdates,
-                        onUpdateNow = onUpdateNow,
-                        onViewChangelog = { showChangelogDialog = true }
-                    )
+            // Tab content: fits on phones; scrolls when the window is short (desktop, landscape)
+            val tabScroll = rememberScrollState()
+            ScrollableArea(state = tabScroll, modifier = Modifier.weight(1f, fill = false)) {
+                Column(modifier = Modifier.touchVerticalScroll(tabScroll).padding(end = scrollbarGutter())) {
+                    when (SettingsTab.values()[selectedTab]) {
+                        SettingsTab.AUDIO -> {
+                            AudioSettingsTab(
+                                audioInfo = audioInfo,
+                                currentSoundSet = currentSoundSet,
+                                pitchMultiplier = pitchMultiplier,
+                                onSelectAudioOutput = onSelectAudioOutput,
+                                onSoundSetSelect = onSoundSetSelect,
+                                onPitchChange = onPitchChange
+                            )
+                        }
+                        SettingsTab.TIMING -> {
+                            TimingSettingsTab(
+                                audioInfo = audioInfo,
+                                bluetoothCompensationMs = bluetoothCompensationMs,
+                                flashDelayMs = flashDelayMs,
+                                vibrationDelayMs = vibrationDelayMs,
+                                buttonTriggerMode = buttonTriggerMode,
+                                isVibrationEnabled = isVibrationEnabled,
+                                isFlashEnabled = isFlashEnabled,
+                                onBluetoothCompensationChange = onBluetoothCompensationChange,
+                                onFlashDelayChange = onFlashDelayChange,
+                                onVibrationDelayChange = onVibrationDelayChange,
+                                onButtonTriggerModeSelect = onButtonTriggerModeSelect,
+                                onResetTimingOffsets = onResetTimingOffsets,
+                                onToggleVibration = onToggleVibration,
+                                onToggleFlash = onToggleFlash
+                            )
+                        }
+                        SettingsTab.THEME -> {
+                            ThemeSettingsTab(
+                                themeMode = themeMode,
+                                accentColor = accentColor,
+                                onThemeModeSelect = onThemeModeSelect,
+                                onAccentColorSelect = onAccentColorSelect
+                            )
+                        }
+                        SettingsTab.ABOUT -> {
+                            AboutSettingsTab(
+                                availableUpdate = availableUpdate,
+                                isCheckingForUpdates = isCheckingForUpdates,
+                                updateCheckMessage = updateCheckMessage,
+                                canCheckForUpdates = canCheckForUpdates,
+                                updateStoreName = updateStoreName,
+                                onCheckForUpdates = onCheckForUpdates,
+                                onUpdateNow = onUpdateNow,
+                                onViewChangelog = { showChangelogDialog = true }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -270,69 +280,77 @@ private fun AudioSettingsTab(
         Spacer(modifier = Modifier.height(6.dp))
 
         // Always show all available outputs (even when there is only one output, e.g., Speaker)
-        Column(
-            verticalArrangement = Arrangement.spacedBy(5.dp),
-            modifier = Modifier.testTag("audio_output_selector_list")
-        ) {
-            outputs.forEach { device ->
-                val isSelected = (audioInfo.selectedDeviceId == device.id) ||
-                    (outputs.size == 1) ||
-                    (audioInfo.selectedDeviceId == null && device.deviceType == audioInfo.deviceType)
-                val deviceIcon = when (device.deviceType) {
-                    AudioDeviceType.BLUETOOTH,
-                    AudioDeviceType.WIRED_HEADPHONES,
-                    AudioDeviceType.USB_AUDIO -> AnchorIcons.Headphones
-                    else -> AnchorIcons.VolumeUp
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(
-                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                        .border(
-                            1.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                            RoundedCornerShape(10.dp)
-                        )
-                        .clickable { onSelectAudioOutput(device.id) }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .testTag("audio_output_option_${device.deviceType.name.lowercase()}"),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = deviceIcon,
-                            contentDescription = null,
-                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = device.name,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = device.deviceType.latencyCategory,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+        // Capped and scrollable: Windows can list many output devices.
+        val outputsScroll = rememberScrollState()
+        ScrollableArea(state = outputsScroll) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier
+                    .testTag("audio_output_selector_list")
+                    .heightIn(max = 236.dp)
+                    .touchVerticalScroll(outputsScroll)
+                    .padding(end = scrollbarGutter())
+            ) {
+                outputs.forEach { device ->
+                    val isSelected = (audioInfo.selectedDeviceId == device.id) ||
+                        (outputs.size == 1) ||
+                        (audioInfo.selectedDeviceId == null && device.deviceType == audioInfo.deviceType)
+                    val deviceIcon = when (device.deviceType) {
+                        AudioDeviceType.BLUETOOTH,
+                        AudioDeviceType.WIRED_HEADPHONES,
+                        AudioDeviceType.USB_AUDIO -> AnchorIcons.Headphones
+                        else -> AnchorIcons.VolumeUp
                     }
 
-                    if (isSelected) {
-                        Icon(
-                            imageVector = AnchorIcons.CheckCircle,
-                            contentDescription = "Active Output",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .border(
+                                1.dp,
+                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                RoundedCornerShape(10.dp)
+                            )
+                            .clickable { onSelectAudioOutput(device.id) }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .testTag("audio_output_option_${device.deviceType.name.lowercase()}"),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = deviceIcon,
+                                contentDescription = null,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = device.name,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = device.deviceType.latencyCategory,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        if (isSelected) {
+                            Icon(
+                                imageVector = AnchorIcons.CheckCircle,
+                                contentDescription = "Active Output",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
