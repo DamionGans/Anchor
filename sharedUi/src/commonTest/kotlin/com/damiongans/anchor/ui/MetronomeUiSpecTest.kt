@@ -43,7 +43,7 @@ class MetronomeUiSpecTest {
         )
     }
 
-    /** SPEC-PROD-001 SPEC-PROD-002 */
+    /** SPEC-PROD-002 */
     @Test
     fun distributionChannels_exposeCorrectSelfUpdateAndStoreBehavior() {
         val githubCtrl = createController(DistributionChannel.GITHUB)
