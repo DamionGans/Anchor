@@ -21,8 +21,12 @@ LINEAGE="$REPO_ROOT/signing/release-rotation.lineage"
 command -v keytool >/dev/null || { echo "keytool not found (install a JDK)"; exit 1; }
 APKSIGNER="$(command -v apksigner || true)"
 if [ -z "$APKSIGNER" ]; then
-  SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}}"
-  APKSIGNER="$(ls -d "$SDK"/build-tools/*/apksigner* 2>/dev/null | sort -V | tail -n1 || true)"
+  # ANDROID_HOME, then the default SDK folders on Linux/macOS and Windows (Git Bash).
+  for SDK in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "$HOME/Android/Sdk" "$HOME/Library/Android/sdk"     "${LOCALAPPDATA:+$(cygpath -u "$LOCALAPPDATA" 2>/dev/null)/Android/Sdk}"; do
+    [ -n "$SDK" ] || continue
+    APKSIGNER="$(ls -d "$SDK"/build-tools/*/apksigner* 2>/dev/null | sort -V | tail -n1 || true)"
+    [ -n "$APKSIGNER" ] && break
+  done
 fi
 [ -n "$APKSIGNER" ] || { echo "apksigner not found (install Android build-tools or set ANDROID_HOME)"; exit 1; }
 
