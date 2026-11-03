@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.7.3] — Setlist Resume Persistence & Google Play Launch Prep
+
+### Playlists & Setlists
+- Resumed active song and song index position across app restarts (`active_song_id`, `active_song_index`), keeping the current repertoire selection ready on stage.
+- Enabled the Next song button on the setlist transport bar when starting without an active song selection, stepping directly into song 1.
+
+### Distribution & Google Play
+- Added Google Play publishing compliance pack (`docs/play-store.md`) detailing Console form answers, data safety, permissions, and closed-testing requirements.
+- Configured dedicated Play upload key signing pipeline in GitHub Actions with debug-certificate rejection guard, and added `scripts/create-play-upload-key.sh` for developer key creation.
+- Prepared Google Play store assets in `fastlane/metadata/android/en-US/`: 512x512 app icon, 1024x500 feature graphic, real Pixel 7 & Pixel Tablet emulator screenshots, and updated musician-first store listing descriptions.
+
 ## [v1.7.2] — Musician-First Showcase & Commercial Website Remake
 
 ### Website & Branding

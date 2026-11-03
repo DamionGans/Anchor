@@ -1,0 +1,3 @@
+- Resumed active song and position across app restarts in the set-list bar.
+- Enabled the Next song button on the setlist bar when starting without an active song selection.
+- Prepared Google Play store assets, compliance pack, and upload key signing pipeline.
