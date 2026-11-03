@@ -64,7 +64,7 @@ struct SetlistBarView: View {
         let idx = state.activeSongIndex?.intValue
         let total = playlist?.songIds.count ?? 0
         let canPrev = playlist != nil && idx != nil && idx! > 0
-        let canNext = playlist != nil && idx != nil && idx! < total - 1
+        let canNext = playlist != nil && total > 0 && (idx == nil || idx! < total - 1)
 
         HStack(spacing: 4) {
             if playlist != nil {

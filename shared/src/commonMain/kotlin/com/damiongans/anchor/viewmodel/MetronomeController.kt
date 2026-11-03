@@ -97,7 +97,10 @@ class MetronomeController(
                 songs = songLibraryRepository.getSongs(),
                 playlists = songLibraryRepository.getPlaylists(),
                 activePlaylistId = songLibraryRepository.getActivePlaylistId()
-            ).pruned()
+            ).pruned().withActiveSong(
+                songLibraryRepository.getActiveSongId(),
+                songLibraryRepository.getActiveSongIndex()
+            )
         )
     )
     val uiState: StateFlow<MetronomeUiState> = _uiState.asStateFlow()
@@ -626,6 +629,8 @@ class MetronomeController(
         if (after.songs != before.songs) songLibraryRepository.setSongs(after.songs)
         if (after.playlists != before.playlists) songLibraryRepository.setPlaylists(after.playlists)
         if (after.activePlaylistId != before.activePlaylistId) songLibraryRepository.setActivePlaylistId(after.activePlaylistId)
+        if (after.activeSongId != before.activeSongId) songLibraryRepository.setActiveSongId(after.activeSongId)
+        if (after.activeSongIndex != before.activeSongIndex) songLibraryRepository.setActiveSongIndex(after.activeSongIndex)
         _uiState.update { it.copy(library = after) }
     }
 

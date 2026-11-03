@@ -202,13 +202,49 @@ jobs:
           echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT
 
       # github flavor -> GitHub Release APK; fdroid flavor -> build check (F-Droid builds and signs
-      # its own copy); play flavor -> AAB for the paid Google Play listing.
-      - name: Build Reproducible Release APK & Play Bundle
+      # its own copy); play flavor -> APK for the permission check below. The Play AAB is built
+      # in its own step with the dedicated Play upload key.
+      - name: Build Reproducible Release APKs
         run: |
-          ./gradlew assembleGithubRelease assembleFdroidRelease assemblePlayRelease bundlePlayRelease \
+          ./gradlew assembleGithubRelease assembleFdroidRelease assemblePlayRelease \
             -PversionName="${{ steps.prepare_release.outputs.version_name }}" \
             -PversionCode="${{ steps.prepare_release.outputs.version_code }}" \
             -PreleaseTag="${{ steps.prepare_release.outputs.release_tag }}"
+
+      # GitHub APK key rotation (docs/release-signing.md): once the owner has created the private
+      # release key and committed signing/release-rotation.lineage, re-sign with the old (debug)
+      # key for Android 7-8 and the new key + lineage (APK Signature Scheme v3) for Android 9+,
+      # so existing installs update in place. Until then the APK keeps the old signature.
+      - name: Rotate GitHub APK Signing Key
+        env:
+          GITHUB_RELEASE_KEYSTORE_BASE64: ${{ secrets.GITHUB_RELEASE_KEYSTORE_BASE64 }}
+          GITHUB_RELEASE_STORE_PASSWORD: ${{ secrets.GITHUB_RELEASE_STORE_PASSWORD }}
+          GITHUB_RELEASE_KEY_PASSWORD: ${{ secrets.GITHUB_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          LINEAGE=signing/release-rotation.lineage
+          if [ -z "${GITHUB_RELEASE_KEYSTORE_BASE64}" ] || [ ! -f "${LINEAGE}" ]; then
+            echo "::warning::GitHub APK is still signed with the public debug key (no release key/lineage yet; see docs/release-signing.md)."
+            exit 0
+          fi
+          APKSIGNER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n1)
+          NEW_KS="${RUNNER_TEMP}/github-release.jks"
+          echo "${GITHUB_RELEASE_KEYSTORE_BASE64}" | tr -d '\r\n' | base64 -d > "${NEW_KS}"
+          APK=androidApp/build/outputs/apk/github/release/androidApp-github-release.apk
+          "${APKSIGNER}" sign \
+            --ks debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android \
+            --next-signer --ks "${NEW_KS}" --ks-key-alias release \
+              --ks-pass env:GITHUB_RELEASE_STORE_PASSWORD --key-pass env:GITHUB_RELEASE_KEY_PASSWORD \
+            --lineage "${LINEAGE}" --rotation-min-sdk-version 28 \
+            --out "${APK}.rotated" "${APK}"
+          rm -f "${NEW_KS}"
+          mv "${APK}.rotated" "${APK}"
+          V3_SIGNER=$("${APKSIGNER}" verify -v --print-certs "${APK}" | grep -m1 "V3.0 Signer: certificate DN:")
+          echo "${V3_SIGNER}"
+          if echo "${V3_SIGNER}" | grep -q "CN=Android Debug"; then
+            echo "::error::Rotation failed: the v3 signer is still the debug key."
+            exit 1
+          fi
 
       - name: Stage APK and Generate SHA-256 Checksum
         run: |
@@ -261,14 +297,45 @@ jobs:
           fi
           echo "Play build has no INTERNET permission; GitHub build keeps it for update checks."
 
-      - name: Stage Play Store Bundle
+      # Play bundle: signed only with the dedicated Play upload key (Play App Signing holds the
+      # app signing key). Skipped until the PLAY_UPLOAD_* secrets exist; never debug-signed.
+      - name: Build Play Store Bundle (upload key)
+        id: play_bundle
+        env:
+          PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
+          PLAY_UPLOAD_STORE_PASSWORD: ${{ secrets.PLAY_UPLOAD_STORE_PASSWORD }}
+          PLAY_UPLOAD_KEY_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
+          if [ -z "${PLAY_UPLOAD_KEYSTORE_BASE64}" ]; then
+            echo "::notice::PLAY_UPLOAD_KEYSTORE_BASE64 is not set; skipping the Play bundle (see docs/play-store.md)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          KEYSTORE="${RUNNER_TEMP}/play-upload.jks"
+          echo "${PLAY_UPLOAD_KEYSTORE_BASE64}" | tr -d '\r\n' | base64 -d > "${KEYSTORE}"
+          KEYSTORE_PATH="${KEYSTORE}" STORE_PASSWORD="${PLAY_UPLOAD_STORE_PASSWORD}" KEY_PASSWORD="${PLAY_UPLOAD_KEY_PASSWORD}" \
+            ./gradlew bundlePlayRelease \
+              -PversionName="${{ steps.prepare_release.outputs.version_name }}" \
+              -PversionCode="${{ steps.prepare_release.outputs.version_code }}" \
+              -PreleaseTag="${{ steps.prepare_release.outputs.release_tag }}"
+          rm -f "${KEYSTORE}"
+
+          AAB=androidApp/build/outputs/bundle/playRelease/androidApp-play-release.aab
+          OWNER=$(keytool -printcert -jarfile "${AAB}" | grep -m1 "Owner:")
+          echo "Play bundle signer: ${OWNER}"
+          if echo "${OWNER}" | grep -q "CN=Android Debug"; then
+            echo "::error::The Play bundle is signed with the debug key; Google Play rejects it."
+            exit 1
+          fi
+
           mkdir -p store-artifacts
-          cp androidApp/build/outputs/bundle/playRelease/androidApp-play-release.aab \
-            "store-artifacts/Anchor-${{ steps.prepare_release.outputs.release_tag }}-play.aab"
+          cp "${AAB}" "store-artifacts/Anchor-${{ steps.prepare_release.outputs.release_tag }}-play.aab"
           ls -la store-artifacts/
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Upload Play Store Bundle to Workflow
+        if: steps.play_bundle.outputs.ready == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: play-bundle
@@ -377,7 +444,7 @@ jobs:
   # ===========================================================================
   # Google Play Upload (v* tags only; skipped until the Play secrets exist)
   # Requires secrets: PLAY_SERVICE_ACCOUNT_JSON (Play Console API service account)
-  # and SIGNING_KEYSTORE_BASE64 (real upload key; never the committed debug keystore).
+  # and PLAY_UPLOAD_KEYSTORE_BASE64 (+ passwords): the Play upload key, never the debug keystore.
   # The very first Play release must be uploaded manually in the Play Console.
   # ===========================================================================
   publish-play:
@@ -389,7 +456,7 @@ jobs:
       contents: read
     env:
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-      HAS_UPLOAD_KEY: ${{ secrets.SIGNING_KEYSTORE_BASE64 != '' }}
+      HAS_UPLOAD_KEY: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 != '' }}
     steps:
       - name: Check Play Publishing Secrets
         id: secrets

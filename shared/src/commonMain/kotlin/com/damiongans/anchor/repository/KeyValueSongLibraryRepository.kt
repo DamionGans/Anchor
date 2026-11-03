@@ -29,6 +29,14 @@ class KeyValueSongLibraryRepository(private val store: IKeyValueStore) : ISongLi
 
     override fun setActivePlaylistId(id: String?) = store.putString(KEY_ACTIVE_PLAYLIST, id ?: "")
 
+    override fun getActiveSongId(): String? = store.getString(KEY_ACTIVE_SONG)?.takeIf { it.isNotEmpty() }
+
+    override fun setActiveSongId(id: String?) = store.putString(KEY_ACTIVE_SONG, id ?: "")
+
+    override fun getActiveSongIndex(): Int? = store.getInt(KEY_ACTIVE_SONG_INDEX, -1).takeIf { it >= 0 }
+
+    override fun setActiveSongIndex(index: Int?) = store.putInt(KEY_ACTIVE_SONG_INDEX, index ?: -1)
+
     private fun formatSong(song: Song): String = listOf(
         escape(song.id),
         escape(song.name),
@@ -90,6 +98,8 @@ class KeyValueSongLibraryRepository(private val store: IKeyValueStore) : ISongLi
         const val KEY_SONGS = "song_library_v1"
         const val KEY_PLAYLISTS = "playlists_v1"
         const val KEY_ACTIVE_PLAYLIST = "active_playlist_id"
+        const val KEY_ACTIVE_SONG = "active_song_id"
+        const val KEY_ACTIVE_SONG_INDEX = "active_song_index"
         private const val CHUNK_LENGTH = 4000
 
         private fun escape(text: String): String = buildString {

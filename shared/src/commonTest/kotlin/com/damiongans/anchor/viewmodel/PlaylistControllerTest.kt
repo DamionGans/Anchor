@@ -161,4 +161,39 @@ class PlaylistControllerTest {
         assertNull(state.activePlaylistId)
         assertNull(newController().uiState.value.activePlaylistId)
     }
+
+    /** SPEC-PLAYLIST-006 */
+    @Test
+    fun setListPosition_resumesAfterRestart() {
+        val a = controller.createSong("A", 80, 4, Subdivision.QUARTER, emptyList())
+        val b = controller.createSong("B", 120, 3, Subdivision.QUARTER, waltz)
+        val set = controller.createPlaylist("Gig")
+        controller.addSongToPlaylist(set.id, a.id)
+        controller.addSongToPlaylist(set.id, b.id)
+        controller.selectPlaylist(set.id)
+        controller.nextSong()
+
+        val restarted = newController().uiState.value
+        assertEquals(set.id, restarted.activePlaylistId)
+        assertEquals(b.id, restarted.activeSongId)
+        assertEquals(1, restarted.activeSongIndex)
+        assertFalse(restarted.isActiveSongModified)
+    }
+
+    /** SPEC-PLAYLIST-004 */
+    @Test
+    fun nextSong_withoutAPosition_loadsTheFirstSong() {
+        val a = controller.createSong("A", 80, 4, Subdivision.QUARTER, emptyList())
+        val set = controller.createPlaylist("Gig")
+        controller.addSongToPlaylist(set.id, a.id)
+        controller.selectPlaylist(set.id)
+        controller.deleteSong(a.id)
+        val b = controller.createSong("B", 99, 4, Subdivision.QUARTER, emptyList())
+        controller.addSongToPlaylist(set.id, b.id)
+        assertNull(state.activeSongIndex)
+
+        controller.nextSong()
+        assertEquals(0, state.activeSongIndex)
+        assertEquals(99, state.bpm)
+    }
 }

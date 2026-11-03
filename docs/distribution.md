@@ -19,13 +19,11 @@ The channel is the shared `DistributionChannel` (`shared/src/commonMain/.../upda
 ## One-time setup (owner only)
 
 ### Google Play
-1. Create a Play Console developer account ($25 one-time) and the app `com.damiongans.anchor` as a **paid** app.
-2. Generate a real upload key (never reuse `signing/debug.keystore.base64`):
-   ```bash
-   keytool -genkeypair -v -keystore upload.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000
-   ```
-   Store it as the `SIGNING_KEYSTORE_BASE64` secret (`base64 -i upload.jks`) and enroll in Play App Signing.
-3. Upload the first `.aab` manually (the `play-bundle` artifact of the Android workflow).
+Full step-by-step guide, Console answers and the closed-test requirement: [`docs/play-store.md`](play-store.md).
+
+1. Create a Play Console developer account ($25 one-time), a payments profile, and the app `com.damiongans.anchor` as a **paid** app.
+2. Create the upload key with `scripts/create-play-upload-key.sh` (never reuse `signing/debug.keystore.base64`); it stores the secrets `PLAY_UPLOAD_KEYSTORE_BASE64`, `PLAY_UPLOAD_STORE_PASSWORD`, `PLAY_UPLOAD_KEY_PASSWORD`. Enroll in Play App Signing.
+3. Upload the first `.aab` manually (the `play-bundle` artifact of the Android workflow; CI only produces it with the upload key and refuses debug-signed bundles).
 4. Create a Play Console API service account with release permissions and store its JSON as the `PLAY_SERVICE_ACCOUNT_JSON` secret. Later `v*` tags upload to the internal track as drafts.
 5. Fill in the Data safety form ("No data collected or shared") and link the privacy policy: `https://damiongans.github.io/Anchor/privacy.html`.
 

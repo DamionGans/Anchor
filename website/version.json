@@ -1,16 +1,16 @@
 {
-  "version": "1.7.2",
-  "versionCode": 10702,
-  "releaseTag": "v1.7.2",
+  "version": "1.7.3",
+  "versionCode": 10703,
+  "releaseTag": "v1.7.3",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.7.2.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.7.2/Anchor-v1.7.2.apk",
+  "apkName": "Anchor-v1.7.3.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.7.3/Anchor-v1.7.3.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2 MB",
   "highlights": [
-    "Remade the website and guides to highlight musician-first advantages: stage setlists, unclipped count-ins, and zero ads",
-    "Added practical musician use cases, transparent pricing, and streamlined navigation across desktop and mobile"
+    "Resumed active song and position across app restarts, with immediate Next song progression from the setlist bar",
+    "Prepared Google Play store listing assets, compliance pack, and upload key signing pipeline"
   ]
 }

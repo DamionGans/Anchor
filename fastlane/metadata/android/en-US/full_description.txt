@@ -1,10 +1,37 @@
-<p><b>Anchor Metronome</b> is a fast, distraction-free metronome for musicians, drummers, teachers, and ensembles. Every essential control sits on one uncluttered screen.</p>
+<p><b>Anchor Metronome</b> is a rock-solid, distraction-free metronome built for musicians, drummers, teachers, and live bands. Anchor gives you unwavering timekeeping with zero lag and zero clutter in every practice session and stage performance.</p>
+
+<p><b>Stage Setlists & Song Library</b></p>
 <ul>
-<li><b>Instant, unclipped first beat</b>: press Play and Beat 1 sounds immediately at full clarity.</li>
-<li><b>Tempo your way</b>: slider, -5/-1/+1/+5 steps, half and double time, and tap tempo with outlier filtering.</li>
-<li><b>Accents & subdivisions</b>: tap any beat to cycle Accent, Normal, Soft, or Mute; accents are remembered per count across time signatures. Quarter, eighth, triplet, and 16th subdivisions.</li>
-<li><b>See and feel the beat</b>: beat bar, pendulum, full-screen flash, and haptic vibration, all synchronized to the actual audio output.</li>
-<li><b>Calibration</b>: visual, vibration, and Bluetooth offsets in 1 ms steps.</li>
-<li><b>Background playback</b> with notification and lock-screen controls (Play/Pause, Tempo -/+).</li>
-<li><b>Private</b>: no ads, no tracking, no accounts, no Google Play Services, and no network access.</li>
+<li><b>Save your repertoire</b>: Store songs with custom tempo, time signature, subdivision, and beat accents.</li>
+<li><b>Seamless setlists</b>: Organize setlists for gigs and rehearsals; switch songs on the fly without breaking your practice flow.</li>
+<li><b>Instant song recall</b>: Everything stays right on your device, accessible in an unobtrusive bottom drawer.</li>
+</ul>
+
+<p><b>Instant, Precision Timing</b></p>
+<ul>
+<li><b>Instant Beat 1</b>: Press Play and Beat 1 sounds immediately at full volume with zero clipping or warmup hesitation.</li>
+<li><b>Accents your way</b>: Tap any beat indicator to cycle between Accent, Normal, Soft, or Mute. Your accent patterns are remembered per count across meter changes.</li>
+<li><b>Subdivisions & sounds</b>: Quarter, eighth, triplet, and 16th subdivisions. Five distinct sound sets: Woodblock, Mechanical, Digital Beep, Rimshot, and 808 Percussion.</li>
+<li><b>Tempo controls</b>: Smooth tempo slider, fine -5 / -1 / +1 / +5 steps, half-time and double-time shortcuts, and an adaptive Tap Tempo algorithm.</li>
+</ul>
+
+<p><b>Multi-Sensory Synchronization</b></p>
+<ul>
+<li><b>Visual beat tracking</b>: Smooth pendulum animation, pulsing beat indicators, and full-screen visual flash.</li>
+<li><b>Haptic vibration</b>: Feel the pulse directly through your device's vibration engine.</li>
+<li><b>Millisecond calibration</b>: Independent offset calibration for visual flash, vibration, and Bluetooth audio delay in 1 ms increments.</li>
+</ul>
+
+<p><b>Built for the Stage and Studio</b></p>
+<ul>
+<li><b>Single-screen simplicity</b>: All core controls remain visible at all times with no buried menus.</li>
+<li><b>Two-pane studio layout</b>: Expands automatically to an intuitive side-by-side layout on tablets, foldables, and large displays.</li>
+<li><b>Background audio</b>: Keeps rock-solid time with the screen locked or while switching between sheet music and chord apps.</li>
+<li><b>Lock screen controls</b>: Play, pause, and adjust tempo directly from system media notifications.</li>
+</ul>
+
+<p><b>Pure Instrument, Zero Distractions</b></p>
+<ul>
+<li><b>Completely private</b>: No ads, no subscriptions, no in-app purchases, no user tracking, and no accounts.</li>
+<li><b>100% offline</b>: Requires zero internet permissions. What happens in your rehearsal room stays on your device.</li>
 </ul>
