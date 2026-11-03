@@ -1,16 +1,16 @@
 {
-  "version": "1.6.3",
-  "versionCode": 10603,
-  "releaseTag": "v1.6.3",
+  "version": "1.7.0",
+  "versionCode": 10700,
+  "releaseTag": "v1.7.0",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.6.3.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.6.3/Anchor-v1.6.3.apk",
+  "apkName": "Anchor-v1.7.0.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.7.0/Anchor-v1.7.0.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
   "fileSizeApprox": "~2.1 MB",
   "highlights": [
-    "Adaptive two-pane studio layout for tablets, landscape displays, and desktop windows",
-    "Proportionally scaling pendulum visualizer and beat bar pills across all screen sizes"
+    "Playlists and Song Library to save songs with BPM, time signature, subdivision, and beat accents across sessions",
+    "Main-screen set-list bar (and PageUp/PageDown shortcuts on Windows) to step through songs live without stopping the pulse"
   ]
 }

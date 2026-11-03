@@ -6,6 +6,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var store: MetronomeStore
     @State private var showSettings = false
+    @State private var showPlaylists = false
     @State private var showTimeSignature = false
 
     var body: some View {
@@ -13,14 +14,29 @@ struct ContentView: View {
         let accent = state.accentColor.swiftUIColor
 
         GeometryReader { geo in
-            let isWide = geo.size.width >= 680 || (geo.size.width >= 560 && geo.size.width > geo.size.height * 1.15)
+            let isWide = geo.size.height >= 480 &&
+                (geo.size.width >= 680 || (geo.size.width >= 560 && geo.size.width > geo.size.height * 1.15))
 
             ZStack {
                 Color(.systemBackground).ignoresSafeArea()
 
                 if isWide {
-                    VStack(spacing: 16) {
-                        TopBar(state: state, accent: accent, onSettings: { showSettings = true })
+                    VStack(spacing: 14) {
+                        TopBar(
+                            state: state,
+                            accent: accent,
+                            onPlaylists: { showPlaylists = true },
+                            onSettings: { showSettings = true }
+                        )
+
+                        if state.activePlaylist != nil || state.activeSong != nil {
+                            SetlistBarView(
+                                state: state,
+                                accent: accent,
+                                app: store.app,
+                                onOpenPlaylists: { showPlaylists = true }
+                            )
+                        }
 
                         HStack(spacing: 24) {
                             VStack(spacing: 16) {
@@ -59,8 +75,22 @@ struct ContentView: View {
                     .frame(maxWidth: 1120, maxHeight: 760)
                     .frame(width: geo.size.width, height: geo.size.height, alignment: .center)
                 } else {
-                    VStack(spacing: 14) {
-                        TopBar(state: state, accent: accent, onSettings: { showSettings = true })
+                    VStack(spacing: 12) {
+                        TopBar(
+                            state: state,
+                            accent: accent,
+                            onPlaylists: { showPlaylists = true },
+                            onSettings: { showSettings = true }
+                        )
+
+                        if state.activePlaylist != nil || state.activeSong != nil {
+                            SetlistBarView(
+                                state: state,
+                                accent: accent,
+                                app: store.app,
+                                onOpenPlaylists: { showPlaylists = true }
+                            )
+                        }
 
                         TempoSection(state: state, accent: accent, app: store.app)
 
@@ -102,6 +132,10 @@ struct ContentView: View {
             SettingsView()
                 .environmentObject(store)
         }
+        .sheet(isPresented: $showPlaylists) {
+            PlaylistsView()
+                .environmentObject(store)
+        }
         .sheet(isPresented: $showTimeSignature) {
             TimeSignatureView(state: state, app: store.app, accent: accent)
                 .presentationDetents([.medium, .large])
@@ -126,9 +160,12 @@ struct ContentView: View {
 private struct TopBar: View {
     let state: MetronomeUiState
     let accent: Color
+    let onPlaylists: () -> Void
     let onSettings: () -> Void
 
     var body: some View {
+        let hasSetlist = state.activePlaylist != nil || state.activeSong != nil
+
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("ANCHOR")
@@ -145,6 +182,13 @@ private struct TopBar: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(Capsule().fill(Color(.secondarySystemBackground)))
+            Button(action: onPlaylists) {
+                Image(systemName: "music.note.list")
+                    .font(.title3)
+                    .foregroundStyle(hasSetlist ? accent : .primary)
+                    .frame(width: 48, height: 48)
+            }
+            .accessibilityLabel("Playlists & Song Library")
             Button(action: onSettings) {
                 Image(systemName: "gearshape.fill")
                     .font(.title3)
@@ -161,6 +205,87 @@ private struct TopBar: View {
         case "USB_AUDIO": return "cable.connector"
         default: return "speaker.wave.2.fill"
         }
+    }
+}
+
+private struct SetlistBarView: View {
+    let state: MetronomeUiState
+    let accent: Color
+    let app: AnchorIosApp
+    let onOpenPlaylists: () -> Void
+
+    var body: some View {
+        let playlist = state.activePlaylist
+        let song = state.activeSong
+        let idx = state.activeSongIndex?.intValue
+        let total = playlist?.songIds.count ?? 0
+        let canPrev = playlist != nil && idx != nil && idx! > 0
+        let canNext = playlist != nil && idx != nil && idx! < total - 1
+
+        HStack(spacing: 4) {
+            if playlist != nil {
+                Button {
+                    app.previousSong()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.subheadline.weight(.bold))
+                        .frame(width: 48, height: 44)
+                }
+                .disabled(!canPrev)
+                .accessibilityLabel("Previous song")
+            }
+
+            Button(action: onOpenPlaylists) {
+                VStack(spacing: 2) {
+                    HStack(spacing: 5) {
+                        if let idx, playlist != nil, total > 0 {
+                            Text("\(idx + 1)/\(total) ·")
+                                .font(.caption.weight(.bold))
+                                .monospacedDigit()
+                                .foregroundStyle(accent)
+                        }
+                        Text(song?.name ?? playlist?.name ?? "")
+                            .font(.subheadline.weight(.bold))
+                            .lineLimit(1)
+                            .foregroundStyle(.primary)
+                        if state.isActiveSongModified && song != nil {
+                            Circle()
+                                .fill(AnchorPalette.accentDownbeat)
+                                .frame(width: 7, height: 7)
+                        }
+                    }
+                    if let song {
+                        Text("\(song.bpm) BPM • \(song.timeSignatureDisplay)\(state.isActiveSongModified ? " (edited)" : "")")
+                            .font(.caption2)
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    } else if playlist != nil && total == 0 {
+                        Text("Empty playlist • Tap to add songs")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.plain)
+
+            if playlist != nil {
+                Button {
+                    app.nextSong()
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.bold))
+                        .frame(width: 48, height: 44)
+                }
+                .disabled(!canNext)
+                .accessibilityLabel("Next song")
+            }
+        }
+        .padding(.horizontal, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(.secondarySystemBackground).opacity(0.85))
+        )
     }
 }
 

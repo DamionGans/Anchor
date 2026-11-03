@@ -10,8 +10,8 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    MARKETING_VERSION: "1.6.3"
-    CURRENT_PROJECT_VERSION: "10603"
+    MARKETING_VERSION: "1.7.0"
+    CURRENT_PROJECT_VERSION: "10700"
     ANCHOR_DISTRIBUTION: GITHUB
 targets:
   Anchor:

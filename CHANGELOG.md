@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.7.0] — Playlists & Song Library
+
+### Shared Logic & Persistence
+- Added Song Library (`Song`: name, BPM, beats, subdivision, and per-beat accents) and ordered Set Lists (`Playlist`) in `shared/commonMain`.
+- Added `ISongLibraryRepository` and `KeyValueSongLibraryRepository` with percent-escaped `|` persistence and 4000-character chunking for large libraries across Android `SharedPreferences`, iOS `NSUserDefaults`, and Windows `java.util.prefs`.
+- Added live song loading and playlist navigation (`loadSong`, `selectPlaylist`, `selectPlaylistSong`, `nextSong`, `previousSong`) to `MetronomeController` and `AnchorIosApp` without interrupting playback.
+
+### Shared UI, iPhone & Windows
+- Added `SetlistBar` on the main screen when a playlist is active for one-tap previous/next song stepping, song position display, and live modification indicator.
+- Added `PlaylistsBottomSheet` (Android & Windows) and `PlaylistsView` sheet (iPhone) with Playlists and Song Library tabs to save current metronome settings as a song, create or edit custom songs, and build ordered set lists.
+- Added `PageUp`/`PageDown` (and `[`/`]`) keyboard shortcuts on Windows for stepping to the previous or next song in the active playlist.
+
 ## [v1.6.3] — Tablet & Desktop Studio Layout
 
 ### Shared UI & iOS

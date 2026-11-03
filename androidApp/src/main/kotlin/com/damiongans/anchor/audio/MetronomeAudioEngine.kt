@@ -52,22 +52,18 @@ class MetronomeAudioEngine(private val context: Context) :
     private var audioThread: Thread? = null
     @Volatile private var audioTrack: AudioTrack? = null
 
-    private val deviceCallback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        object : AudioDeviceCallback() {
-            override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>?) {
-                detectCurrentAudioDevice()
-            }
-            override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
-                detectCurrentAudioDevice()
-            }
+    private val deviceCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>?) {
+            detectCurrentAudioDevice()
         }
-    } else null
+        override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
+            detectCurrentAudioDevice()
+        }
+    }
 
     init {
         detectCurrentAudioDevice()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && deviceCallback != null) {
-            audioManager.registerAudioDeviceCallback(deviceCallback, mainHandler)
-        }
+        audioManager.registerAudioDeviceCallback(deviceCallback, mainHandler)
     }
 
     private fun getLowLatencyFramesPerBuffer(): Int {
@@ -86,20 +82,18 @@ class MetronomeAudioEngine(private val context: Context) :
     }
 
     private fun applyPreferredDeviceToTrack(track: AudioTrack, targetId: Int?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                if (targetId == null) {
-                    track.preferredDevice = null
-                } else {
-                    val rawDevices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-                    val matched = rawDevices.firstOrNull { it.id == targetId }
-                        ?: if (targetId == AudioRouteSelector.SPEAKER_DEVICE_ID) {
-                            rawDevices.firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
-                        } else null
-                    track.preferredDevice = matched
-                }
-            } catch (_: Exception) {
+        try {
+            if (targetId == null) {
+                track.preferredDevice = null
+            } else {
+                val rawDevices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                val matched = rawDevices.firstOrNull { it.id == targetId }
+                    ?: if (targetId == AudioRouteSelector.SPEAKER_DEVICE_ID) {
+                        rawDevices.firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+                    } else null
+                track.preferredDevice = matched
             }
+        } catch (_: Exception) {
         }
     }
 
@@ -110,17 +104,15 @@ class MetronomeAudioEngine(private val context: Context) :
      */
     override fun detectCurrentAudioDevice() {
         val discovered = mutableListOf<AudioOutputDevice>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val rawDevices = try {
-                audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-            } catch (_: Exception) {
-                emptyArray()
-            }
-            for (dev in rawDevices) {
-                if (!isMediaOutputSink(dev.type)) continue
-                val (type, name) = classifyDevice(dev)
-                discovered.add(AudioOutputDevice(id = dev.id, deviceType = type, name = name))
-            }
+        val rawDevices = try {
+            audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+        } catch (_: Exception) {
+            emptyArray()
+        }
+        for (dev in rawDevices) {
+            if (!isMediaOutputSink(dev.type)) continue
+            val (type, name) = classifyDevice(dev)
+            discovered.add(AudioOutputDevice(id = dev.id, deviceType = type, name = name))
         }
         val sortedDevices = AudioRouteSelector.normalize(discovered)
 
@@ -130,18 +122,16 @@ class MetronomeAudioEngine(private val context: Context) :
             preferredDeviceId = null
         }
 
-        val routedDevice: AudioOutputDevice? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                audioTrack?.routedDevice
-                    ?.takeIf { isMediaOutputSink(it.type) }
-                    ?.let { routed ->
-                        val (rType, rName) = classifyDevice(routed)
-                        AudioOutputDevice(routed.id, rType, rName)
-                    }
-            } catch (_: Exception) {
-                null
-            }
-        } else null
+        val routedDevice: AudioOutputDevice? = try {
+            audioTrack?.routedDevice
+                ?.takeIf { isMediaOutputSink(it.type) }
+                ?.let { routed ->
+                    val (rType, rName) = classifyDevice(routed)
+                    AudioOutputDevice(routed.id, rType, rName)
+                }
+        } catch (_: Exception) {
+            null
+        }
 
         val activeDevice = AudioRouteSelector.selectActive(sortedDevices, preferredDeviceId, routedDevice)
 
@@ -295,11 +285,9 @@ class MetronomeAudioEngine(private val context: Context) :
         standbyRequested = false
         stop()
         closeOutput()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && deviceCallback != null) {
-            try {
-                audioManager.unregisterAudioDeviceCallback(deviceCallback)
-            } catch (_: Exception) {}
-        }
+        try {
+            audioManager.unregisterAudioDeviceCallback(deviceCallback)
+        } catch (_: Exception) {}
     }
 
     private fun openOutputIfNeeded() {

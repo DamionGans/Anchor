@@ -2,6 +2,7 @@ package com.damiongans.anchor.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.damiongans.anchor.model.BeatAccent
 
 /**
@@ -10,13 +11,13 @@ import com.damiongans.anchor.model.BeatAccent
 class SharedPreferencesKeyValueStore(private val prefs: SharedPreferences) : IKeyValueStore {
     override fun contains(key: String): Boolean = prefs.contains(key)
     override fun getInt(key: String, default: Int): Int = prefs.getInt(key, default)
-    override fun putInt(key: String, value: Int) = prefs.edit().putInt(key, value).apply()
+    override fun putInt(key: String, value: Int) = prefs.edit { putInt(key, value) }
     override fun getFloat(key: String, default: Float): Float = prefs.getFloat(key, default)
-    override fun putFloat(key: String, value: Float) = prefs.edit().putFloat(key, value).apply()
+    override fun putFloat(key: String, value: Float) = prefs.edit { putFloat(key, value) }
     override fun getBoolean(key: String, default: Boolean): Boolean = prefs.getBoolean(key, default)
-    override fun putBoolean(key: String, value: Boolean) = prefs.edit().putBoolean(key, value).apply()
+    override fun putBoolean(key: String, value: Boolean) = prefs.edit { putBoolean(key, value) }
     override fun getString(key: String): String? = prefs.getString(key, null)
-    override fun putString(key: String, value: String) = prefs.edit().putString(key, value).apply()
+    override fun putString(key: String, value: String) = prefs.edit { putString(key, value) }
 }
 
 /**

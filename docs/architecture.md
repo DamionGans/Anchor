@@ -88,7 +88,9 @@ All application logic lives once in the `shared` Kotlin Multiplatform module. Pl
 
 ```text
 shared/src/commonMain/kotlin/com/damiongans/anchor/     # Shared logic (no platform imports)
-├── model/MetronomeModels.kt            # Immutable domain models
+├── model/
+│   ├── MetronomeModels.kt              # Immutable domain models
+│   └── PlaylistModels.kt               # Song & Playlist setlist domain models
 ├── domain/
 │   ├── DelayCompensationEngine.kt      # Frame-accurate visual/haptic/Bluetooth scheduler
 │   └── TapTempoCalculator.kt           # Tap tempo outlier filtering & pulse detection
@@ -103,7 +105,9 @@ shared/src/commonMain/kotlin/com/damiongans/anchor/     # Shared logic (no platf
 ├── playback/IPlaybackSession.kt        # System media controls contract
 ├── repository/
 │   ├── ISettingsRepository.kt          # Settings contract & default accent rules
-│   └── KeyValueSettingsRepository.kt   # Shared keys/defaults/clamping over IKeyValueStore
+│   ├── ISongLibraryRepository.kt       # Song library & playlists persistence contract
+│   ├── KeyValueSettingsRepository.kt   # Shared keys/defaults/clamping over IKeyValueStore
+│   └── KeyValueSongLibraryRepository.kt# Escaped & chunked song/playlist storage over IKeyValueStore
 ├── update/
 │   ├── IUpdateRepository.kt            # Update check contract & AppReleaseInfo
 │   └── ReleaseVersioning.kt            # GitHub repo config, asset selection, SemVer comparison

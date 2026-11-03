@@ -8,6 +8,8 @@ import com.damiongans.anchor.model.AccentColorOption
 import com.damiongans.anchor.model.AudioDeviceType
 import com.damiongans.anchor.model.AudioOutputInfo
 import com.damiongans.anchor.model.BeatAccent
+import com.damiongans.anchor.model.Playlist
+import com.damiongans.anchor.model.Song
 import com.damiongans.anchor.model.ButtonTriggerMode
 import com.damiongans.anchor.model.SoundSet
 import com.damiongans.anchor.model.Subdivision
@@ -20,6 +22,9 @@ import com.damiongans.anchor.playback.NoOpPlaybackSession
 import com.damiongans.anchor.playback.PlaybackCommandListener
 import com.damiongans.anchor.playback.PlaybackSessionState
 import com.damiongans.anchor.repository.ISettingsRepository
+import com.damiongans.anchor.repository.ISongLibraryRepository
+import com.damiongans.anchor.repository.InMemorySongLibraryRepository
+import com.damiongans.anchor.repository.KeyValueSongLibraryRepository
 import com.damiongans.anchor.update.AppReleaseInfo
 import com.damiongans.anchor.update.AppVersionInfo
 import com.damiongans.anchor.update.IUpdateRepository
@@ -31,6 +36,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 import kotlin.time.TimeSource
 
 data class MetronomeUiState(
@@ -71,8 +77,30 @@ data class MetronomeUiState(
     /** False for store / F-Droid builds, which are updated by their store. */
     val canCheckForUpdates: Boolean = true,
     /** Store that delivers updates for this build (e.g. "Google Play"), or null for GitHub builds. */
-    val updateStoreName: String? = null
+    val updateStoreName: String? = null,
+    /** Song library, in the order the user created or arranged it. */
+    val songs: List<Song> = emptyList(),
+    val playlists: List<Playlist> = emptyList(),
+    /** Playlist the set-list bar steps through, or null when none is selected. */
+    val activePlaylistId: String? = null,
+    /** Position of the loaded song inside the active playlist, or null. */
+    val activeSongIndex: Int? = null,
+    /** Library song whose settings were last loaded or saved, or null. */
+    val activeSongId: String? = null
 ) {
+    val activePlaylist: Playlist?
+        get() = playlists.firstOrNull { it.id == activePlaylistId }
+
+    val activeSong: Song?
+        get() = songs.firstOrNull { it.id == activeSongId }
+
+    /** True when the live bpm, meter or accents differ from the active song's stored values. */
+    val isActiveSongModified: Boolean
+        get() = activeSong?.let { song ->
+            song.bpm != bpm || song.totalBeats != totalBeats ||
+                song.subdivision != currentSubdivision || song.accents != accents
+        } ?: false
+
     val effectiveVisualDelayMs: Int
         get() = flashDelayMs + (if (audioInfo.deviceType == AudioDeviceType.BLUETOOTH) bluetoothCompensationMs else 0)
 
@@ -102,6 +130,8 @@ class MetronomeController(
     private val appVersion: AppVersionInfo,
     private val scope: CoroutineScope,
     private val playbackSession: IPlaybackSession = NoOpPlaybackSession(),
+    private val songLibraryRepository: ISongLibraryRepository =
+        settingsRepository as? ISongLibraryRepository ?: InMemorySongLibraryRepository(),
     private val tapCalculator: TapTempoCalculator = TapTempoCalculator(),
     private val clockMs: () -> Long = monotonicClockMs(),
     autoCheckForUpdates: Boolean = true
@@ -119,6 +149,11 @@ class MetronomeController(
 
     private val initialBpm = settingsRepository.getBpm()
     private val initialBeats = settingsRepository.getTotalBeats().coerceIn(1, ISettingsRepository.MAX_BEATS)
+
+    private val initialSongs = songLibraryRepository.getSongs()
+    private val initialPlaylists = songLibraryRepository.getPlaylists().map { playlist ->
+        playlist.copy(songIds = playlist.songIds.filter { id -> initialSongs.any { it.id == id } })
+    }
 
     private val _uiState = MutableStateFlow(
         MetronomeUiState(
@@ -139,7 +174,11 @@ class MetronomeController(
             accentColor = settingsRepository.getAccentColor(),
             audioInfo = audioEngine.currentAudioInfo,
             canCheckForUpdates = appVersion.channel.selfUpdates,
-            updateStoreName = appVersion.channel.storeName
+            updateStoreName = appVersion.channel.storeName,
+            songs = initialSongs,
+            playlists = initialPlaylists,
+            activePlaylistId = songLibraryRepository.getActivePlaylistId()
+                ?.takeIf { id -> initialPlaylists.any { it.id == id } }
         )
     )
     val uiState: StateFlow<MetronomeUiState> = _uiState.asStateFlow()
@@ -547,6 +586,227 @@ class MetronomeController(
             settingsRepository.setUpdateDeclined(release.tagName, true)
         }
         _uiState.update { it.copy(showUpdateDialog = false, isUpdateDeclined = true) }
+    }
+
+    // --- Song library & playlists ---
+
+    /** Saves the live bpm, meter and accents as a new library song and marks it active. */
+    fun saveCurrentAsSong(name: String): Song {
+        val state = _uiState.value
+        val song = createSong(name, state.bpm, state.totalBeats, state.currentSubdivision, state.accents)
+        _uiState.update { it.copy(activeSongId = song.id) }
+        refreshActiveSongIndex()
+        return song
+    }
+
+    /** Adds a song with explicit values to the library (does not load it). */
+    fun createSong(
+        name: String,
+        bpm: Int,
+        totalBeats: Int,
+        subdivision: Subdivision,
+        accents: List<BeatAccent>
+    ): Song {
+        val song = KeyValueSongLibraryRepository.normalizeSong(
+            Song(newId(), name, bpm, totalBeats, subdivision, accents)
+        )
+        commitLibrary(songs = _uiState.value.songs + song)
+        return song
+    }
+
+    /** Replaces a song's stored values; the live metronome is not changed. */
+    fun updateSong(
+        songId: String,
+        name: String,
+        bpm: Int,
+        totalBeats: Int,
+        subdivision: Subdivision,
+        accents: List<BeatAccent>
+    ) {
+        val songs = _uiState.value.songs
+        if (songs.none { it.id == songId }) return
+        val updated = KeyValueSongLibraryRepository.normalizeSong(
+            Song(songId, name, bpm, totalBeats, subdivision, accents)
+        )
+        commitLibrary(songs = songs.map { if (it.id == songId) updated else it })
+    }
+
+    /** Overwrites a library song with the live bpm, meter and accents (name unchanged). */
+    fun updateSongFromCurrent(songId: String) {
+        val state = _uiState.value
+        val song = state.songs.firstOrNull { it.id == songId } ?: return
+        updateSong(songId, song.name, state.bpm, state.totalBeats, state.currentSubdivision, state.accents)
+        _uiState.update { it.copy(activeSongId = songId) }
+        refreshActiveSongIndex()
+    }
+
+    fun renameSong(songId: String, name: String) {
+        val song = _uiState.value.songs.firstOrNull { it.id == songId } ?: return
+        updateSong(songId, name, song.bpm, song.totalBeats, song.subdivision, song.accents)
+    }
+
+    /** Deletes a song from the library and from every playlist. */
+    fun deleteSong(songId: String) {
+        val state = _uiState.value
+        if (state.songs.none { it.id == songId }) return
+        val playlists = state.playlists.map { p -> p.copy(songIds = p.songIds.filter { it != songId }) }
+        commitLibrary(songs = state.songs.filter { it.id != songId }, playlists = playlists)
+        if (state.activeSongId == songId) {
+            _uiState.update { it.copy(activeSongId = null, activeSongIndex = null) }
+        } else {
+            refreshActiveSongIndex()
+        }
+    }
+
+    fun createPlaylist(name: String): Playlist {
+        val playlist = Playlist(newId(), name.trim(), emptyList())
+        commitLibrary(playlists = _uiState.value.playlists + playlist)
+        return playlist
+    }
+
+    fun renamePlaylist(playlistId: String, name: String) =
+        editPlaylist(playlistId) { it.copy(name = name.trim()) }
+
+    fun deletePlaylist(playlistId: String) {
+        val state = _uiState.value
+        if (state.playlists.none { it.id == playlistId }) return
+        commitLibrary(playlists = state.playlists.filter { it.id != playlistId })
+        if (state.activePlaylistId == playlistId) setActivePlaylist(null, null)
+    }
+
+    fun addSongToPlaylist(playlistId: String, songId: String) {
+        if (_uiState.value.songs.none { it.id == songId }) return
+        editPlaylist(playlistId) { it.copy(songIds = it.songIds + songId) }
+    }
+
+    fun removeSongFromPlaylist(playlistId: String, index: Int) {
+        val state = _uiState.value
+        val playlist = state.playlists.firstOrNull { it.id == playlistId } ?: return
+        if (index !in playlist.songIds.indices) return
+        editPlaylist(playlistId) { p -> p.copy(songIds = p.songIds.filterIndexed { i, _ -> i != index }) }
+        val current = state.activeSongIndex
+        if (playlistId == state.activePlaylistId && current != null) {
+            // Removing the loaded entry keeps its settings live but clears the set list position.
+            val shifted = when {
+                index == current -> null
+                index < current -> current - 1
+                else -> current
+            }
+            _uiState.update { it.copy(activeSongIndex = shifted) }
+        }
+    }
+
+    fun moveSongInPlaylist(playlistId: String, fromIndex: Int, toIndex: Int) {
+        val state = _uiState.value
+        val playlist = state.playlists.firstOrNull { it.id == playlistId } ?: return
+        if (fromIndex !in playlist.songIds.indices || toIndex !in playlist.songIds.indices) return
+        editPlaylist(playlistId) { p ->
+            val ids = p.songIds.toMutableList()
+            ids.add(toIndex, ids.removeAt(fromIndex))
+            p.copy(songIds = ids)
+        }
+        val current = state.activeSongIndex
+        if (playlistId == state.activePlaylistId && current != null) {
+            val moved = when {
+                current == fromIndex -> toIndex
+                fromIndex < current && toIndex >= current -> current - 1
+                fromIndex > current && toIndex <= current -> current + 1
+                else -> current
+            }
+            _uiState.update { it.copy(activeSongIndex = moved) }
+        }
+    }
+
+    /** Applies a library song's bpm, meter and accents (also while playing; never starts or stops playback). */
+    fun loadSong(songId: String) {
+        val song = _uiState.value.songs.firstOrNull { it.id == songId } ?: return
+        applySong(song)
+        _uiState.update { it.copy(activeSongId = song.id) }
+        refreshActiveSongIndex()
+    }
+
+    /** Makes a playlist active and loads its first song; null clears the active playlist. */
+    fun selectPlaylist(playlistId: String?) {
+        val playlist = _uiState.value.playlists.firstOrNull { it.id == playlistId }
+        if (playlist == null) {
+            setActivePlaylist(null, null)
+            return
+        }
+        setActivePlaylist(playlist.id, null)
+        if (playlist.songIds.isNotEmpty()) selectPlaylistSong(0)
+    }
+
+    /** Loads the song at [index] of the active playlist. */
+    fun selectPlaylistSong(index: Int) {
+        val state = _uiState.value
+        val songId = state.activePlaylist?.songIds?.getOrNull(index) ?: return
+        val song = state.songs.firstOrNull { it.id == songId } ?: return
+        applySong(song)
+        _uiState.update { it.copy(activeSongId = song.id, activeSongIndex = index) }
+    }
+
+    /** Loads the next song of the active playlist (no wrap; no-op at the end). */
+    fun nextSong() {
+        val index = _uiState.value.activeSongIndex
+        selectPlaylistSong(if (index == null) 0 else index + 1)
+    }
+
+    /** Loads the previous song of the active playlist (no wrap; no-op at the start). */
+    fun previousSong() {
+        val index = _uiState.value.activeSongIndex ?: return
+        if (index > 0) selectPlaylistSong(index - 1)
+    }
+
+    private fun applySong(song: Song) {
+        setBpm(song.bpm)
+        setTimeSignature(song.totalBeats, song.subdivision)
+        val accents = song.accents.take(song.totalBeats)
+        for (i in accents.indices) rememberedAccents[i] = accents[i]
+        audioEngine.accents = accents
+        settingsRepository.setAccents(accents)
+        _uiState.update { it.copy(accents = accents) }
+    }
+
+    private fun setActivePlaylist(playlistId: String?, songIndex: Int?) {
+        songLibraryRepository.setActivePlaylistId(playlistId)
+        _uiState.update { it.copy(activePlaylistId = playlistId, activeSongIndex = songIndex) }
+    }
+
+    private inline fun editPlaylist(playlistId: String, transform: (Playlist) -> Playlist) {
+        val playlists = _uiState.value.playlists
+        if (playlists.none { it.id == playlistId }) return
+        commitLibrary(playlists = playlists.map { if (it.id == playlistId) transform(it) else it })
+    }
+
+    private fun commitLibrary(
+        songs: List<Song> = _uiState.value.songs,
+        playlists: List<Playlist> = _uiState.value.playlists
+    ) {
+        songLibraryRepository.setSongs(songs)
+        songLibraryRepository.setPlaylists(playlists)
+        _uiState.update { it.copy(songs = songs, playlists = playlists) }
+    }
+
+    /** Keeps the set list position pointing at the active song when it is in the active playlist. */
+    private fun refreshActiveSongIndex() {
+        _uiState.update { state ->
+            val ids = state.activePlaylist?.songIds.orEmpty()
+            val current = state.activeSongIndex
+            val index = when {
+                state.activeSongId == null -> null
+                current != null && ids.getOrNull(current) == state.activeSongId -> current
+                else -> ids.indexOf(state.activeSongId).takeIf { it >= 0 }
+            }
+            state.copy(activeSongIndex = index)
+        }
+    }
+
+    private fun newId(): String {
+        val taken = _uiState.value.songs.map { it.id } + _uiState.value.playlists.map { it.id }
+        while (true) {
+            val id = Random.nextLong().toULong().toString(36)
+            if (id !in taken) return id
+        }
     }
 
     /** Releases audio, haptics, and system media resources. Call when the owner is destroyed. */

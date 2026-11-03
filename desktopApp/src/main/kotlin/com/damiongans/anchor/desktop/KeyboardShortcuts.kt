@@ -12,6 +12,7 @@ import com.damiongans.anchor.viewmodel.MetronomeController
  * - Space: play / pause
  * - Up / Down (or + / -): tempo ±1 BPM; with Shift: ±5 BPM
  * - T: tap tempo
+ * - PageUp / PageDown (or [ / ]): previous / next song in active playlist
  */
 internal object KeyboardShortcuts {
 
@@ -30,6 +31,12 @@ internal object KeyboardShortcuts {
             }
             Key.T -> {
                 controller.tapTempo(); true
+            }
+            Key.PageUp, Key.LeftBracket -> {
+                controller.previousSong(); true
+            }
+            Key.PageDown, Key.RightBracket -> {
+                controller.nextSong(); true
             }
             else -> false
         }

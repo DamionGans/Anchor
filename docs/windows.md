@@ -24,6 +24,7 @@ The installers are not code-signed yet, so Windows SmartScreen may show "Windows
 | Up / Down (or + / −) | Tempo +1 / −1 BPM |
 | Shift + Up / Down | Tempo +5 / −5 BPM |
 | T | Tap tempo |
+| PageUp / PageDown (or `[` / `]`) | Previous / next song in active playlist |
 
 ## Architecture
 

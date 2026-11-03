@@ -31,8 +31,8 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 private data class ChangelogEntry(val title: String, val description: String)
 
 private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Tablet & Desktop Studio Layout", "Wide screens on tablets, landscape phones, and desktop PCs now arrange the pendulum and beat bar alongside the tempo and transport controls."),
-    ChangelogEntry("Scalable Pendulum & Beat Bar", "The pendulum arm, counterweight, and beat pills scale proportionally to fit large studio displays as well as compact phone screens.")
+    ChangelogEntry("Playlists & Song Library", "Save songs with custom name, BPM, time signature, subdivision, and beat accents into your library, and organize them into ordered set lists."),
+    ChangelogEntry("Live Set-List Stepping", "Step through songs from the main screen set-list bar (or with PageUp / PageDown on Windows) while the metronome keeps playing without losing the beat.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

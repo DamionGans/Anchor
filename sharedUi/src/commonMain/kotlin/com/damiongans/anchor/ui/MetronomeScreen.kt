@@ -50,7 +50,9 @@ import com.damiongans.anchor.model.AudioOutputInfo
 import com.damiongans.anchor.ui.components.BeatBar
 import com.damiongans.anchor.ui.components.PendulumVisualizer
 import com.damiongans.anchor.ui.components.QuickControlsBar
+import com.damiongans.anchor.ui.components.SetlistBar
 import com.damiongans.anchor.ui.components.TempoControls
+import com.damiongans.anchor.ui.dialogs.PlaylistsBottomSheet
 import com.damiongans.anchor.ui.dialogs.SettingsBottomSheet
 import com.damiongans.anchor.ui.dialogs.TimeSignatureDialog
 import com.damiongans.anchor.ui.dialogs.UpdateAvailableDialog
@@ -70,6 +72,7 @@ fun MetronomeScreen(
 
     var showTimeSignatureDialog by remember { mutableStateOf(false) }
     var showSettingsSheet by remember { mutableStateOf(false) }
+    var showPlaylistsSheet by remember { mutableStateOf(false) }
 
     // Flash background color animation with instantaneous onset (zero-lag strobe)
     val flashColor by animateColorAsState(
@@ -100,7 +103,8 @@ fun MetronomeScreen(
         ) {
             val screenWidth = maxWidth
             val screenHeight = maxHeight
-            val isWideLayout = screenWidth >= 680.dp || (screenWidth >= 560.dp && screenWidth > screenHeight * 1.15f)
+            val isWideLayout = screenHeight >= 480.dp &&
+                (screenWidth >= 680.dp || (screenWidth >= 560.dp && screenWidth > screenHeight * 1.15f))
             val isSpacious = screenWidth >= 820.dp && screenHeight >= 540.dp
 
             if (isWideLayout) {
@@ -115,12 +119,24 @@ fun MetronomeScreen(
                         .widthIn(max = 1140.dp)
                         .heightIn(max = 760.dp)
                         .align(Alignment.Center),
-                    verticalArrangement = Arrangement.spacedBy(if (screenHeight >= 620.dp) 16.dp else 10.dp)
+                    verticalArrangement = Arrangement.spacedBy(if (screenHeight >= 620.dp) 14.dp else 8.dp)
                 ) {
                     TopBar(
                         audioInfo = state.audioInfo,
+                        hasActiveSetlist = state.activePlaylist != null || state.activeSong != null,
                         onSelectAudioOutput = { deviceId -> controller.selectAudioOutputDevice(deviceId) },
+                        onPlaylistsClick = { showPlaylistsSheet = true },
                         onSettingsClick = { showSettingsSheet = true }
+                    )
+
+                    SetlistBar(
+                        activePlaylist = state.activePlaylist,
+                        activeSong = state.activeSong,
+                        activeSongIndex = state.activeSongIndex,
+                        isActiveSongModified = state.isActiveSongModified,
+                        onPreviousSong = { controller.previousSong() },
+                        onNextSong = { controller.nextSong() },
+                        onOpenPlaylistsSheet = { showPlaylistsSheet = true }
                     )
 
                     Row(
@@ -222,8 +238,21 @@ fun MetronomeScreen(
                     // Top App Bar
                     TopBar(
                         audioInfo = state.audioInfo,
+                        hasActiveSetlist = state.activePlaylist != null || state.activeSong != null,
                         onSelectAudioOutput = { deviceId -> controller.selectAudioOutputDevice(deviceId) },
+                        onPlaylistsClick = { showPlaylistsSheet = true },
                         onSettingsClick = { showSettingsSheet = true }
+                    )
+
+                    SetlistBar(
+                        activePlaylist = state.activePlaylist,
+                        activeSong = state.activeSong,
+                        activeSongIndex = state.activeSongIndex,
+                        isActiveSongModified = state.isActiveSongModified,
+                        onPreviousSong = { controller.previousSong() },
+                        onNextSong = { controller.nextSong() },
+                        onOpenPlaylistsSheet = { showPlaylistsSheet = true },
+                        modifier = Modifier.padding(vertical = 2.dp)
                     )
 
                     // Pendulum Physical Visualizer (dynamically scales to fit space)
@@ -333,12 +362,48 @@ fun MetronomeScreen(
             onDismiss = { showSettingsSheet = false }
         )
     }
+
+    if (showPlaylistsSheet) {
+        PlaylistsBottomSheet(
+            songs = state.songs,
+            playlists = state.playlists,
+            activePlaylistId = state.activePlaylistId,
+            activeSongIndex = state.activeSongIndex,
+            activeSongId = state.activeSongId,
+            isActiveSongModified = state.isActiveSongModified,
+            currentBpm = state.bpm,
+            currentTotalBeats = state.totalBeats,
+            currentSubdivision = state.currentSubdivision,
+            currentAccents = state.accents,
+            onSaveCurrentAsSong = { name -> controller.saveCurrentAsSong(name) },
+            onCreateSong = { name, bpm, beats, sub, accents ->
+                controller.createSong(name, bpm, beats, sub, accents)
+            },
+            onUpdateSong = { id, name, bpm, beats, sub, accents ->
+                controller.updateSong(id, name, bpm, beats, sub, accents)
+            },
+            onUpdateSongFromCurrent = { id -> controller.updateSongFromCurrent(id) },
+            onDeleteSong = { id -> controller.deleteSong(id) },
+            onLoadSong = { id -> controller.loadSong(id) },
+            onCreatePlaylist = { name -> controller.createPlaylist(name) },
+            onRenamePlaylist = { id, name -> controller.renamePlaylist(id, name) },
+            onDeletePlaylist = { id -> controller.deletePlaylist(id) },
+            onAddSongToPlaylist = { playlistId, songId -> controller.addSongToPlaylist(playlistId, songId) },
+            onRemoveSongFromPlaylist = { playlistId, idx -> controller.removeSongFromPlaylist(playlistId, idx) },
+            onMoveSongInPlaylist = { playlistId, from, to -> controller.moveSongInPlaylist(playlistId, from, to) },
+            onSelectPlaylist = { id -> controller.selectPlaylist(id) },
+            onSelectPlaylistSong = { idx -> controller.selectPlaylistSong(idx) },
+            onDismiss = { showPlaylistsSheet = false }
+        )
+    }
 }
 
 @Composable
 private fun TopBar(
     audioInfo: AudioOutputInfo,
+    hasActiveSetlist: Boolean,
     onSelectAudioOutput: (Int?) -> Unit,
+    onPlaylistsClick: () -> Unit,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -504,6 +569,35 @@ private fun TopBar(
                         }
                     }
                 }
+            }
+
+            // Playlists & Song Library Button
+            IconButton(
+                onClick = onPlaylistsClick,
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (hasActiveSetlist) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        }
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (hasActiveSetlist) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                        shape = CircleShape
+                    )
+                    .testTag("top_playlists_button")
+            ) {
+                Icon(
+                    imageVector = AnchorIcons.QueueMusic,
+                    contentDescription = "Playlists & Song Library",
+                    tint = if (hasActiveSetlist) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(20.dp)
+                )
             }
 
             // Settings Button
