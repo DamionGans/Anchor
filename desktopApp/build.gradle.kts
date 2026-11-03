@@ -13,7 +13,7 @@ plugins {
 
 val appVersionName: String = (project.findProperty("versionName") as? String)
   ?: System.getenv("APP_VERSION_NAME")
-  ?: "1.7.1"
+  ?: "1.7.2"
 
 kotlin {
   compilerOptions {

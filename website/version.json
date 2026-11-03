@@ -1,16 +1,16 @@
 {
-  "version": "1.7.1",
-  "versionCode": 10701,
-  "releaseTag": "v1.7.1",
+  "version": "1.7.2",
+  "versionCode": 10702,
+  "releaseTag": "v1.7.2",
   "releaseDate": "2026-11-02",
-  "apkName": "Anchor-v1.7.1.apk",
-  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.7.1/Anchor-v1.7.1.apk",
+  "apkName": "Anchor-v1.7.2.apk",
+  "downloadUrl": "https://github.com/DamionGans/Anchor/releases/download/v1.7.2/Anchor-v1.7.2.apk",
   "repoUrl": "https://github.com/DamionGans/Anchor",
   "minSdk": 24,
   "targetSdk": 36,
-  "fileSizeApprox": "~2.1 MB",
+  "fileSizeApprox": "~2 MB",
   "highlights": [
-    "Ensured cold-start audio warmup dither always spans at least 55 ms across all sample rates before Beat 1 fires",
-    "Added full specification test coverage across Android, Windows (x64 & ARM64), and iPhone, and trimmed unused Android assets"
+    "Remade the website and guides to highlight musician-first advantages: stage setlists, unclipped count-ins, and zero ads",
+    "Added practical musician use cases, transparent pricing, and streamlined navigation across desktop and mobile"
   ]
 }
