@@ -124,7 +124,7 @@ data class SongLibrary(
      * occurrence in the active playlist (null when the song is not in it).
      */
     fun withActiveSong(songId: String?, index: Int? = null): SongLibrary {
-        if (songId == null) return copy(activeSongId = null, activeSongIndex = null)
+        if (songId == null || song(songId) == null) return copy(activeSongId = null, activeSongIndex = null)
         val ids = activePlaylist?.songIds.orEmpty()
         val position = when {
             index != null && ids.getOrNull(index) == songId -> index
