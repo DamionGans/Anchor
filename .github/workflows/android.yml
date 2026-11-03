@@ -202,10 +202,11 @@ jobs:
           echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT
 
       # github flavor -> GitHub Release APK; fdroid flavor -> build check (F-Droid builds and signs
-      # its own copy); play flavor -> AAB for the paid Google Play listing.
-      - name: Build Reproducible Release APK & Play Bundle
+      # its own copy); play flavor -> APK for the permission check below. The Play AAB is built
+      # in its own step with the dedicated Play upload key.
+      - name: Build Reproducible Release APKs
         run: |
-          ./gradlew assembleGithubRelease assembleFdroidRelease assemblePlayRelease bundlePlayRelease \
+          ./gradlew assembleGithubRelease assembleFdroidRelease assemblePlayRelease \
             -PversionName="${{ steps.prepare_release.outputs.version_name }}" \
             -PversionCode="${{ steps.prepare_release.outputs.version_code }}" \
             -PreleaseTag="${{ steps.prepare_release.outputs.release_tag }}"
@@ -261,14 +262,45 @@ jobs:
           fi
           echo "Play build has no INTERNET permission; GitHub build keeps it for update checks."
 
-      - name: Stage Play Store Bundle
+      # Play bundle: signed only with the dedicated Play upload key (Play App Signing holds the
+      # app signing key). Skipped until the PLAY_UPLOAD_* secrets exist; never debug-signed.
+      - name: Build Play Store Bundle (upload key)
+        id: play_bundle
+        env:
+          PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
+          PLAY_UPLOAD_STORE_PASSWORD: ${{ secrets.PLAY_UPLOAD_STORE_PASSWORD }}
+          PLAY_UPLOAD_KEY_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
+          if [ -z "${PLAY_UPLOAD_KEYSTORE_BASE64}" ]; then
+            echo "::notice::PLAY_UPLOAD_KEYSTORE_BASE64 is not set; skipping the Play bundle (see docs/play-store.md)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          KEYSTORE="${RUNNER_TEMP}/play-upload.jks"
+          echo "${PLAY_UPLOAD_KEYSTORE_BASE64}" | tr -d '\r\n' | base64 -d > "${KEYSTORE}"
+          KEYSTORE_PATH="${KEYSTORE}" STORE_PASSWORD="${PLAY_UPLOAD_STORE_PASSWORD}" KEY_PASSWORD="${PLAY_UPLOAD_KEY_PASSWORD}" \
+            ./gradlew bundlePlayRelease \
+              -PversionName="${{ steps.prepare_release.outputs.version_name }}" \
+              -PversionCode="${{ steps.prepare_release.outputs.version_code }}" \
+              -PreleaseTag="${{ steps.prepare_release.outputs.release_tag }}"
+          rm -f "${KEYSTORE}"
+
+          AAB=androidApp/build/outputs/bundle/playRelease/androidApp-play-release.aab
+          OWNER=$(keytool -printcert -jarfile "${AAB}" | grep -m1 "Owner:")
+          echo "Play bundle signer: ${OWNER}"
+          if echo "${OWNER}" | grep -q "CN=Android Debug"; then
+            echo "::error::The Play bundle is signed with the debug key; Google Play rejects it."
+            exit 1
+          fi
+
           mkdir -p store-artifacts
-          cp androidApp/build/outputs/bundle/playRelease/androidApp-play-release.aab \
-            "store-artifacts/Anchor-${{ steps.prepare_release.outputs.release_tag }}-play.aab"
+          cp "${AAB}" "store-artifacts/Anchor-${{ steps.prepare_release.outputs.release_tag }}-play.aab"
           ls -la store-artifacts/
+          echo "ready=true" >> "$GITHUB_OUTPUT"
 
       - name: Upload Play Store Bundle to Workflow
+        if: steps.play_bundle.outputs.ready == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: play-bundle
@@ -377,7 +409,7 @@ jobs:
   # ===========================================================================
   # Google Play Upload (v* tags only; skipped until the Play secrets exist)
   # Requires secrets: PLAY_SERVICE_ACCOUNT_JSON (Play Console API service account)
-  # and SIGNING_KEYSTORE_BASE64 (real upload key; never the committed debug keystore).
+  # and PLAY_UPLOAD_KEYSTORE_BASE64 (+ passwords): the Play upload key, never the debug keystore.
   # The very first Play release must be uploaded manually in the Play Console.
   # ===========================================================================
   publish-play:
@@ -389,7 +421,7 @@ jobs:
       contents: read
     env:
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-      HAS_UPLOAD_KEY: ${{ secrets.SIGNING_KEYSTORE_BASE64 != '' }}
+      HAS_UPLOAD_KEY: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 != '' }}
     steps:
       - name: Check Play Publishing Secrets
         id: secrets
