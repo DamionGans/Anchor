@@ -7,6 +7,7 @@ import kotlin.test.assertTrue
 
 class WindowsArchTest {
 
+    /** SPEC-UPDATE-001 */
     @Test
     fun mapsJvmArchitectureNames() {
         assertEquals(WindowsArch.X64, WindowsArch.fromOsArch("amd64"))

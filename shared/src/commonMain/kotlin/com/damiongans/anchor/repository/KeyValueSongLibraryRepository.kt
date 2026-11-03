@@ -1,5 +1,6 @@
 package com.damiongans.anchor.repository
 
+import com.damiongans.anchor.domain.SongLibrary
 import com.damiongans.anchor.model.BeatAccent
 import com.damiongans.anchor.model.Playlist
 import com.damiongans.anchor.model.Song
@@ -44,7 +45,7 @@ class KeyValueSongLibraryRepository(private val store: IKeyValueStore) : ISongLi
         val accents = if (f[5].isEmpty()) emptyList() else f[5].split(",").map { token ->
             BeatAccent.entries.firstOrNull { it.name == token } ?: return null
         }
-        return normalizeSong(
+        return SongLibrary.normalize(
             Song(
                 id = unescape(f[0]).ifEmpty { return null },
                 name = unescape(f[1]),
@@ -90,18 +91,6 @@ class KeyValueSongLibraryRepository(private val store: IKeyValueStore) : ISongLi
         const val KEY_PLAYLISTS = "playlists_v1"
         const val KEY_ACTIVE_PLAYLIST = "active_playlist_id"
         private const val CHUNK_LENGTH = 4000
-
-        /** Clamps a song to the ranges the metronome supports and sizes its accents to its beats. */
-        fun normalizeSong(song: Song): Song {
-            val beats = song.totalBeats.coerceIn(1, ISettingsRepository.MAX_BEATS)
-            val defaults = ISettingsRepository.defaultAccentsForBeats(beats)
-            return song.copy(
-                name = song.name.trim(),
-                bpm = song.bpm.coerceIn(20, 300),
-                totalBeats = beats,
-                accents = List(beats) { i -> song.accents.getOrNull(i) ?: defaults[i] }
-            )
-        }
 
         private fun escape(text: String): String = buildString {
             for (c in text) {

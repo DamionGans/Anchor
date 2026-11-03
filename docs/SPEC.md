@@ -12,6 +12,8 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 | --- | --- |
 | `SPEC-PROD-001` | **Product Identity**: Full name is `"Anchor Metronome"` (≤30 characters, no emojis); short display name is `"Anchor"`; tagline is `"Rock-solid time for serious play"`. |
 | `SPEC-PROD-002` | **Distribution Channels**: `DistributionChannel` supports `GITHUB`, `FDROID`, `PLAY_STORE`, and `APP_STORE`. Only `DistributionChannel.GITHUB` enables self-update checks (`canCheckForUpdates == true`, `updateStoreName == null`). Store channels (`FDROID`, `PLAY_STORE`, `APP_STORE`) disable in-app GitHub update checks (`canCheckForUpdates == false`) and expose their store display name (`"F-Droid"`, `"Google Play"`, `"the App Store"`). |
+| `SPEC-PROD-003` | **Offline Store Builds & Least Privilege**: The `fdroid` and `play` flavors remove `INTERNET` (`tools:node="remove"`), so they make no network calls; the main manifest requests only `INTERNET` (GitHub build), `VIBRATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` and `POST_NOTIFICATIONS`, disables cleartext traffic, and never requests install-packages or storage permissions. |
+| `SPEC-PROD-004` | **Windows MSI Packaging Per Architecture**: Windows desktop builds package per-user MSI installers (`perUserInstall = true`, fixed `upgradeUuid`) for both `x64` (`Anchor-vX.Y.Z-windows-x64.msi`) and `arm64` (`Anchor-vX.Y.Z-windows-arm64.msi`) on matching CI runners (`windows-latest` and `windows-11-arm`). |
 
 ---
 
@@ -19,11 +21,13 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 
 | ID | Requirement |
 | --- | --- |
-| `SPEC-TEMPO-001` | **BPM Bounds & Default**: Tempo is an integer clamped to `20..300` BPM (`MetronomeUiState.MIN_BPM = 20`, `MAX_BPM = 300`), defaulting to `120` BPM. |
-| `SPEC-TEMPO-002` | **BPM Adjustments**: `setBpm(target)` clamps to `20..300` and persists immediately; `adjustBpm(delta)` adjusts relative to current BPM within `20..300`. |
+| `SPEC-TEMPO-001` | **BPM Bounds & Default**: Tempo is an integer clamped to `20..300` BPM (`MetronomeController.MIN_BPM`/`MAX_BPM`), defaulting to `120` BPM on first launch. |
+| `SPEC-TEMPO-002` | **BPM Adjustments**: `setBpm(bpm)` clamps to `20..300`, updates the engine and persists immediately; `adjustBpm(delta)` and `multiplyBpm(factor)` derive from the current BPM and go through the same clamp. |
 | `SPEC-TEMPO-003` | **Tempo Markings**: Classical Italian tempo markings map deterministically across `20..300` BPM: `Larghissimo` (20–39), `Grave` (40–49), `Largo` (50–59), `Adagio` (60–71), `Andante` (72–87), `Moderato` (88–107), `Allegretto` (108–119), `Allegro` (120–155), `Vivace` (156–175), `Presto` (176–199), `Prestissimo` (200–300). |
-| `SPEC-TEMPO-004` | **Tap Tempo Calculation**: `TapTempoCalculator` computes BPM from recent tap timestamps, resets after a pause exceeding the reset threshold, clamps calculated BPM to `20..300`, and updates controller BPM from the second tap onward. |
+| `SPEC-TEMPO-004` | **Tap Tempo**: `TapTempoCalculator` needs at least 2 taps to produce a BPM (`bpmToApply`), filters outlier intervals once 4+ intervals exist, reports a confidence value and locks at 3+ taps with confidence ≥ 70; the controller applies `bpmToApply` (clamped to `20..300`) and resets the tap state after `TAP_RESET_MS` (2500 ms) without taps. |
 | `SPEC-TEMPO-005` | **Button Trigger Mode**: Play/Pause and Tap Tempo buttons support `ButtonTriggerMode.ON_PRESS` (fires on initial press down, default) and `ButtonTriggerMode.ON_RELEASE` (fires on pointer release). |
+| `SPEC-TRANSPORT-001` | **Play / Pause**: `togglePlayPause()`, `play()` and `pause()` start and stop the audio engine and update `isPlaying` and the media session; pausing cancels pending haptics and resets the visual beat, flash and pendulum. Output standby (`setOutputStandby`) is passed straight to the engine and never starts playback by itself. |
+| `SPEC-FEEDBACK-001` | **Visual & Haptic Feedback**: Each played beat updates `currentBeat`/`currentSubdivisionIndex` and the accent flag; with flash enabled, the first tick of a beat raises `flashPulse` for `FLASH_DURATION_MS` (65 ms); with vibration enabled, beats trigger haptics. Flash and vibration are off by default, toggled with `toggleFlash()` / `toggleVibration()`, and persisted. |
 
 ---
 
@@ -31,9 +35,9 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 
 | ID | Requirement |
 | --- | --- |
-| `SPEC-METER-001` | **Beat Count Bounds & Default**: Beats per bar (`totalBeats`) is clamped to `1..16` (`MIN_BEATS = 1`, `MAX_BEATS = 16`), defaulting to `4` (`4/4` time). |
+| `SPEC-METER-001` | **Beat Count Bounds & Default**: Beats per bar (`totalBeats`) is clamped to `1..16` (`ISettingsRepository.MAX_BEATS = 16`), defaulting to `4`. |
 | `SPEC-METER-002` | **Subdivisions**: Supported subdivisions are `QUARTER` (1 tick/beat), `EIGHTH` (2 ticks/beat), `TRIPLET` (3 ticks/beat), and `SIXTEENTH` (4 ticks/beat). |
-| `SPEC-METER-003` | **Time Signature Display & Presets**: `timeSignatureDisplay` renders `"$totalBeats/8"` when `subdivision == Subdivision.EIGHTH` and `"$totalBeats/4"` otherwise. Standard `TimeSignaturePreset` entries configure both beat count and subdivision. |
+| `SPEC-METER-003` | **Meter Display & Presets**: The meter is shown as `totalBeats/8` when the subdivision is `EIGHTH` and `totalBeats/4` otherwise (`MetronomeUiState.timeSignatureDenominator`, `Song.timeSignatureDisplay`). `TimeSignaturePreset` (1/4, 2/4, 3/4, 4/4, 5/4, 6/8, 7/8, 9/8, 12/8) sets beat count and subdivision together. |
 | `SPEC-ACCENT-001` | **Beat Accent Cycling**: Each beat has a `BeatAccent` state that cycles `ACCENT -> REGULAR -> SUB -> MUTE -> ACCENT` when tapped via `cycleBeatAccent(index)`. Default pattern for `N` beats is `[ACCENT, REGULAR, REGULAR, ...]`. |
 | `SPEC-ACCENT-002` | **16-Beat Accent Memory**: Modifying a beat's accent updates the 16-entry `rememberedAccents` list at that index. Changing `totalBeats` restores `rememberedAccents.take(newBeats)` so switching meters preserves custom accent patterns. |
 
@@ -43,14 +47,16 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 
 | ID | Requirement |
 | --- | --- |
-| `SPEC-AUDIO-001` | **Click Sound Sets & Pitch**: `ClickSynthesizer` pre-renders 16-bit mono PCM (`ShortArray`) for all 6 `SoundSet`s (`TICK`, `CLICK`, `WOODBLOCK`, `COWBELL`, `BEEP`, `HI_HAT`) across `ACCENT`, `REGULAR`, and `SUB` click types with configurable `pitchMultiplier` (`0.5f..2.0f`, default `1.0f`) and zero allocations on the audio thread. |
-| `SPEC-AUDIO-002` | **Warmup Dither**: On cold starts, `MetronomeSequencer` writes ≥55 ms (`warmupChunkCount(sampleRate, chunkFrames)`) of ±1 LSB dither (`fillWarmupDither`) before Beat 1 so OS/Bluetooth DACs wake up without clipping Beat 1. |
-| `SPEC-AUDIO-003` | **Standby Alignment (`alignToOutputFrame`)**: When output standby is active, pressing Play aligns Beat 1 to the next output chunk (`alignToOutputFrame`) and only adds warmup frames if fewer than `warmupFrames` have been written since stream start. |
-| `SPEC-AUDIO-004` | **Audio Route Selection**: `AudioRouteSelector.normalize` always includes the Built-in Speaker even when empty or only external routes are reported; selecting a disconnected route falls back to Built-in Speaker; Bluetooth status is tracked from the active route. |
-| `SPEC-PULSE-001` | **Single Beat-Phase Accumulator & Slew-Limited BPM**: `MetronomeSequencer` advances a single continuous `beatPhase += currentBpm / (60.0 * sampleRate)` accumulator, slewing `currentBpm` toward `targetBpm` by at most `MAX_BPM_STEP_PER_CHUNK` (`5.0` BPM/chunk) so rapid tempo adjustments never click, stutter, or jump backwards. |
+| `SPEC-AUDIO-001` | **Click Sounds & Pitch**: `ClickSynthesizer` pre-renders 16-bit mono PCM (`ShortArray`) clicks for every `SoundSet` (`WOODBLOCK` default, `MECHANICAL`, `DIGITAL`, `RIMSHOT`, `ELECTRO_808`) and accent level (`ACCENT`, `REGULAR`, `SUB`; `MUTE` is silent), scaled by `pitchMultiplier` (`0.5..2.0`, default `1.0`), with no allocations on the audio thread. |
+| `SPEC-AUDIO-002` | **Warmup Dither**: On a cold start the sequencer writes at least 55 ms of ±1 LSB dither (`warmupChunkCount`, `fillWarmupDither`) before Beat 1 so output hardware is awake when Beat 1 plays. |
+| `SPEC-AUDIO-003` | **Standby Alignment**: With output standby active, Play aligns Beat 1 to the next output chunk (`alignToOutputFrame`) and adds warmup only for frames not already written since the stream started. |
+| `SPEC-AUDIO-004` | **Audio Route Selection**: `AudioRouteSelector.normalize` de-duplicates outputs and always includes the Built-in Speaker; `selectActive` picks the preferred device if still connected, else the platform-routed device, else USB > wired > Bluetooth > first available. |
+| `SPEC-AUDIO-005` | **Live Sound Changes**: `setSoundSet` and `setPitchMultiplier` (clamped to `0.5..2.0`) apply to the engine immediately (also while playing) and persist. |
+| `SPEC-AUDIO-006` | **Manual Output Selection**: `selectAudioOutputDevice(id)` asks the engine to route to that output; the engine reports the resulting route back and `MetronomeUiState.audioInfo` follows it (including the Bluetooth offset rule of `SPEC-TIMING-003`); `null` re-detects the system route. |
+| `SPEC-PULSE-001` | **Single Beat-Phase Accumulator & Slew-Limited BPM**: `MetronomeSequencer` advances one continuous `beatPhase += bpm / (60 * sampleRate)` accumulator (never a per-subdivision counter); BPM moves toward the target by at most `MAX_BPM_STEP_PER_CHUNK` (2.0 BPM) per chunk. |
 | `SPEC-PULSE-002` | **Glitch-Free Live Subdivision Change**: Changing subdivision while playing takes effect at the next subdivision boundary without firing late retroactive ticks or resetting `currentBeat` / `currentSubdivisionIndex`. |
-| `SPEC-PULSE-003` | **Glitch-Free Live Time-Signature Change**: Changing `totalBeats` while playing applies at the next beat boundary (wrapping to Beat 1 if the new bar is shorter than the next beat index) without resetting phase mid-beat. |
-| `SPEC-PULSE-004` | **Continuous Pendulum Phase Interpolation**: `MetronomeSequencer` records per-chunk `(audioFrame, totalBeatsElapsed)` phase checkpoints in a lock-free ring buffer (`interpolateTotalBeatsAtFrame`) so the pendulum swings smoothly through tempo and meter changes. |
+| `SPEC-PULSE-003` | **Live Time-Signature Change**: Changing `totalBeats` while playing applies at the next beat (a bar that becomes shorter than the current position starts a new bar) without resetting the phase mid-beat or resetting `currentBeat`/`currentSubdivisionIndex`. |
+| `SPEC-PULSE-004` | **Pendulum Phase Interpolation**: The sequencer records per-chunk phase checkpoints (`recordPhaseCheckpoint`, allocation-free ring buffer) and `processPlayhead` interpolates the pendulum phase from them, so the swing stays smooth through tempo and meter changes. |
 
 ---
 
@@ -58,9 +64,9 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 
 | ID | Requirement |
 | --- | --- |
-| `SPEC-TIMING-001` | **Hardware Playhead Synchronization**: Visuals, screen flash, pendulum, and haptics fire when smoothed hardware playhead frame reaches `beatAudioFrame` (`playheadFrame >= targetFrame` at `0` ms offset), never from write-head time and with zero hidden latency constants. |
-| `SPEC-TIMING-002` | **Independent Visual, Vibration & Bluetooth Offsets**: Visual (`flashDelayMs`), Vibration (`vibrationDelayMs`), and Bluetooth (`bluetoothDelayMs`) offsets are clamped to `-200..300` ms (`MIN_DELAY_MS = -200`, `MAX_DELAY_MS = 300`). Negative offsets schedule events earlier (using warmup lookahead); positive offsets schedule events later. |
-| `SPEC-TIMING-003` | **Bluetooth Offset Conditional Application**: `bluetoothDelayMs` shifts visual and vibration targets together (`effectiveFlashDelayMs = flashDelayMs - bluetoothDelayMs`) **only** when `isBluetoothConnected == true` (active output route is Bluetooth). |
+| `SPEC-TIMING-001` | **Hardware Playhead Synchronization**: Visual beat, flash, pendulum and vibration events fire from the smoothed hardware playhead (`PlayheadEstimator`), at `playheadFrame >= beatAudioFrame` for a 0 ms offset — never from the write head and with no hidden latency constants. |
+| `SPEC-TIMING-002` | **Offsets & Ranges**: Visual (`flashDelayMs`) and vibration (`vibrationDelayMs`) offsets are clamped to `-200..300` ms; the Bluetooth offset (`bluetoothCompensationMs`) to `-100..400` ms (`DelayCompensationEngine` constants). Negative values fire earlier (using warmup lookahead), positive later; `resetTimingOffsets()` sets all three to 0. |
+| `SPEC-TIMING-003` | **Bluetooth Offset Only on Bluetooth**: `effectiveVisualDelayMs = flashDelayMs + bluetoothCompensationMs` and `effectiveVibrationDelayMs = vibrationDelayMs + bluetoothCompensationMs` only while the active output is `AudioDeviceType.BLUETOOTH`; otherwise the Bluetooth offset is ignored. |
 
 ---
 
@@ -68,12 +74,12 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 
 | ID | Requirement |
 | --- | --- |
-| `SPEC-PLAYLIST-001` | **Song Model & Normalization**: Every `Song(id, name, bpm, totalBeats, subdivision, accents)` normalizes blank names to `"Untitled"`, clamps `bpm` to `20..300` and `totalBeats` to `1..16`, and sizes `accents` to `totalBeats` (padding with `ACCENT` on beat 0 and `REGULAR` on remaining beats). |
-| `SPEC-PLAYLIST-002` | **Library CRUD**: Controller supports `saveCurrentAsSong(name)`, `createSong(...)`, `updateSong(...)`, `updateSongFromCurrent(songId)`, `renameSong(songId, name)`, and `deleteSong(songId)`. Deleting a song removes its ID from all playlists and adjusts `activeSongIndex` / `activeSongId` cleanly. |
-| `SPEC-PLAYLIST-003` | **Playlist CRUD & Ordering**: Controller supports `createPlaylist(name)`, `renamePlaylist(id, name)`, `deletePlaylist(id)`, `addSongToPlaylist(playlistId, songId)`, `removeSongFromPlaylist(playlistId, index)`, and `moveSongInPlaylist(playlistId, fromIndex, toIndex)`, keeping the active song tracked across reorder/removal. |
-| `SPEC-PLAYLIST-004` | **Live Song Loading & Non-Wrapping Stepping**: `loadSong`, `selectPlaylist`, `selectPlaylistSong`, `nextSong`, and `previousSong` apply the song's BPM, time signature, subdivision, and accents live (updating `rememberedAccents`) without starting or stopping playback. `nextSong()` and `previousSong()` do not wrap at playlist ends. |
+| `SPEC-PLAYLIST-001` | **Song Model & Normalization**: `Song(id, name, bpm, totalBeats, subdivision, accents)`; saving trims the name, clamps `bpm` to `20..300` and `totalBeats` to `1..16`, and sizes `accents` to `totalBeats` (missing beats default to `ACCENT` on beat 1 and `REGULAR` after). Songs live once in the library; `Playlist(id, name, songIds)` references them by id. |
+| `SPEC-PLAYLIST-002` | **Library CRUD**: `saveCurrentAsSong(name)` (snapshot of live settings, becomes the active song), `createSong(...)`, `updateSong(...)` (live metronome unchanged), `updateSongFromCurrent(songId)`, `renameSong(songId, name)`, `deleteSong(songId)` (also removes it from every playlist and clears it as active song). |
+| `SPEC-PLAYLIST-003` | **Playlist CRUD & Ordering**: `createPlaylist`, `renamePlaylist`, `deletePlaylist` (clears it if active), `addSongToPlaylist` (duplicates allowed), `removeSongFromPlaylist(index)` and `moveSongInPlaylist(from, to)`; the active position follows the loaded song through moves and removals and is cleared when the loaded entry is removed. |
+| `SPEC-PLAYLIST-004` | **Live Loading & Non-Wrapping Stepping**: `loadSong`, `selectPlaylist` (loads the first song), `selectPlaylistSong`, `nextSong` and `previousSong` apply BPM, meter and accents live (also into the per-count accent memory) and never start or stop playback; stepping does not wrap at either end. |
 | `SPEC-PLAYLIST-005` | **Modified State Detection**: `MetronomeUiState.isActiveSongModified` is `true` if and only if an active song is loaded and live `bpm`, `totalBeats`, `subdivision`, or `accents` differ from that song's saved values; `updateSongFromCurrent` clears the modified state. |
-| `SPEC-PLAYLIST-006` | **Chunked Escaped Persistence**: `KeyValueSongLibraryRepository` persists songs and playlists using percent-escaped `|`-delimited lines split into ≤4000-character chunks (`<key>_<n>` + `<key>_chunks`) so libraries of 200+ songs survive Windows `java.util.prefs` 8192-char limits, and gracefully skips malformed lines. |
+| `SPEC-PLAYLIST-006` | **Library Persistence**: `KeyValueSongLibraryRepository` (shared by every platform via `KeyValueSettingsRepository`) stores songs and playlists as percent-escaped `|`-delimited lines in ≤4000-char chunks (`<key>_<n>` + `<key>_chunks`; Windows prefs cap values at 8192 chars), plus `active_playlist_id`; unreadable lines are skipped, and playlist entries pointing at missing songs are dropped on load. |
 
 ---
 
@@ -81,9 +87,11 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 
 | ID | Requirement |
 | --- | --- |
-| `SPEC-SESSION-001` | **Media / Now Playing Session Sync**: `MetronomeController` starts the audio engine **before** syncing `IPlaybackSession` on `play()`, formats session title as `"<BPM> BPM • <Marking>"` and subtitle as `"Playing • <meter> Time"` / `"Paused • <meter> Time"`, debounces BPM/meter session updates by `150` ms while keeping Play/Pause immediate, and maps remote Next/Previous commands to `+1` / `-1` BPM. |
-| `SPEC-PERSIST-001` | **Settings Round-Trip & Clamping**: `KeyValueSettingsRepository` persists and clamps all user settings (`bpm`, `timeSignature`, `subdivision`, `soundSet`, `pitchMultiplier`, `accents`, `rememberedAccents`, `buttonTriggerMode`, `flashEnabled`, `vibrationEnabled`, `flashDelayMs`, `vibrationDelayMs`, `bluetoothDelayMs`, `themeMode`, `accentColor`) and recovers safely from corrupt stored strings. |
-| `SPEC-UPDATE-001` | **SemVer Comparison & Asset Selection**: `ReleaseVersioning` compares semantic versions (`isNewerVersion`), selects platform-appropriate release assets (`.apk` on Android, `.ipa` on iOS, architecture-matched `-windows-x64.msi` / `-windows-arm64.msi` on Windows via `WindowsArch.fromOsArch`), and falls back from `DamionGans/Anchor` to `DamionGans/PulseMetronome`. |
+| `SPEC-SESSION-001` | **Media / Now Playing Session**: `play()` starts the audio engine before syncing `IPlaybackSession`; the session title is `"<BPM> BPM • <Marking>"` and the subtitle `"Playing • <beats>/<denominator> Time"` or `"Paused • …"`; BPM/meter updates are debounced by `SESSION_SYNC_DEBOUNCE_MS` (150 ms) while play/pause sync immediately; remote commands map to play, pause, toggle, stop (= pause) and BPM ± delta. |
+| `SPEC-SESSION-002` | **Platform Media Surfaces (manual)**: Android shows a `mediaPlayback` foreground-service notification with −1 BPM / Play-Pause / +1 BPM that stays while paused; iOS shows Now Playing with remote play/pause and next/previous = ±1 BPM; Windows has no media session (`NoOpPlaybackSession`). Verified on devices; the shared contract is `SPEC-SESSION-001`. |
+| `SPEC-PERSIST-001` | **Settings Round-Trip & Clamping**: `KeyValueSettingsRepository` persists bpm, beats, subdivision, sound set, pitch, accents and the 16-entry accent memory, button trigger mode, flash/vibration toggles, visual/vibration/Bluetooth offsets, theme and accent colour; values are clamped on read and write, unknown enum strings fall back to defaults, and the legacy single timing offset seeds the visual/vibration offsets. |
+| `SPEC-UPDATE-001` | **Release Selection**: `ReleaseVersioning.isVersionNewer` compares SemVer tags; `buildReleaseInfo` picks the `.apk` (Android), `.ipa` (iOS) or architecture-matched `-windows-x64.msi`/`-windows-arm64.msi` (`WindowsArch.fromOsArch`) asset; update checks fall back from `DamionGans/Anchor` to the legacy `DamionGans/PulseMetronome` repository. |
+| `SPEC-UPDATE-002` | **Update Flow**: GitHub builds check for a newer release on launch and on demand; a newer release opens the update dialog with Update (opens the download URL, or the release page when there is no matching asset), Ask Later (hides it for this session) and Decline (remembered for that release tag); a manual check with nothing newer reports that the app is up to date. Store builds never check. |
 
 ---
 
@@ -95,3 +103,7 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 | `SPEC-UI-002` | **Setlist Bar Visibility & Stepping**: `SetlistBar` is rendered on the main screen only when `activePlaylist != null`, displays the active playlist/song position and modified indicator, and triggers `previousSong()`, `nextSong()`, and the Playlists sheet. |
 | `SPEC-UI-003` | **Bottom Sheets & Dialogs**: Top bar buttons open Audio Output menu, Playlists sheet (`PlaylistsBottomSheet`), Changelog dialog (`ChangelogDialog`), and Settings sheet (`SettingsBottomSheet` with Sound, Visual & Haptic, Timing, Theme, and About tabs). |
 | `SPEC-UI-004` | **Desktop Keyboard Shortcuts**: On Windows, `Space` toggles Play/Pause, `Up`/`+` and `Down`/`-` adjust BPM by `±1` (`±5` with `Shift`), `T` triggers Tap Tempo, and `PageUp`/`[` / `PageDown`/`]` step to the previous/next song in the active playlist. |
+| `SPEC-UI-005` | **Theme Mode & Accent Palette**: Settings Theme tab exposes `ThemeMode` (`SYSTEM`, `DARK`, `LIGHT`) and `AccentColorOption` (`SYSTEM` dynamic theme plus `CYAN`, `GOLD`, `CORAL`, `EMERALD`, `VIOLET`), updating `uiState.themeMode` / `uiState.accentColor` and persisting changes immediately. |
+| `SPEC-UI-006` | **Audio Output Picker in Top Bar & Settings**: Both the top-bar route menu (`TopBar.kt`) and the Settings Sound tab (`SettingsBottomSheet.kt`) list `uiState.audioInfo.availableDevices` (always normalized to include `"Built-in Speaker"` even when only 1 route is present) and route selections through `selectAudioOutputDevice(deviceId)`. |
+| `SPEC-UI-007` | **Changelog & About Dialogs**: `ChangelogDialog` renders non-blank `CURRENT_RELEASE_CHANGELOG` entries (`title` and `description`) for the active app version without emojis, and the Settings About tab displays the app version and channel-appropriate update actions (`canCheckForUpdates` / `updateStoreName`). |
+| `SPEC-UI-008` | **iOS SwiftUI Feature Parity (manual)**: SwiftUI `iosApp` (`ContentView.swift`, `MetronomeComponentsView.swift`, `PlaylistsView.swift`, `PlaylistsLibraryView.swift`, `SettingsView.swift`, `TimeSignatureView.swift`) mirrors the 1-screen/2-pane metronome layout, playlist bottom sheet, set-list bar, and settings tabs via `AnchorIosApp`. |

@@ -1,0 +1,2 @@
+- Fixed cold-start audio warmup rounding so the silent pre-roll always spans at least 55 ms at 48 kHz before Beat 1 fires.
+- Added full specification test coverage across shared logic, Android, Windows, and iPhone, modularized the UI and controller layers, and removed unused Android assets.

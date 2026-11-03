@@ -9,6 +9,7 @@ import kotlin.test.assertTrue
 
 class ReleaseVersioningTest {
 
+    /** SPEC-UPDATE-001 */
     @Test
     fun versionComparison() {
         assertTrue(isVersionNewer("v1.4.1", "1.4.0"))
@@ -28,6 +29,7 @@ class ReleaseVersioningTest {
         assertFalse(isVersionNewer("   ", "1.4.0"))
     }
 
+    /** SPEC-UPDATE-001 */
     @Test
     fun buildReleaseInfo_picksPlatformAssetOrFallsBackToReleasePage() {
         val assets = listOf(
@@ -50,6 +52,7 @@ class ReleaseVersioningTest {
         assertNull(ReleaseVersioning.buildReleaseInfo(" ", null, null, null, emptyList(), ".apk", "1.4.0", ""))
     }
 
+    /** SPEC-UPDATE-001 */
     @Test
     fun buildReleaseInfo_picksThePerArchitectureWindowsInstaller() {
         val assets = listOf(

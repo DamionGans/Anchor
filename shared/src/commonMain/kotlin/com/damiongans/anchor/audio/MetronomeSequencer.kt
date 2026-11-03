@@ -5,6 +5,7 @@ import com.damiongans.anchor.model.BeatAccent
 import com.damiongans.anchor.model.Subdivision
 import kotlin.concurrent.Volatile
 import kotlin.math.abs
+import kotlin.math.ceil
 
 /**
  * Platform-agnostic, allocation-free metronome sequencer shared by every platform audio engine.
@@ -39,7 +40,8 @@ class MetronomeSequencer(
         /** Number of whole [chunkFrames]-sized chunks covering [WARMUP_SECONDS] (at least [minimumChunks]). */
         fun warmupChunkCount(sampleRate: Int, chunkFrames: Int, minimumChunks: Int = 1): Int {
             val safeChunk = chunkFrames.coerceAtLeast(1)
-            return maxOf(minimumChunks, ((sampleRate * WARMUP_SECONDS) / safeChunk).toInt())
+            // Round up: a partial chunk would leave the dither shorter than WARMUP_SECONDS.
+            return maxOf(minimumChunks, ceil((sampleRate * WARMUP_SECONDS) / safeChunk).toInt())
         }
 
         /** Fills [buffer] with alternating ±1 PCM dither (about -90 dBFS, inaudible). */
@@ -91,6 +93,10 @@ class MetronomeSequencer(
     private var beatPhase = 0.0
     private var activeSubdivisionCount = 1
     private var activeSmoothedBpm = 120.0
+
+    /** BPM the click grid is currently running at (slews toward [bpm]); exposed for tests. */
+    internal val smoothedBpm: Double
+        get() = activeSmoothedBpm
     private var activeWave: ShortArray? = null
     private var activeWavePos = 0
 

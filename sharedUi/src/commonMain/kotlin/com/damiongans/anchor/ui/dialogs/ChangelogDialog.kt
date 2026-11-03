@@ -28,11 +28,11 @@ import androidx.compose.ui.unit.sp
 import com.damiongans.anchor.ui.platform.LocalAppVersionName
 import com.damiongans.anchor.ui.icons.AnchorIcons
 
-private data class ChangelogEntry(val title: String, val description: String)
+internal data class ChangelogEntry(val title: String, val description: String)
 
-private val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Playlists & Song Library", "Save songs with custom name, BPM, time signature, subdivision, and beat accents into your library, and organize them into ordered set lists."),
-    ChangelogEntry("Live Set-List Stepping", "Step through songs from the main screen set-list bar (or with PageUp / PageDown on Windows) while the metronome keeps playing without losing the beat.")
+internal val CURRENT_RELEASE_CHANGELOG = listOf(
+    ChangelogEntry("Audio Warmup Precision", "Ensured cold-start warmup dither always spans at least 55 ms across all sample rates and buffer sizes for unclipped first-beat clicks."),
+    ChangelogEntry("Spec-Verified Reliability & Lighter APK", "Added a full functional specification test suite across Android, Windows, and iPhone, modularized the UI and controller layers, and removed unused resources.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

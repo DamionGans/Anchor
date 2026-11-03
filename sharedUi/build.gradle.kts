@@ -32,6 +32,10 @@ kotlin {
       api(libs.jetbrains.compose.ui)
       api(libs.jetbrains.compose.material3)
     }
+    commonTest.dependencies {
+      implementation(libs.kotlin.test)
+      implementation(libs.kotlinx.coroutines.test)
+    }
     androidMain.dependencies {
       implementation(libs.androidx.core.ktx)
     }

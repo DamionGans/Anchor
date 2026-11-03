@@ -16,6 +16,7 @@ class TapTempoCalculatorTest {
         calculator = TapTempoCalculator()
     }
 
+    /** SPEC-TEMPO-004 */
     @Test
     fun singleTap_doesNotCalculateBpmYet() {
         val result = calculator.registerTap(1000L)
@@ -24,6 +25,7 @@ class TapTempoCalculatorTest {
         assertNull(result.bpmToApply)
     }
 
+    /** SPEC-TEMPO-004 */
     @Test
     fun steadyTapsAt500ms_calculates120Bpm() {
         calculator.registerTap(1000L)
@@ -52,6 +54,7 @@ class TapTempoCalculatorTest {
         assertEquals(2, valid.status.tapCount)
     }
 
+    /** SPEC-TEMPO-004 */
     @Test
     fun idleTimeout_resetsTapHistory() {
         calculator.registerTap(1000L)

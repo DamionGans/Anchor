@@ -93,6 +93,7 @@ shared/src/commonMain/kotlin/com/damiongans/anchor/     # Shared logic (no platf
 │   └── PlaylistModels.kt               # Song & Playlist setlist domain models
 ├── domain/
 │   ├── DelayCompensationEngine.kt      # Frame-accurate visual/haptic/Bluetooth scheduler
+│   ├── SongLibrary.kt                  # Pure immutable song library, playlist & active-position rules
 │   └── TapTempoCalculator.kt           # Tap tempo outlier filtering & pulse detection
 ├── audio/
 │   ├── IAudioEngine.kt                 # Audio engine contract
@@ -111,7 +112,9 @@ shared/src/commonMain/kotlin/com/damiongans/anchor/     # Shared logic (no platf
 ├── update/
 │   ├── IUpdateRepository.kt            # Update check contract & AppReleaseInfo
 │   └── ReleaseVersioning.kt            # GitHub repo config, asset selection, SemVer comparison
-└── viewmodel/MetronomeController.kt    # MetronomeUiState + all user actions (shared state holder)
+└── viewmodel/
+    ├── MetronomeUiState.kt             # Single immutable UI state snapshot
+    └── MetronomeController.kt          # All user actions & shared state holder
 
 shared/src/iosMain/kotlin/com/damiongans/anchor/        # iOS platform implementations
 ├── audio/IosAudioEngine.kt             # AVAudioEngine + AVAudioPlayerNode I/O loop
@@ -129,7 +132,11 @@ shared/src/desktopMain/kotlin/com/damiongans/anchor/    # Desktop JVM (Windows x
 └── desktop/AnchorDesktop.kt            # Composition root used by desktopApp (see windows.md)
 
 sharedUi/src/                            # Compose Multiplatform UI (android + jvm "desktop")
-├── commonMain/.../ui/                  # MetronomeScreen(controller), components/, dialogs/, icons/, theme/
+├── commonMain/.../ui/                  # MetronomeScreen(controller), components/ (TopBar, SetlistBar,
+│   │                                   #   BeatBar, PendulumVisualizer, TempoControl), dialogs/
+│   │                                   #   (PlaylistsBottomSheet, PlaylistsLibraryTab, SongFormEditor,
+│   │                                   #   SettingsBottomSheet, SettingsTimingTab, SettingsThemeAboutTabs,
+│   │                                   #   TimeSignatureDialog, ChangelogDialog, UpdateDialog), icons/, theme/
 │   └── platform/PlatformUi.kt          # expect hooks: dynamic color, system bars, labels, vibration, version
 ├── androidMain/.../ui/platform/        # Material You dynamic color, status/navigation bars
 └── desktopMain/.../ui/platform/        # Windows defaults
@@ -147,7 +154,8 @@ androidApp/src/main/kotlin/com/damiongans/anchor/       # Android platform layer
 iosApp/                                  # SwiftUI app (XcodeGen project.yml)
 ├── Anchor/App/                         # AnchorApp.swift, MetronomeStore.swift (display-link
 │                                       #   throttled ObservableObject bridge), Theme.swift
-├── Anchor/Views/                       # ContentView, SettingsView, TimeSignatureView
+├── Anchor/Views/                       # ContentView, MetronomeComponentsView, PlaylistsView,
+│                                       #   PlaylistsLibraryView, SettingsView, TimeSignatureView
 └── Anchor/Resources/Assets.xcassets    # App icon & accent color
 ```
 
@@ -180,7 +188,7 @@ Anchor avoids bloated third-party dependencies so the release APK remains fast, 
 - **Distribution channels**: shared `DistributionChannel` (`GITHUB`, `FDROID`, `PLAY_STORE`, `APP_STORE`). Only GitHub builds run the GitHub Releases update checker; Android `fdroid` and `play` flavors also drop the `INTERNET` permission. iOS selects the channel with the `ANCHOR_DISTRIBUTION` build setting.
 
 - **Android** (`.github/workflows/android.yml`, every branch push and PRs; publishing only from `main` / `v*` tags): lint, `testGithubDebugUnitTest`, `:shared:testAndroidHostTest`, reproducible signed `assembleGithubRelease` (GitHub Release APK), `assembleFdroidRelease`, `bundlePlayRelease` (Play AAB, optional tag upload to the internal track), and the GitHub Release.
-- **Windows** (`.github/workflows/desktop.yml`): on Windows x64 (`windows-latest`) and Windows arm64 (`windows-11-arm`): `:shared:desktopTest`, then `:desktopApp:packageMsi` staged as `Anchor-vX.Y.Z-windows-{x64,arm64}.msi` (+ SHA-256); on `main` / `v*`, both MSIs are attached to the GitHub Release. See [`windows.md`](./windows.md).
+- **Windows** (`.github/workflows/desktop.yml`): on Windows x64 (`windows-latest`) and Windows arm64 (`windows-11-arm`): `:shared:desktopTest :sharedUi:desktopTest :desktopApp:test`, then `:desktopApp:packageMsi` staged as `Anchor-vX.Y.Z-windows-{x64,arm64}.msi` (+ SHA-256); on `main` / `v*`, both MSIs are attached to the GitHub Release. See [`windows.md`](./windows.md).
 - **Website** (`.github/workflows/pages.yml`): deploys `website/` to GitHub Pages on `main` / `v*` pushes that touch `website/**` or `CHANGELOG.md`, independent of the app builds.
 - **iPhone** (`.github/workflows/ios.yml`, macOS runner): `:shared:iosSimulatorArm64Test`, `xcodegen generate`, simulator build, and an unsigned device build packaged as `Anchor-vX.Y.Z-unsigned.ipa` (+ SHA-256) uploaded as a workflow artifact; on tags, an optional App Store Connect upload (`ANCHOR_DISTRIBUTION=APP_STORE`).
 - **Local iOS build**: `brew install xcodegen`, `cd iosApp && xcodegen generate`, open `Anchor.xcodeproj`. The "Build Kotlin shared framework" phase runs `./gradlew :shared:embedAndSignAppleFrameworkForXcode`.
@@ -193,13 +201,18 @@ For developer workflow rules, testing requirements, and release checklists, see 
 
 ---
 
-## 8. Test Inventory
+## 8. Spec-Driven Test Inventory (`docs/SPEC.md`)
+
+All user-visible features and invariants are specified with numbered IDs (`SPEC-<AREA>-<NNN>`) in [**`SPEC.md`**](./SPEC.md) and enforced by `SpecCoverageTest` (`shared/src/desktopTest`), which fails if any non-manual spec row lacks a test citation or if any test cites an unknown ID.
 
 - **Shared** (`shared/src/commonTest`, `kotlin.test`; runs on the Android host, desktop JVM, and iOS simulator):
-  - `TapTempoCalculatorTest`
+  - `ModelSpecTest`: tempo markings, time signature presets, subdivisions, beat accent cycling
+  - `TapTempoCalculatorTest`: tap tempo interval averaging, outlier rejection, lock confidence
   - `DelayCompensationEngineTest`: 0 ms exact frame match, negative/positive offsets, Bluetooth shift, subdivisions
-  - `MetronomeControllerTest`: state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update, output standby passthrough
-  - `MetronomeSequencerTest`: synthesis, warmup, exact beat frames, warm start on a running output, steady pulse under subdivision/meter changes, pendulum continuity, playhead estimator, route selection
-  - `KeyValueSettingsRepositoryTest`, `ReleaseVersioningTest`
-- **Desktop** (`shared/src/desktopTest`, run on Windows x64 + arm64): `DesktopAudioEngineTest` (lifecycle and standby without an audio device), `PreferencesKeyValueStoreTest`, `WindowsArchTest`, `DesktopUpdateRepositoryTest`.
-- **Android** (`androidApp/src/test`, Robolectric): `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`.
+  - `MetronomeControllerTest`: state, persistence, calibration clamping, playback session commands, update flow, store channels never self-update, output standby passthrough, playlist/song loading
+  - `SongLibraryTest`: pure song normalization, playlist CRUD, cascading deletes, active position tracking
+  - `MetronomeSequencerTest` & `WarmupAndSlewTest`: synthesis, ≥55 ms warmup dither ceiling, BPM slew limiting, exact beat frames, warm start on a running output, steady pulse under subdivision/meter changes, pendulum continuity, playhead estimator, route selection
+  - `KeyValueSettingsRepositoryTest`, `KeyValueSongLibraryRepositoryTest`, `ReleaseVersioningTest`
+- **Desktop & Spec Coverage** (`shared/src/desktopTest`, run on Windows x64 + arm64): `SpecCoverageTest` (1-to-1 verification of `docs/SPEC.md` across all test source sets), `DesktopAudioEngineTest` (lifecycle and standby without an audio device), `PreferencesKeyValueStoreTest`, `WindowsArchTest`, `DesktopUpdateRepositoryTest`.
+- **Shared UI & Windows Host** (`sharedUi/src/commonTest`, `desktopApp/src/test`): `MetronomeUiSpecTest` (responsive studio split threshold, distribution channel UI flags, set-list bar state, theme/accent palettes, audio output picker, changelog dialog, offset formatting), `KeyboardShortcutsTest` (`Space`, `Up`/`Down`/`±1`/`±5`, `T`, `PageUp`/`PageDown`/`[`/`]` playlist stepping), `PackagingSpecTest` (Windows MSI packaging policy).
+- **Android** (`androidApp/src/test`, Robolectric): `ProductPolicyTest` (product naming, ≤30-char title, tagline, flavor `INTERNET` removal, manifest permission policy), `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`.

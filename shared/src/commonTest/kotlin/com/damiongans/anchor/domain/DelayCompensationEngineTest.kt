@@ -16,6 +16,7 @@ class DelayCompensationEngineTest {
         BeatAccent.REGULAR
     )
 
+    /** SPEC-TIMING-001, SPEC-AUDIO-002 */
     @Test
     fun zeroOffsets_withWarmupPreRoll_holdsEventsUntilPlayheadReachesWarmupFrame() {
         val sampleRate = 48000
@@ -72,6 +73,7 @@ class DelayCompensationEngineTest {
         assertEquals(24f, snapAtBeat1.pendulumAngle, 0.01f)
     }
 
+    /** SPEC-TIMING-002 */
     @Test
     fun negativeOffsets_advanceVibrationAndVisualsEarlierThanAudioWithoutDuplicatingOnSynthesis() {
         val sampleRate = 48000
@@ -177,6 +179,7 @@ class DelayCompensationEngineTest {
         assertEquals(listOf(0, 1), visualEvents)
     }
 
+    /** SPEC-TIMING-002, SPEC-TIMING-003 */
     @Test
     fun positiveOffsets_andBluetoothCompensation_delayChannelsIndependently() {
         val sampleRate = 48000

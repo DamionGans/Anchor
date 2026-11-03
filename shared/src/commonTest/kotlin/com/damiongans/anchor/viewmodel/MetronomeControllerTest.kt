@@ -5,6 +5,8 @@ import com.damiongans.anchor.fakes.FakeHapticsManager
 import com.damiongans.anchor.fakes.FakeSettingsRepository
 import com.damiongans.anchor.fakes.FakeUpdateRepository
 import com.damiongans.anchor.model.AccentColorOption
+import com.damiongans.anchor.model.AudioDeviceType
+import com.damiongans.anchor.model.AudioOutputDevice
 import com.damiongans.anchor.model.BeatAccent
 import com.damiongans.anchor.model.ButtonTriggerMode
 import com.damiongans.anchor.model.SoundSet
@@ -67,6 +69,7 @@ class MetronomeControllerTest {
         autoCheckForUpdates = autoCheck
     )
 
+    /** SPEC-SESSION-001, SPEC-TRANSPORT-001 */
     @Test
     fun playAndPause_controlsAudioEngineHapticsAndPlaybackSession() {
         assertFalse(controller.uiState.value.isPlaying)
@@ -82,6 +85,7 @@ class MetronomeControllerTest {
         assertEquals(false, session.lastState?.isPlaying)
     }
 
+    /** SPEC-TRANSPORT-001 */
     @Test
     fun setOutputStandby_isPassedToTheAudioEngine() {
         controller.setOutputStandby(true)
@@ -93,6 +97,7 @@ class MetronomeControllerTest {
         assertTrue(audio.isStarted, "Leaving the foreground must not stop playback")
     }
 
+    /** SPEC-TEMPO-001, SPEC-TEMPO-002 */
     @Test
     fun setBpm_clampsUpdatesMarkingAndPersists() {
         controller.setBpm(60)
@@ -115,6 +120,7 @@ class MetronomeControllerTest {
         assertEquals("300 BPM • Prestissimo", session.lastState?.title)
     }
 
+    /** SPEC-ACCENT-001 */
     @Test
     fun cycleBeatAccent_rotatesAndPersists() {
         controller.cycleBeatAccent(0)
@@ -127,6 +133,7 @@ class MetronomeControllerTest {
         assertEquals(BeatAccent.ACCENT, controller.uiState.value.accents[0])
     }
 
+    /** SPEC-ACCENT-002 */
     @Test
     fun timeSignatureChanges_preserveAccentsPerCount() {
         controller.cycleBeatAccent(1)
@@ -148,6 +155,7 @@ class MetronomeControllerTest {
         assertEquals("Paused • 6/8 Time", session.lastState?.subtitle)
     }
 
+    /** SPEC-PERSIST-001, SPEC-AUDIO-005, SPEC-FEEDBACK-001 */
     @Test
     fun settings_persistAndRestoreAcrossControllerRecreation() {
         controller.setBpm(144)
@@ -182,6 +190,7 @@ class MetronomeControllerTest {
         assertEquals(0, settings.getBluetoothCompensationMs())
     }
 
+    /** SPEC-TIMING-001, SPEC-FEEDBACK-001 */
     @Test
     fun beatTick_drivesVisualsFlashAndHaptics() {
         controller.toggleFlash()
@@ -198,6 +207,7 @@ class MetronomeControllerTest {
         assertFalse(controller.uiState.value.flashPulse)
     }
 
+    /** SPEC-TEMPO-004 */
     @Test
     fun tapTempo_appliesBpmAndResetsStatus() {
         var now = 0L
@@ -213,6 +223,7 @@ class MetronomeControllerTest {
         assertEquals(0, tapController.uiState.value.tapStatus.tapCount)
     }
 
+    /** SPEC-SESSION-001 */
     @Test
     fun playbackSessionCommands_controlTransportAndTempo() {
         val listener = assertNotNull(session.commandListener)
@@ -228,6 +239,7 @@ class MetronomeControllerTest {
         assertTrue(audio.isReleased)
     }
 
+    /** SPEC-UPDATE-001, SPEC-UPDATE-002 */
     @Test
     fun updateFlow_showsDialogAndRemembersDecline() {
         updates.mockRelease = AppReleaseInfo(
@@ -252,6 +264,7 @@ class MetronomeControllerTest {
         assertTrue(settings.isUpdateDeclined("v2.0.0"))
     }
 
+    /** SPEC-UPDATE-002 */
     @Test
     fun manualUpdateCheck_reportsUpToDate() {
         controller.checkForUpdates(manual = true)
@@ -260,6 +273,7 @@ class MetronomeControllerTest {
         assertFalse(controller.uiState.value.isCheckingForUpdates)
     }
 
+    /** SPEC-UPDATE-002, SPEC-PROD-002 */
     @Test
     fun storeBuilds_neverCheckGitHubForUpdates() {
         updates.mockRelease = AppReleaseInfo(
@@ -286,6 +300,7 @@ class MetronomeControllerTest {
         assertEquals(DistributionChannel.GITHUB, DistributionChannel.fromName(""))
     }
 
+    /** SPEC-PULSE-003 */
     @Test
     fun meterChangesWhilePlaying_doNotResetTheVisualBeat() {
         controller.play()
@@ -299,6 +314,7 @@ class MetronomeControllerTest {
         assertTrue(audio.isStarted)
     }
 
+    /** SPEC-SESSION-001 */
     @Test
     fun rapidBpmChanges_updateTheMediaSessionOnceAfterSettling() {
         val updatesBefore = session.updateCount
@@ -316,5 +332,82 @@ class MetronomeControllerTest {
         controller.play()
         assertEquals(updatesBefore + 2, session.updateCount)
         assertEquals(true, session.lastState?.isPlaying)
+    }
+
+    /** SPEC-TEMPO-002 */
+    @Test
+    fun adjustAndMultiplyBpm_deriveFromCurrentTempoAndClamp() {
+        controller.setBpm(100)
+        controller.adjustBpm(5)
+        assertEquals(105, controller.uiState.value.bpm)
+        controller.multiplyBpm(2.0)
+        assertEquals(210, controller.uiState.value.bpm)
+        controller.multiplyBpm(2.0)
+        assertEquals(MetronomeController.MAX_BPM, controller.uiState.value.bpm)
+        controller.adjustBpm(-1000)
+        assertEquals(MetronomeController.MIN_BPM, controller.uiState.value.bpm)
+        assertEquals(MetronomeController.MIN_BPM, settings.getBpm())
+    }
+
+    /** SPEC-TEMPO-005 */
+    @Test
+    fun buttonTriggerMode_defaultsToOnPressAndPersists() {
+        assertEquals(ButtonTriggerMode.ON_PRESS, controller.uiState.value.buttonTriggerMode)
+        controller.setButtonTriggerMode(ButtonTriggerMode.ON_RELEASE)
+        assertEquals(ButtonTriggerMode.ON_RELEASE, controller.uiState.value.buttonTriggerMode)
+        assertEquals(ButtonTriggerMode.ON_RELEASE, newController().uiState.value.buttonTriggerMode)
+    }
+
+    /** SPEC-METER-001 */
+    @Test
+    fun beatCount_isClampedTo1Through16() {
+        assertEquals(4, controller.uiState.value.totalBeats)
+        controller.setTimeSignature(0, Subdivision.QUARTER)
+        assertEquals(1, controller.uiState.value.totalBeats)
+        controller.setTimeSignature(40, Subdivision.QUARTER)
+        assertEquals(16, controller.uiState.value.totalBeats)
+        assertEquals(16, audio.totalBeats)
+        assertEquals(16, controller.uiState.value.accents.size)
+    }
+
+    /** SPEC-TIMING-002 */
+    @Test
+    fun timingOffsets_areClampedToTheirRangesAndResetToZero() {
+        controller.setFlashDelay(-999)
+        controller.setVibrationDelay(999)
+        controller.setBluetoothCompensation(999)
+        with(controller.uiState.value) {
+            assertEquals(-200, flashDelayMs)
+            assertEquals(300, vibrationDelayMs)
+            assertEquals(400, bluetoothCompensationMs)
+        }
+        controller.setBluetoothCompensation(-999)
+        assertEquals(-100, controller.uiState.value.bluetoothCompensationMs)
+
+        controller.resetTimingOffsets()
+        with(controller.uiState.value) {
+            assertEquals(0, flashDelayMs)
+            assertEquals(0, vibrationDelayMs)
+            assertEquals(0, bluetoothCompensationMs)
+        }
+    }
+
+    /** SPEC-AUDIO-006, SPEC-TIMING-003 */
+    @Test
+    fun selectingAnOutput_routesTheEngineAndUpdatesTheReportedRoute() {
+        val headset = AudioOutputDevice(id = 7, deviceType = AudioDeviceType.BLUETOOTH, name = "Headset")
+        audio.currentAudioInfo = audio.currentAudioInfo.copy(
+            availableDevices = audio.currentAudioInfo.availableDevices + headset
+        )
+        controller.setBluetoothCompensation(120)
+
+        controller.selectAudioOutputDevice(7)
+        assertEquals(7, audio.selectedOutputDeviceId)
+        assertEquals(AudioDeviceType.BLUETOOTH, controller.uiState.value.audioInfo.deviceType)
+        assertEquals(120, controller.uiState.value.effectiveVisualDelayMs)
+
+        controller.selectAudioOutputDevice(-1)
+        assertEquals(AudioDeviceType.SPEAKER, controller.uiState.value.audioInfo.deviceType)
+        assertEquals(0, controller.uiState.value.effectiveVisualDelayMs)
     }
 }
