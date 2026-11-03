@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.7.1] — Warmup Timing Fix, Spec-Driven Test Suite & Codebase Modularization
+
+### Audio & Timing
+- Fixed `MetronomeSequencer.warmupChunkCount` integer division rounding so cold-start warmup dither always spans at least 55 ms (previously 53.3 ms at 48 kHz with 256-frame chunks).
+
+### Architecture & Maintainability
+- Extracted pure immutable `SongLibrary` (`domain/SongLibrary.kt`) and `MetronomeUiState` (`viewmodel/MetronomeUiState.kt`) from `MetronomeController`.
+- Decomposed `PlaylistsBottomSheet`, `SettingsBottomSheet`, and `MetronomeScreen` in `sharedUi` into focused tab, editor, and top-bar modules (`PlaylistsLibraryTab`, `SongFormEditor`, `SettingsTimingTab`, `SettingsThemeAboutTabs`, `TopBar`).
+- Decomposed iOS SwiftUI `ContentView` and `PlaylistsView` into focused view files (`MetronomeComponentsView`, `PlaylistsLibraryView`).
+- Removed unused legacy Android image assets (~690 KB) and resolved Android lint warnings.
+
+### Spec-Driven Testing & CI
+- Added canonical functional specification (`docs/SPEC.md`) covering 48 numbered product, tempo, meter, accent, audio, pulse, timing, playlist, session, persistence, update, and UI requirements.
+- Added `SpecCoverageTest` in `:shared:desktopTest` to enforce 1-to-1 test coverage for every requirement in `docs/SPEC.md`, and expanded CI (`desktop.yml`) to execute `:sharedUi:desktopTest` and `:desktopApp:test` on both Windows x64 and ARM64 runners.
+
 ## [v1.7.0] — Playlists & Song Library
 
 ### Shared Logic & Persistence

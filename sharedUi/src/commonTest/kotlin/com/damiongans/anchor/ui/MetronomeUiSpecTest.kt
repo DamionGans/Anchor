@@ -3,14 +3,17 @@ package com.damiongans.anchor.ui
 import androidx.compose.ui.unit.dp
 import com.damiongans.anchor.audio.IAudioEngine
 import com.damiongans.anchor.haptics.NoOpHapticsManager
+import com.damiongans.anchor.model.AccentColorOption
 import com.damiongans.anchor.model.AudioDeviceType
 import com.damiongans.anchor.model.AudioOutputDevice
 import com.damiongans.anchor.model.AudioOutputInfo
 import com.damiongans.anchor.model.BeatAccent
 import com.damiongans.anchor.model.SoundSet
 import com.damiongans.anchor.model.Subdivision
+import com.damiongans.anchor.model.ThemeMode
 import com.damiongans.anchor.repository.InMemoryKeyValueStore
 import com.damiongans.anchor.repository.KeyValueSettingsRepository
+import com.damiongans.anchor.ui.dialogs.CURRENT_RELEASE_CHANGELOG
 import com.damiongans.anchor.ui.dialogs.formatSignedMs
 import com.damiongans.anchor.ui.dialogs.formatTwoDecimals
 import com.damiongans.anchor.ui.dialogs.offsetDirectionLabel
@@ -118,6 +121,44 @@ class MetronomeUiSpecTest {
 
         val resized = resizeAccents(listOf(BeatAccent.MUTE), 3)
         assertEquals(listOf(BeatAccent.MUTE, BeatAccent.REGULAR, BeatAccent.REGULAR), resized)
+    }
+
+    /** SPEC-UI-005 */
+    @Test
+    fun themeModeAndAccentPalette_updateUiStateAndPersistAcrossOptions() {
+        val controller = createController()
+        for (mode in ThemeMode.entries) {
+            controller.setThemeMode(mode)
+            assertEquals(mode, controller.uiState.value.themeMode)
+        }
+        assertTrue(AccentColorOption.SYSTEM.isDynamic)
+        for (accent in AccentColorOption.entries) {
+            controller.setAccentColor(accent)
+            assertEquals(accent, controller.uiState.value.accentColor)
+        }
+    }
+
+    /** SPEC-UI-006 */
+    @Test
+    fun audioOutputPickerState_exposesBuiltInSpeakerAndForwardsRouteSelection() {
+        val controller = createController()
+        val devices = controller.uiState.value.audioInfo.availableDevices
+        assertTrue(devices.isNotEmpty())
+        assertTrue(devices.any { it.deviceType == AudioDeviceType.SPEAKER && it.name == "Built-in Speaker" })
+        controller.selectAudioOutputDevice(-1)
+        assertEquals(-1, controller.uiState.value.audioInfo.selectedDeviceId)
+    }
+
+    /** SPEC-UI-007 */
+    @Test
+    fun changelogEntries_areNonBlankAndFreeOfEmojis() {
+        assertTrue(CURRENT_RELEASE_CHANGELOG.isNotEmpty(), "CURRENT_RELEASE_CHANGELOG must not be empty")
+        for (entry in CURRENT_RELEASE_CHANGELOG) {
+            assertTrue(entry.title.isNotBlank(), "Changelog entry title must not be blank")
+            assertTrue(entry.description.isNotBlank(), "Changelog entry description must not be blank")
+            assertFalse(entry.title.any { it.code > 0x2600 }, "Changelog title must not contain emojis")
+            assertFalse(entry.description.any { it.code > 0x2600 }, "Changelog description must not contain emojis")
+        }
     }
 }
 
