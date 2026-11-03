@@ -12,6 +12,7 @@ Every requirement has a stable ID (`SPEC-<AREA>-<NNN>`). Automated tests cite th
 | --- | --- |
 | `SPEC-PROD-001` | **Product Identity**: Full name is `"Anchor Metronome"` (≤30 characters, no emojis); short display name is `"Anchor"`; tagline is `"Rock-solid time for serious play"`. |
 | `SPEC-PROD-002` | **Distribution Channels**: `DistributionChannel` supports `GITHUB`, `FDROID`, `PLAY_STORE`, and `APP_STORE`. Only `DistributionChannel.GITHUB` enables self-update checks (`canCheckForUpdates == true`, `updateStoreName == null`). Store channels (`FDROID`, `PLAY_STORE`, `APP_STORE`) disable in-app GitHub update checks (`canCheckForUpdates == false`) and expose their store display name (`"F-Droid"`, `"Google Play"`, `"the App Store"`). |
+| `SPEC-PROD-003` | **Offline Store Builds & Least Privilege**: The `fdroid` and `play` flavors remove `INTERNET` (`tools:node="remove"`), so they make no network calls; the main manifest requests only `INTERNET` (GitHub build), `VIBRATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` and `POST_NOTIFICATIONS`, disables cleartext traffic, and never requests install-packages or storage permissions. |
 
 ---
 
