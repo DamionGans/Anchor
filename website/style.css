@@ -1694,13 +1694,9 @@ body {
   gap: 0.45rem;
 }
 
-.trust-item::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--beat-cyan);
-  box-shadow: 0 0 0 4px var(--beat-cyan-soft);
+.trust-item svg {
+  color: var(--beat-cyan);
+  flex-shrink: 0;
 }
 
 /* ---- Shared card look ---- */
