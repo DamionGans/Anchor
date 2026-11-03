@@ -5,6 +5,8 @@ import com.damiongans.anchor.fakes.FakeHapticsManager
 import com.damiongans.anchor.fakes.FakeSettingsRepository
 import com.damiongans.anchor.fakes.FakeUpdateRepository
 import com.damiongans.anchor.model.AccentColorOption
+import com.damiongans.anchor.model.AudioDeviceType
+import com.damiongans.anchor.model.AudioOutputDevice
 import com.damiongans.anchor.model.BeatAccent
 import com.damiongans.anchor.model.ButtonTriggerMode
 import com.damiongans.anchor.model.SoundSet
@@ -67,7 +69,7 @@ class MetronomeControllerTest {
         autoCheckForUpdates = autoCheck
     )
 
-    /** SPEC-SESSION-001 */
+    /** SPEC-SESSION-001, SPEC-TRANSPORT-001 */
     @Test
     fun playAndPause_controlsAudioEngineHapticsAndPlaybackSession() {
         assertFalse(controller.uiState.value.isPlaying)
@@ -83,6 +85,7 @@ class MetronomeControllerTest {
         assertEquals(false, session.lastState?.isPlaying)
     }
 
+    /** SPEC-TRANSPORT-001 */
     @Test
     fun setOutputStandby_isPassedToTheAudioEngine() {
         controller.setOutputStandby(true)
@@ -152,7 +155,7 @@ class MetronomeControllerTest {
         assertEquals("Paused • 6/8 Time", session.lastState?.subtitle)
     }
 
-    /** SPEC-PERSIST-001 */
+    /** SPEC-PERSIST-001, SPEC-AUDIO-005, SPEC-FEEDBACK-001 */
     @Test
     fun settings_persistAndRestoreAcrossControllerRecreation() {
         controller.setBpm(144)
@@ -187,7 +190,7 @@ class MetronomeControllerTest {
         assertEquals(0, settings.getBluetoothCompensationMs())
     }
 
-    /** SPEC-TIMING-001 */
+    /** SPEC-TIMING-001, SPEC-FEEDBACK-001 */
     @Test
     fun beatTick_drivesVisualsFlashAndHaptics() {
         controller.toggleFlash()
@@ -236,7 +239,7 @@ class MetronomeControllerTest {
         assertTrue(audio.isReleased)
     }
 
-    /** SPEC-UPDATE-001 */
+    /** SPEC-UPDATE-001, SPEC-UPDATE-002 */
     @Test
     fun updateFlow_showsDialogAndRemembersDecline() {
         updates.mockRelease = AppReleaseInfo(
@@ -261,6 +264,7 @@ class MetronomeControllerTest {
         assertTrue(settings.isUpdateDeclined("v2.0.0"))
     }
 
+    /** SPEC-UPDATE-002 */
     @Test
     fun manualUpdateCheck_reportsUpToDate() {
         controller.checkForUpdates(manual = true)
@@ -269,6 +273,7 @@ class MetronomeControllerTest {
         assertFalse(controller.uiState.value.isCheckingForUpdates)
     }
 
+    /** SPEC-UPDATE-002, SPEC-PROD-002 */
     @Test
     fun storeBuilds_neverCheckGitHubForUpdates() {
         updates.mockRelease = AppReleaseInfo(
@@ -385,5 +390,24 @@ class MetronomeControllerTest {
             assertEquals(0, vibrationDelayMs)
             assertEquals(0, bluetoothCompensationMs)
         }
+    }
+
+    /** SPEC-AUDIO-006, SPEC-TIMING-003 */
+    @Test
+    fun selectingAnOutput_routesTheEngineAndUpdatesTheReportedRoute() {
+        val headset = AudioOutputDevice(id = 7, deviceType = AudioDeviceType.BLUETOOTH, name = "Headset")
+        audio.currentAudioInfo = audio.currentAudioInfo.copy(
+            availableDevices = audio.currentAudioInfo.availableDevices + headset
+        )
+        controller.setBluetoothCompensation(120)
+
+        controller.selectAudioOutputDevice(7)
+        assertEquals(7, audio.selectedOutputDeviceId)
+        assertEquals(AudioDeviceType.BLUETOOTH, controller.uiState.value.audioInfo.deviceType)
+        assertEquals(120, controller.uiState.value.effectiveVisualDelayMs)
+
+        controller.selectAudioOutputDevice(-1)
+        assertEquals(AudioDeviceType.SPEAKER, controller.uiState.value.audioInfo.deviceType)
+        assertEquals(0, controller.uiState.value.effectiveVisualDelayMs)
     }
 }
