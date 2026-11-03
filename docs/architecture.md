@@ -155,7 +155,7 @@ iosApp/                                  # SwiftUI app (XcodeGen project.yml)
 ├── Anchor/App/                         # AnchorApp.swift, MetronomeStore.swift (display-link
 │                                       #   throttled ObservableObject bridge), Theme.swift
 ├── Anchor/Views/                       # ContentView, MetronomeComponentsView, PlaylistsView,
-│                                       #   PlaylistsLibraryView, SetlistBarView, SettingsView, TimeSignatureView
+│                                       #   PlaylistsLibraryView, SettingsView, TimeSignatureView
 └── Anchor/Resources/Assets.xcassets    # App icon & accent color
 ```
 
@@ -214,5 +214,5 @@ All user-visible features and invariants are specified with numbered IDs (`SPEC-
   - `MetronomeSequencerTest` & `WarmupAndSlewTest`: synthesis, ≥55 ms warmup dither ceiling, BPM slew limiting, exact beat frames, warm start on a running output, steady pulse under subdivision/meter changes, pendulum continuity, playhead estimator, route selection
   - `KeyValueSettingsRepositoryTest`, `KeyValueSongLibraryRepositoryTest`, `ReleaseVersioningTest`
 - **Desktop & Spec Coverage** (`shared/src/desktopTest`, run on Windows x64 + arm64): `SpecCoverageTest` (1-to-1 verification of `docs/SPEC.md` across all test source sets), `DesktopAudioEngineTest` (lifecycle and standby without an audio device), `PreferencesKeyValueStoreTest`, `WindowsArchTest`, `DesktopUpdateRepositoryTest`.
-- **Shared UI & Windows Host** (`sharedUi/src/commonTest`, `desktopApp/src/test`): `MetronomeUiSpecTest` (responsive studio split threshold, distribution channel UI flags, set-list bar state, theme/accent palettes, audio output picker, changelog dialog, offset formatting), `KeyboardShortcutsTest` (`Space`, `Up`/`Down`/`±1`/`±5`, `T`, `PageUp`/`PageDown`/`[`/`]` playlist stepping, Windows MSI packaging policy).
+- **Shared UI & Windows Host** (`sharedUi/src/commonTest`, `desktopApp/src/test`): `MetronomeUiSpecTest` (responsive studio split threshold, distribution channel UI flags, set-list bar state, theme/accent palettes, audio output picker, changelog dialog, offset formatting), `KeyboardShortcutsTest` (`Space`, `Up`/`Down`/`±1`/`±5`, `T`, `PageUp`/`PageDown`/`[`/`]` playlist stepping), `PackagingSpecTest` (Windows MSI packaging policy).
 - **Android** (`androidApp/src/test`, Robolectric): `ProductPolicyTest` (product naming, ≤30-char title, tagline, flavor `INTERNET` removal, manifest permission policy), `MetronomeUnitTest`, `MetronomeViewModelTest` (ViewModel wiring, notification service), `AppUpdateManagerTest` (`BuildConfig.VERSION_NAME` alignment), `ExampleRobolectricTest`.

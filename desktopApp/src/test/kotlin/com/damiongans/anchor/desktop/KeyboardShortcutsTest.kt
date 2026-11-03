@@ -15,14 +15,12 @@ import com.damiongans.anchor.update.AppReleaseInfo
 import com.damiongans.anchor.update.AppVersionInfo
 import com.damiongans.anchor.update.IUpdateRepository
 import com.damiongans.anchor.viewmodel.MetronomeController
-import java.io.File
 import kotlinx.coroutines.test.TestScope
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
 class KeyboardShortcutsTest {
 
@@ -38,30 +36,11 @@ class KeyboardShortcutsTest {
             hapticsManager = NoOpHapticsManager(),
             settingsRepository = settings,
             updateRepository = StubUpdateRepository(),
-            appVersion = AppVersionInfo("1.7.0"),
+            appVersion = AppVersionInfo("1.7.1"),
             scope = TestScope(),
             clockMs = { currentClockMs },
             autoCheckForUpdates = false
         )
-    }
-
-    /** SPEC-PROD-004 */
-    @Test
-    fun windowsMsiPackaging_configuresPerUserInstallFixedUpgradeUuidAndBothArchitectures() {
-        val root = generateSequence(File("").absoluteFile) { it.parentFile }
-            .firstOrNull { File(it, "desktopApp/build.gradle.kts").isFile }
-            ?: fail("repo root not found")
-        val buildScript = File(root, "desktopApp/build.gradle.kts").readText()
-        assertTrue(buildScript.contains("TargetFormat.Msi"))
-        assertTrue(buildScript.contains("perUserInstall = true"))
-        assertTrue(buildScript.contains("upgradeUuid = \"6f1c2b8e-4a7d-4e3b-9c55-0d8a1e2f7b31\""))
-
-        val workflow = File(root, ".github/workflows/desktop.yml").readText()
-        assertTrue(workflow.contains("windows-latest"))
-        assertTrue(workflow.contains("windows-11-arm"))
-        assertTrue(workflow.contains("arch: x64"))
-        assertTrue(workflow.contains("arch: arm64"))
-        assertTrue(workflow.contains("-windows-\${{ matrix.arch }}.msi"))
     }
 
     /** SPEC-UI-004 */
