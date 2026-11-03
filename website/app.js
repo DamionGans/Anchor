@@ -175,8 +175,8 @@
           btnTitle.textContent = `Download for Windows (${releaseTag})`;
         }
         if (btnNavDownload) {
-          btnNavDownload.href = btnHeroDownload.href;
-          btnNavDownload.textContent = `Download for Windows (${releaseTag})`;
+          btnNavDownload.href = '#pricing';
+          btnNavDownload.textContent = 'Get Anchor';
         }
       } else if (os === 'ios') {
         if (chipIos) chipIos.classList.add('active');
@@ -185,8 +185,8 @@
           btnTitle.textContent = `Anchor for iPhone (iOS 16+)`;
         }
         if (btnNavDownload) {
-          btnNavDownload.href = '#platforms-ios';
-          btnNavDownload.textContent = `Get for iPhone`;
+          btnNavDownload.href = '#pricing';
+          btnNavDownload.textContent = 'Get Anchor';
         }
       } else {
         // Android or other
@@ -196,8 +196,8 @@
           btnTitle.textContent = `Download for Android (${releaseTag})`;
         }
         if (btnNavDownload) {
-          btnNavDownload.href = apkUrl;
-          btnNavDownload.textContent = `Download (${releaseTag})`;
+          btnNavDownload.href = '#pricing';
+          btnNavDownload.textContent = 'Get Anchor';
         }
       }
     }
