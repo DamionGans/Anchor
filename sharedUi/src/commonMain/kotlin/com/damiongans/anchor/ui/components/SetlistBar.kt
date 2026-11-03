@@ -54,7 +54,7 @@ fun SetlistBar(
 
     val totalInPlaylist = activePlaylist?.songIds?.size ?: 0
     val canStepPrevious = activePlaylist != null && activeSongIndex != null && activeSongIndex > 0
-    val canStepNext = activePlaylist != null && activeSongIndex != null && activeSongIndex < totalInPlaylist - 1
+    val canStepNext = activePlaylist != null && totalInPlaylist > 0 && (activeSongIndex == null || activeSongIndex < totalInPlaylist - 1)
 
     Surface(
         modifier = modifier

@@ -107,6 +107,31 @@ class MetronomeUiSpecTest {
         assertFalse(controller.uiState.value.isActiveSongModified)
     }
 
+    /** SPEC-UI-002 */
+    @Test
+    fun setlistBarState_canStepNextFromPlaylistWithoutActiveSong() {
+        val controller = createController()
+        val s1 = controller.createSong("A", 80, 4, Subdivision.QUARTER, emptyList())
+        val playlist = controller.createPlaylist("Gig")
+        controller.addSongToPlaylist(playlist.id, s1.id)
+        controller.selectPlaylist(playlist.id)
+        controller.deleteSong(s1.id)
+        val s2 = controller.createSong("B", 100, 4, Subdivision.QUARTER, emptyList())
+        controller.addSongToPlaylist(playlist.id, s2.id)
+
+        assertNull(controller.uiState.value.activeSongIndex)
+        assertEquals("Gig", controller.uiState.value.activePlaylist?.name)
+        val total = controller.uiState.value.activePlaylist?.songIds?.size ?: 0
+        val canStepNext = controller.uiState.value.activePlaylist != null &&
+            total > 0 &&
+            (controller.uiState.value.activeSongIndex == null || controller.uiState.value.activeSongIndex!! < total - 1)
+        assertTrue(canStepNext)
+
+        controller.nextSong()
+        assertEquals(0, controller.uiState.value.activeSongIndex)
+        assertEquals("B", controller.uiState.value.activeSong?.name)
+    }
+
     /** SPEC-UI-003 */
     @Test
     fun dialogAndSheetFormattingHelpers_formatAccentsPitchAndOffsetsCleanly() {
