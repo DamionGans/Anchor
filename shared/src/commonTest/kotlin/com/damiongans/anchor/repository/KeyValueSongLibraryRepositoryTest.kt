@@ -10,6 +10,7 @@ import kotlin.test.assertNull
 
 class KeyValueSongLibraryRepositoryTest {
 
+    /** SPEC-PLAYLIST-006 */
     @Test
     fun roundTripsNamesWithSeparatorsAndEscapes() {
         val store = InMemoryKeyValueStore()
@@ -31,6 +32,7 @@ class KeyValueSongLibraryRepositoryTest {
         assertEquals("p1", restored.getActivePlaylistId())
     }
 
+    /** SPEC-PLAYLIST-006 */
     @Test
     fun largeLibrariesAreChunkedBelowStoreLimits() {
         val store = InMemoryKeyValueStore()
@@ -45,6 +47,7 @@ class KeyValueSongLibraryRepositoryTest {
         assertEquals(songs, KeyValueSongLibraryRepository(store).getSongs())
     }
 
+    /** SPEC-PLAYLIST-006 */
     @Test
     fun skipsCorruptRecordsAndClearsActivePlaylist() {
         val store = InMemoryKeyValueStore()

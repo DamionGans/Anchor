@@ -13,6 +13,7 @@ class MetronomeSequencerTest {
 
     private val sampleRate = 48000
 
+    /** SPEC-AUDIO-001 */
     @Test
     fun clickSynthesizer_producesFadedWaveformsForEverySoundSet() {
         for (soundSet in SoundSet.entries) {
@@ -25,6 +26,7 @@ class MetronomeSequencerTest {
         }
     }
 
+    /** SPEC-PULSE-001, SPEC-TIMING-001, SPEC-AUDIO-002 */
     @Test
     fun sequencer_placesBeatsAtExactFramesAndDispatchesOnPlayhead() {
         val sequencer = MetronomeSequencer()
@@ -76,6 +78,7 @@ class MetronomeSequencerTest {
         assertEquals(1, bars)
     }
 
+    /** SPEC-AUDIO-003 */
     @Test
     fun warmStart_onRunningOutput_placesBeat1AtTheNextFrameOfTheOutputTimeline() {
         val sequencer = MetronomeSequencer()
@@ -106,6 +109,7 @@ class MetronomeSequencerTest {
         }
     }
 
+    /** SPEC-TIMING-001 */
     @Test
     fun playheadEstimator_interpolatesMonotonicallyAndCapsAtWritten() {
         val estimator = PlayheadEstimator(sampleRate = 48000, maxInterpolationFrames = 512)
@@ -126,6 +130,7 @@ class MetronomeSequencerTest {
         assertEquals(0x100000010L, counter.unwrap(0x10L))
     }
 
+    /** SPEC-AUDIO-004 */
     @Test
     fun audioRouteSelector_alwaysListsSpeakerAndPrefersExternalOutputs() {
         val bt = AudioOutputDevice(7, AudioDeviceType.BLUETOOTH, "Buds")
@@ -184,6 +189,7 @@ class MetronomeSequencerTest {
         }
     }
 
+    /** SPEC-PULSE-002 */
     @Test
     fun subdivisionChangeMidBeat_keepsDownbeatsOnTheGridAndNeverFiresLateSubTicks() {
         val h = Harness() // 120 BPM quarter notes: one beat every 24000 frames
@@ -199,6 +205,7 @@ class MetronomeSequencerTest {
         assertEquals(listOf(30000L to 1, 36000L to 2, 42000L to 3), subTicks.drop(1).take(3))
     }
 
+    /** SPEC-PULSE-003 */
     @Test
     fun timeSignatureChangeMidBar_keepsThePulseAndStartsTheNewBarOnTheNextBeat() {
         val h = Harness()
@@ -213,6 +220,7 @@ class MetronomeSequencerTest {
         assertEquals(1, h.bars)
     }
 
+    /** SPEC-PULSE-004 */
     @Test
     fun pendulumStaysContinuous_acrossTempoSubdivisionAndMeterChanges() {
         val h = Harness()

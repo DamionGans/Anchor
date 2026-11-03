@@ -45,6 +45,7 @@ class PlaylistControllerTest {
 
     private val waltz = listOf(BeatAccent.ACCENT, BeatAccent.SUB, BeatAccent.SUB)
 
+    /** SPEC-PLAYLIST-001, SPEC-PLAYLIST-006 */
     @Test
     fun createSong_normalizesValuesAndPersists() {
         val song = controller.createSong("  Waltz ", 999, 3, Subdivision.QUARTER, listOf(BeatAccent.ACCENT))
@@ -56,6 +57,7 @@ class PlaylistControllerTest {
         assertEquals(listOf(song), newController().uiState.value.songs)
     }
 
+    /** SPEC-PLAYLIST-004, SPEC-PLAYLIST-005, SPEC-PLAYLIST-002 */
     @Test
     fun loadSong_appliesBpmMeterAndAccentsWithoutChangingTransport() {
         val song = controller.createSong("Waltz", 96, 3, Subdivision.EIGHTH, waltz)
@@ -77,6 +79,7 @@ class PlaylistControllerTest {
         assertEquals(97, state.activeSong?.bpm)
     }
 
+    /** SPEC-PLAYLIST-002 */
     @Test
     fun saveCurrentAsSong_snapshotsLiveSettings() {
         controller.setBpm(140)
@@ -89,6 +92,7 @@ class PlaylistControllerTest {
         assertEquals(song.id, state.activeSongId)
     }
 
+    /** SPEC-PLAYLIST-004, SPEC-PLAYLIST-003 */
     @Test
     fun playlistNavigation_stepsThroughSongsWithoutWrapping() {
         val a = controller.createSong("A", 80, 4, Subdivision.QUARTER, emptyList())
@@ -113,6 +117,7 @@ class PlaylistControllerTest {
         assertEquals(set.id, newController().uiState.value.activePlaylistId)
     }
 
+    /** SPEC-PLAYLIST-003 */
     @Test
     fun moveAndRemove_keepActivePositionOnTheLoadedSong() {
         val ids = (1..3).map { controller.createSong("S$it", 60 + it, 4, Subdivision.QUARTER, emptyList()).id }
@@ -130,6 +135,7 @@ class PlaylistControllerTest {
         assertNull(state.activeSongIndex)
     }
 
+    /** SPEC-PLAYLIST-002 */
     @Test
     fun deleteSong_removesItFromEveryPlaylist() {
         val a = controller.createSong("A", 80, 4, Subdivision.QUARTER, emptyList())
@@ -146,6 +152,7 @@ class PlaylistControllerTest {
         assertNull(state.activeSongId)
     }
 
+    /** SPEC-PLAYLIST-003 */
     @Test
     fun deletePlaylist_clearsActivePlaylist() {
         val set = controller.createPlaylist("Set")

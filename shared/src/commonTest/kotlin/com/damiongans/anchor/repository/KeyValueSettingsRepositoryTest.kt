@@ -11,6 +11,7 @@ import kotlin.test.assertTrue
 
 class KeyValueSettingsRepositoryTest {
 
+    /** SPEC-PERSIST-001, SPEC-TEMPO-001, SPEC-METER-001 */
     @Test
     fun defaultsAndClamping() {
         val repo = KeyValueSettingsRepository(InMemoryKeyValueStore())
@@ -30,6 +31,7 @@ class KeyValueSettingsRepositoryTest {
         assertEquals(0.5f, repo.getPitchMultiplier())
     }
 
+    /** SPEC-ACCENT-002 */
     @Test
     fun accentsAreRememberedPerBeatCount() {
         val repo = KeyValueSettingsRepository(InMemoryKeyValueStore())
@@ -42,6 +44,7 @@ class KeyValueSettingsRepositoryTest {
         assertEquals(remembered.take(6), repo.getAccents(6))
     }
 
+    /** SPEC-PERSIST-001 */
     @Test
     fun legacyKeysAndInvalidValuesFallBack() {
         val store = InMemoryKeyValueStore()
