@@ -49,6 +49,7 @@ Rules for **Anchor Metronome** (**Anchor**, ex-Pulse Metronome; Android, iPhone,
 - System media volume only (`STREAM_MUSIC`, unity gain; no in-app volume slider). Accents: 16-entry `rememberedAccents` per count; meter change restores `rememberedAccents.take(beats)`. `ButtonTriggerMode` (`ON_PRESS/ON_RELEASE`) for Play & Tap Tempo.
 - `ISettingsRepository` keys: bpm, timeSignature, subdivision, soundSet, pitchMultiplier, accents, rememberedAccents, buttonTriggerMode, flash/vibration enabled, flash/vibration/bluetooth delays, themeMode, accentColor.
 - Song library (`ISongLibraryRepository`, implemented by `KeyValueSettingsRepository` via `KeyValueSongLibraryRepository`, so platforms need no wiring): `Song(id, name, bpm, totalBeats, subdivision, accents)`, `Playlist(id, name, songIds)`; keys `song_library_v1` / `playlists_v1` (percent-escaped `|` lines, stored in ≤4000-char chunks `<key>_<n>` + `<key>_chunks`; Windows prefs cap values at 8192), `active_playlist_id`. Loading a song applies bpm/meter/accents live and never starts/stops playback; next/previous do not wrap; media-session next/previous stay ±1 BPM.
+- Library rules are pure in `domain/SongLibrary` (immutable; cascading deletes, set-list position through moves/removals, `pruned()` on load, `normalize`); `MetronomeController` only applies results via `editLibrary` (persists changed parts) and loads songs. `MetronomeUiState` lives in its own file; its `songs`/`playlists`/`active*` are read-only views of `library`.
 - Offsets UI: slider (−200…+300ms) + −10/−1/0/+1/+10ms buttons. Tabular numerals (`"tnum"`) on BPM/counters/ms; Material You ("Android Phone Theme") + custom accents + System/Light/Dark.
 
 ## 8. Android constraints
@@ -62,6 +63,8 @@ Rules for **Anchor Metronome** (**Anchor**, ex-Pulse Metronome; Android, iPhone,
 - Bump: SemVer `versionCode = MAJOR*10000 + MINOR*100 + PATCH` (PATCH=fixes/docs, MINOR=features, MAJOR=rare). Run `scripts/set-version.sh X.Y.Z` (updates Gradle/iOS `project.yml`/desktop defaults, code/CI fallbacks, `AppUpdateManagerTest`, `website/{version.json,app.js,index.html}`, README APK, fastlane file), then write 5 changelogs: `CHANGELOG.md` top `## [vX.Y.Z]`, `CURRENT_RELEASE_CHANGELOG` (`sharedUi/.../dialogs/ChangelogDialog.kt`), `website/index.html` (Latest/Previous/Earlier), `website/version.json` highlights, `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`.
 
 ## 10. Verify (`docs/architecture.md` §8)
+- **Spec-driven**: every user-visible feature/invariant is a row in `docs/SPEC.md` (`SPEC-<AREA>-<NNN>`, describes current behaviour) and is cited by ≥1 test (`/** SPEC-… */` on the test); `SpecCoverageTest` (`:shared:desktopTest`) fails on uncovered rows or unknown IDs. Add/change the row and its test in the same commit; mark rows that only hardware/humans can verify `(manual)`.
+- `./gradlew :sharedUi:desktopTest :desktopApp:test` (UI + Windows host tests; also run by `desktop.yml`)
 - `./gradlew :androidApp:testGithubDebugUnitTest assembleGithubDebug` (store: `assemblePlayRelease bundlePlayRelease assembleFdroidRelease`)
 - `./gradlew :shared:testAndroidHostTest :shared:desktopTest` (macOS: `:shared:iosSimulatorArm64Test`)
 - Win: `./gradlew :desktopApp:run` / `:desktopApp:packageMsi` (`desktop.yml`)
