@@ -84,8 +84,8 @@ jobs:
           java -version
           java -XshowSettings:properties -version 2>&1 | grep -E "os.name|os.arch"
 
-      - name: Run shared desktop tests
-        run: ./gradlew :shared:desktopTest --stacktrace
+      - name: Run desktop tests (shared logic + spec coverage, shared UI, Windows host)
+        run: ./gradlew :shared:desktopTest :sharedUi:desktopTest :desktopApp:test --stacktrace
 
       - name: Build MSI
         run: ./gradlew :desktopApp:packageMsi -PversionName="${{ steps.version.outputs.version_name }}" --stacktrace
