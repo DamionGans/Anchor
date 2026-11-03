@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.7.2] — Musician-First Showcase & Commercial Website Remake
+
+### Website & Branding
+- Remade the website to focus squarely on real musician advantages: stage-ready setlists, count-ins that never clip Beat 1, and distraction-free offline practice with zero ads or subscriptions.
+- Added comprehensive musician use cases covering solo practice rooms, band rehearsals, live stages, and teaching studios.
+- Added a dedicated setlist spotlight showcasing instant one-tap song progression without interrupting the pulse.
+- Refined navigation for mobile screens and updated FAQ with practical musician workflows.
+
 ## [v1.7.1] — Warmup Timing Fix, Spec-Driven Test Suite & Codebase Modularization
 
 ### Audio & Timing

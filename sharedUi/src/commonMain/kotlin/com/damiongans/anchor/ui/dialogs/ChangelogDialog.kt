@@ -31,8 +31,8 @@ import com.damiongans.anchor.ui.icons.AnchorIcons
 internal data class ChangelogEntry(val title: String, val description: String)
 
 internal val CURRENT_RELEASE_CHANGELOG = listOf(
-    ChangelogEntry("Audio Warmup Precision", "Ensured cold-start warmup dither always spans at least 55 ms across all sample rates and buffer sizes for unclipped first-beat clicks."),
-    ChangelogEntry("Spec-Verified Reliability & Lighter APK", "Added a full functional specification test suite across Android, Windows, and iPhone, modularized the UI and controller layers, and removed unused resources.")
+    ChangelogEntry("Musician-First Experience", "Remade the website and guides to highlight real rehearsal, stage, and practice workflows: instant count-ins, stage setlists, and zero ads."),
+    ChangelogEntry("Distraction-Free Practice", "Full transparent pricing and offline performance across Android, iPhone, and Windows with no account requirements or subscriptions.")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

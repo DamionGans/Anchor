@@ -36,7 +36,7 @@ class KeyboardShortcutsTest {
             hapticsManager = NoOpHapticsManager(),
             settingsRepository = settings,
             updateRepository = StubUpdateRepository(),
-            appVersion = AppVersionInfo("1.7.1"),
+            appVersion = AppVersionInfo("1.7.2"),
             scope = TestScope(),
             clockMs = { currentClockMs },
             autoCheckForUpdates = false

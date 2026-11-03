@@ -1,6 +1,6 @@
 /* ==========================================================================
    Anchor - Modern GitHub Pages Stylesheet
-   Theme: Obsidian & Neon Cyan | Precision Audio Aesthetic
+   Theme: Dark stage | warm amber stage light for actions, cyan for the beat
    ========================================================================== */
 
 :root {
@@ -1539,5 +1539,418 @@ body {
   .footer-top, .footer-bottom {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ==========================================================================
+   Musician-first sections (2026 remake)
+   Brand: dark stage, warm amber "stage light" for actions, cyan for the beat.
+   Classes follow the section contract agreed in AGENT_COMMS.md.
+   ========================================================================== */
+
+:root {
+  --stage-amber: #FFB300;
+  --stage-amber-soft: rgba(255, 179, 0, 0.14);
+  --stage-amber-glow: rgba(255, 179, 0, 0.35);
+  --beat-cyan: #00E5FF;
+  --beat-cyan-soft: rgba(0, 229, 255, 0.12);
+  --surface-1: rgba(17, 24, 39, 0.72);
+  --surface-2: rgba(30, 41, 59, 0.55);
+  --line: rgba(148, 163, 184, 0.16);
+  --text-strong: #FFFFFF;
+  --text-body: #CBD5E1;
+  --section-gap: clamp(4rem, 9vw, 7rem);
+}
+
+/* ---- Layout rhythm ---- */
+.section-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 1.5rem);
+}
+
+.section {
+  padding-top: var(--section-gap);
+  padding-bottom: var(--section-gap);
+}
+
+.section-eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stage-amber);
+  margin-bottom: 0.9rem;
+}
+
+.section-title {
+  font-size: clamp(1.9rem, 4.2vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: var(--text-strong);
+  text-wrap: balance;
+}
+
+.section-lead {
+  max-width: 42rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  line-height: 1.65;
+  color: var(--text-body);
+  margin-bottom: 2.75rem;
+  text-wrap: pretty;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 48px;
+  padding: 0.85rem 1.6rem;
+  border-radius: var(--radius-full);
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-normal),
+    background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn.btn-primary {
+  background: var(--stage-amber);
+  color: #1A1200;
+  box-shadow: 0 10px 30px -10px var(--stage-amber-glow);
+}
+
+.btn.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px -10px var(--stage-amber-glow);
+}
+
+.btn.btn-secondary {
+  background: transparent;
+  color: var(--text-strong);
+  border-color: var(--line);
+}
+
+.btn.btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.btn:focus-visible,
+.usecase-card:focus-within,
+.price-card a:focus-visible {
+  outline: 3px solid var(--beat-cyan);
+  outline-offset: 3px;
+}
+
+/* ---- Hero ---- */
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.hero-title {
+  font-size: clamp(2.6rem, 7vw, 4.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  color: var(--text-strong);
+  text-wrap: balance;
+}
+
+.hero-subtitle {
+  max-width: 34rem;
+  font-size: clamp(1.1rem, 2vw, 1.3rem);
+  line-height: 1.6;
+  color: var(--text-body);
+  text-wrap: pretty;
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.trust-item svg {
+  color: var(--beat-cyan);
+  flex-shrink: 0;
+}
+
+/* ---- Shared card look ---- */
+.usecase-card,
+.benefit-card,
+.price-card,
+.setlist-step {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* ---- Use cases ---- */
+.usecases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.usecase-card {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color var(--transition-fast), transform var(--transition-normal);
+}
+
+.usecase-card:hover {
+  border-color: rgba(255, 179, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+.usecase-icon,
+.benefit-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  font-size: 1.5rem;
+  line-height: 1;
+  background: var(--stage-amber-soft);
+  color: var(--stage-amber);
+}
+
+.usecase-title,
+.benefit-title,
+.step-title,
+.price-name {
+  font-size: 1.2rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--text-strong);
+}
+
+.usecase-text,
+.benefit-text,
+.step-text,
+.price-note {
+  color: var(--text-body);
+  line-height: 1.65;
+}
+
+/* ---- Benefits ---- */
+.benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.benefit-card {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.benefit-card:nth-child(3n + 2) .benefit-icon {
+  background: var(--beat-cyan-soft);
+  color: var(--beat-cyan);
+}
+
+/* ---- Setlist spotlight ---- */
+.setlist-spotlight {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.setlist-steps {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: setlist;
+}
+
+.setlist-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  padding: 1.25rem 1.4rem;
+}
+
+.step-number {
+  grid-row: span 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: var(--stage-amber);
+  color: #1A1200;
+}
+
+.setlist-visual {
+  background:
+    radial-gradient(circle at 30% 0%, var(--stage-amber-soft), transparent 60%),
+    var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+/* ---- Pricing / Get Anchor ---- */
+.pricing {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 3rem;
+}
+
+.price-card {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.price-card--free {
+  border-color: rgba(255, 179, 0, 0.5);
+  box-shadow: 0 20px 50px -30px var(--stage-amber-glow);
+}
+
+.price-amount {
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-strong);
+}
+
+.price-list {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0;
+  margin: 0.25rem 0 0.5rem;
+  list-style: none;
+  color: var(--text-body);
+}
+
+.price-list li {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr;
+  gap: 0.5rem;
+}
+
+.price-list li::before {
+  content: "✓";
+  font-weight: 800;
+  color: var(--beat-cyan);
+}
+
+.price-card .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* ---- Footer ---- */
+.footer-dev {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.footer-dev a {
+  color: var(--text-muted);
+}
+
+/* ---- Nav call to action matches the primary button ---- */
+.btn-nav-download {
+  background: var(--stage-amber);
+  color: #1A1200;
+  border-radius: var(--radius-full);
+  box-shadow: 0 6px 18px -8px var(--stage-amber-glow);
+}
+
+.btn-nav-download:hover {
+  background: #FFC233;
+  box-shadow: 0 10px 24px -8px var(--stage-amber-glow);
+}
+
+.footer-links {
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+/* ---- Wider screens ---- */
+@media (min-width: 900px) {
+  .setlist-spotlight {
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5rem;
+  }
+}
+
+/* ---- Phones ---- */
+@media (max-width: 600px) {
+  /* Keep the bar to logo + one call to action so it never scrolls sideways. */
+  .nav-actions .btn-github {
+    display: none;
+  }
+
+  .btn-nav-download {
+    padding: 0.5rem 0.9rem;
+    white-space: nowrap;
+  }
+
+  .hero-ctas .btn {
+    flex: 1 1 100%;
+  }
+
+  .usecase-card,
+  .benefit-card,
+  .price-card {
+    padding: 1.4rem;
+  }
+
+  .section-lead {
+    margin-bottom: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .usecase-card {
+    transition: none;
+  }
+
+  .btn.btn-primary:hover,
+  .usecase-card:hover {
+    transform: none;
   }
 }

@@ -12,10 +12,10 @@
 
   // Fallback metadata from version.json
   const DEFAULT_METADATA = {
-    version: '1.7.1',
-    releaseTag: 'v1.7.1',
-    downloadUrl: 'https://github.com/DamionGans/Anchor/releases/download/v1.7.1/Anchor-v1.7.1.apk',
-    apkName: 'Anchor-v1.7.1.apk',
+    version: '1.7.2',
+    releaseTag: 'v1.7.2',
+    downloadUrl: 'https://github.com/DamionGans/Anchor/releases/download/v1.7.2/Anchor-v1.7.2.apk',
+    apkName: 'Anchor-v1.7.2.apk',
     fileSizeApprox: '~2.1 MB',
     releaseDate: 'November 2026',
     repoUrl: 'https://github.com/DamionGans/Anchor'
@@ -175,8 +175,8 @@
           btnTitle.textContent = `Download for Windows (${releaseTag})`;
         }
         if (btnNavDownload) {
-          btnNavDownload.href = btnHeroDownload.href;
-          btnNavDownload.textContent = `Download for Windows (${releaseTag})`;
+          btnNavDownload.href = '#pricing';
+          btnNavDownload.textContent = 'Get Anchor';
         }
       } else if (os === 'ios') {
         if (chipIos) chipIos.classList.add('active');
@@ -185,8 +185,8 @@
           btnTitle.textContent = `Anchor for iPhone (iOS 16+)`;
         }
         if (btnNavDownload) {
-          btnNavDownload.href = '#platforms-ios';
-          btnNavDownload.textContent = `Get for iPhone`;
+          btnNavDownload.href = '#pricing';
+          btnNavDownload.textContent = 'Get Anchor';
         }
       } else {
         // Android or other
@@ -196,8 +196,8 @@
           btnTitle.textContent = `Download for Android (${releaseTag})`;
         }
         if (btnNavDownload) {
-          btnNavDownload.href = apkUrl;
-          btnNavDownload.textContent = `Download (${releaseTag})`;
+          btnNavDownload.href = '#pricing';
+          btnNavDownload.textContent = 'Get Anchor';
         }
       }
     }
