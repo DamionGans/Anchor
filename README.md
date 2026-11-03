@@ -17,9 +17,7 @@
 
 ---
 
-**Anchor Metronome** (**Anchor**) is a fast, distraction-free metronome built for musicians, drummers, teachers, and ensembles.
-
-It puts every essential control on a single, uncluttered screen—giving you unwavering tempo, a crisp first beat that never gets cut off, and flexible visual and vibration cues without ads, pop-ups, or subscriptions. One shared Kotlin Multiplatform core (timing engine, click synthesis, settings, and update logic) powers every platform:
+**Anchor Metronome** (**Anchor**) is the metronome you can trust from the practice room to the stage. It starts exactly when you press Play, keeps every control on one screen, and has your whole setlist ready—on your phone, tablet, or computer. No ads, no subscriptions, no account.
 
 | Platform | Status | Get it |
 |---|---|---|
@@ -27,7 +25,7 @@ It puts every essential control on a single, uncluttered screen—giving you unw
 | **iPhone** (iOS 16+) | Available (sideload / build from source) | [Unsigned IPA from CI](#iphone); App Store coming soon |
 | **Windows** 10/11 (x64 + arm64) | Available | MSI installer from [GitHub Releases](https://github.com/DamionGans/Anchor/releases/latest) ([guide](./docs/windows.md)) |
 
-On Android, Anchor uses pure platform APIs with zero reliance on Google Play Services, so it runs on standard Google Play devices and plain AOSP phones alike.
+Anchor runs on any Android phone or tablet, including devices without Google services.
 
 👉 **[Visit the Website & Download the App](https://damiongans.github.io/Anchor/)**
 
@@ -35,16 +33,16 @@ On Android, Anchor uses pure platform APIs with zero reliance on Google Play Ser
 
 ## Why Musicians Love Anchor
 
-* **Instant, Unclipped First Beat**: Press Play and hear Beat 1 immediately at full clarity—no swallowed first clicks while your phone speaker wakes up.
-* **Everything on One Screen**: Adjust your tempo via the slider, quick steppers (`-5`, `-1`, `+1`, `+5`, `½`, `2×`), or **Tap Tempo** without digging through menus or scrolling.
-* **6 Musical Click Voices**: Choose between **Tick**, **Click**, **Woodblock**, **Cowbell**, **Beep**, and **Hi-Hat**—voiced to cut cleanly through acoustic instruments or headphones.
-* **Playlists & Song Library**: Save songs with their name, BPM, time signature, and custom beat accents into your library, arrange them into ordered setlists, and step through songs effortlessly on the main screen during rehearsals or gigs.
-* **Custom Accents & Subdivisions**: Tap any beat indicator to cycle between **Accented**, **Normal**, and **Muted** (great for testing your internal pulse), with per-count accents remembered across time signature changes. Supports quarter, eighth, triplet, and 16th-note subdivisions.
-* **See & Feel the Tempo**: Practice on a loud stage or without headphones using the **Beat Bar**, smooth **Pendulum** animation, **Full-Screen Flash**, and distinct **Haptic Vibrations** for accents, beats, and subdivisions.
-* **Plays While You Read Sheet Music**: Switch to your PDF score reader, chord chart app, or lock your phone screen—Anchor keeps your beat steady in the background with a multimedia player (**Play/Pause** and **Tempo −/+** buttons) right in your notification drawer.
-* **Dial In Your Headphones**: Using wireless Bluetooth earbuds or an external speaker? Fine-tune Visual, Vibration, and Bluetooth timing offsets in `1 ms` steps so what you see, feel, and hear line up together.
-* **Remembers Your Setup**: Your tempo, time signature, sound choice, accent pattern, calibration offsets, and theme (Light, Dark, or Android Material You colors) are saved automatically.
-* **Free, Open Source & Private**: the full app is free on GitHub (and F-Droid). Paid Google Play and App Store versions—identical features, one-time price, automatic store updates—are coming soon as a way to support development. Every version has zero ads, zero tracking, zero accounts, and zero Google Play Services dependencies (~2 MB, works offline).
+* **A count-in you can trust**: Press Play and Beat 1 sounds right away, loud and clear—never swallowed while the speaker wakes up.
+* **Your whole set, ready**: Save each song's tempo, time signature, and accents, build setlists, and step to the next song with one tap on the main screen.
+* **Everything on one screen**: Tempo slider, quick steps (`-5`, `-1`, `+1`, `+5`, `½`, `2×`), and **Tap Tempo**—no menus or scrolling mid-song.
+* **See it and feel it**: Beat bar, swinging pendulum, full-screen flash, and vibration for accents, beats, and subdivisions—made for loud rooms, drummers, and silent practice.
+* **In sync with your earbuds**: Using Bluetooth earbuds or speakers? Nudge the visual, vibration, and Bluetooth timing in 1 ms steps until what you see, feel, and hear line up.
+* **Your groove, your accents**: Tap any beat to make it **Accent**, **Normal**, **Soft**, or **Mute**. Quarter, eighth, triplet, and 16th-note subdivisions, odd meters included, and Anchor remembers your accent pattern for every meter.
+* **Five click sounds**: **Woodblock**, **Mechanical**, **Digital Beep**, **Rimshot**, and **808 Percussion**, with adjustable pitch, voiced to cut through acoustic instruments and in-ear monitors.
+* **Keeps going while you read**: Switch to your sheet-music or chord-chart app or lock the screen—the beat keeps going, with play/pause and tempo controls in the Android notification or on the iPhone lock screen.
+* **Remembers your setup**: Tempo, meter, sound, accents, timing, and theme (Light, Dark, or Android Material You colors) are saved automatically.
+* **Free, open source, private**: The full app is free on GitHub (and F-Droid). Paid Google Play and App Store versions—identical features, one-time price, automatic store updates—are coming soon as a way to support development. Every version has no ads, no tracking, no account, and works offline.
 
 ---
 
