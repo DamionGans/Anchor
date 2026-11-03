@@ -211,6 +211,41 @@ jobs:
             -PversionCode="${{ steps.prepare_release.outputs.version_code }}" \
             -PreleaseTag="${{ steps.prepare_release.outputs.release_tag }}"
 
+      # GitHub APK key rotation (docs/release-signing.md): once the owner has created the private
+      # release key and committed signing/release-rotation.lineage, re-sign with the old (debug)
+      # key for Android 7-8 and the new key + lineage (APK Signature Scheme v3) for Android 9+,
+      # so existing installs update in place. Until then the APK keeps the old signature.
+      - name: Rotate GitHub APK Signing Key
+        env:
+          GITHUB_RELEASE_KEYSTORE_BASE64: ${{ secrets.GITHUB_RELEASE_KEYSTORE_BASE64 }}
+          GITHUB_RELEASE_STORE_PASSWORD: ${{ secrets.GITHUB_RELEASE_STORE_PASSWORD }}
+          GITHUB_RELEASE_KEY_PASSWORD: ${{ secrets.GITHUB_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          LINEAGE=signing/release-rotation.lineage
+          if [ -z "${GITHUB_RELEASE_KEYSTORE_BASE64}" ] || [ ! -f "${LINEAGE}" ]; then
+            echo "::warning::GitHub APK is still signed with the public debug key (no release key/lineage yet; see docs/release-signing.md)."
+            exit 0
+          fi
+          APKSIGNER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n1)
+          NEW_KS="${RUNNER_TEMP}/github-release.jks"
+          echo "${GITHUB_RELEASE_KEYSTORE_BASE64}" | tr -d '\r\n' | base64 -d > "${NEW_KS}"
+          APK=androidApp/build/outputs/apk/github/release/androidApp-github-release.apk
+          "${APKSIGNER}" sign \
+            --ks debug.keystore --ks-key-alias androiddebugkey --ks-pass pass:android \
+            --next-signer --ks "${NEW_KS}" --ks-key-alias release \
+              --ks-pass env:GITHUB_RELEASE_STORE_PASSWORD --key-pass env:GITHUB_RELEASE_KEY_PASSWORD \
+            --lineage "${LINEAGE}" --rotation-min-sdk-version 28 \
+            --out "${APK}.rotated" "${APK}"
+          rm -f "${NEW_KS}"
+          mv "${APK}.rotated" "${APK}"
+          V3_SIGNER=$("${APKSIGNER}" verify -v --print-certs "${APK}" | grep -m1 "V3.0 Signer: certificate DN:")
+          echo "${V3_SIGNER}"
+          if echo "${V3_SIGNER}" | grep -q "CN=Android Debug"; then
+            echo "::error::Rotation failed: the v3 signer is still the debug key."
+            exit 1
+          fi
+
       - name: Stage APK and Generate SHA-256 Checksum
         run: |
           APK_FILE="${{ steps.prepare_release.outputs.apk_name }}"
