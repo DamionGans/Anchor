@@ -1,4 +1,4 @@
-<p><b>Anchor Metronome</b> is a rock-solid, distraction-free metronome built for musicians, drummers, teachers, and live bands. Engineered with a low-latency native audio engine, Anchor eliminates playback lag and keeps your time locked in every practice session and stage performance.</p>
+<p><b>Anchor Metronome</b> is a rock-solid, distraction-free metronome built for musicians, drummers, teachers, and live bands. Anchor gives you unwavering timekeeping with zero lag and zero clutter in every practice session and stage performance.</p>
 
 <p><b>Stage Setlists & Song Library</b></p>
 <ul>
@@ -9,10 +9,10 @@
 
 <p><b>Instant, Precision Timing</b></p>
 <ul>
-<li><b>Instant Beat 1</b>: Press Play and the first beat sounds immediately at full volume with zero clipping or warmup lag.</li>
+<li><b>Instant Beat 1</b>: Press Play and Beat 1 sounds immediately at full volume with zero clipping or warmup hesitation.</li>
 <li><b>Accents your way</b>: Tap any beat indicator to cycle between Accent, Normal, Soft, or Mute. Your accent patterns are remembered per count across meter changes.</li>
-<li><b>Subdivisions</b>: Clean quarter, eighth, triplet, and 16th subdivisions with dedicated sound sets (Woodblock, Click, Beep, Drumstick).</li>
-<li><b>Tempo controls</b>: Smooth tempo wheel, fine -5 / -1 / +1 / +5 steps, half-time and double-time shortcuts, and an adaptive Tap Tempo algorithm.</li>
+<li><b>Subdivisions & sounds</b>: Quarter, eighth, triplet, and 16th subdivisions. Five distinct sound sets: Woodblock, Mechanical, Digital Beep, Rimshot, and 808 Percussion.</li>
+<li><b>Tempo controls</b>: Smooth tempo slider, fine -5 / -1 / +1 / +5 steps, half-time and double-time shortcuts, and an adaptive Tap Tempo algorithm.</li>
 </ul>
 
 <p><b>Multi-Sensory Synchronization</b></p>
