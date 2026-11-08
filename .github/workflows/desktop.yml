@@ -57,7 +57,7 @@ jobs:
       # The shared modules also declare the Android target, which needs an Android SDK to
       # configure (nothing Android is compiled by this workflow).
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           # The action's default package list includes the removed `tools` package; only a valid
           # SDK root is needed here.
